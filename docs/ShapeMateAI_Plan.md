@@ -76,7 +76,27 @@ Criar um **aplicativo inteligente** que facilite a vida do usuário, utilizando 
 - **Biblioteca para Orquestração dos Agentes**: LangGraph.
 - **Modelo de IA**: DeepSeek.
 
----
 
-### Observações Finais:
-Essa ideia visa tornar o processo de nutrição mais acessível e personalizado, utilizando IA para oferecer soluções práticas e viáveis para o dia a dia dos usuários. A proposta é que o sistema seja fácil de usar, com informações claras, sugestões realistas e suporte contínuo.
+# ShapeMateAI - Anotações da Banca com o Professor Jonas
+
+## Agente Nutricionista
+- **Base de Dados**: Definir uma base de dados estruturada para informações nutricionais
+- **Roteiro de Consulta**: Estabelecer um fluxo padrão para a consulta nutricional virtual
+- **Geração de Dieta**: Implementar algoritmos para criar dietas personalizadas
+- **Toolbox de Agenda**: Desenvolver funcionalidade para ter uma ideia de "volta" ao nutricionista
+- **Banco de Dados Compartilhado**: Implementar um sistema de banco de dados acessível por ambos os agentes
+- **API de Dados**: Criar uma API para alimentar o sistema com informações nutricionais atualizadas
+
+## Assistente do Dia-a-Dia
+- **Sistema de Substituições**: Implementar função para substituir ingredientes (ex: "não quero comer ovo hoje")
+- **Gerador de Receitas**: Criar funcionalidade onde o usuário informa ingredientes disponíveis e a IA sugere receitas
+- **Assistente de Compras**: Desenvolver feature "estou indo ao mercado, o que eu compro?" que verifica o estoque atual e sugere compras alinhadas à dieta
+
+## Interface Inicial
+- **Chat Integrado**: Desenvolver interface de chat com suporte para anexos
+- **Tabela de Estoque**: Implementar tabela de controle para alimentos disponíveis em casa
+
+## Tecnologias Recomendadas
+- **Banco de Dados**: SQLite
+- **Backend**: Python
+- **Framework**: Django (para facilitar integração de Python com HTML)
