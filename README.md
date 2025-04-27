@@ -1,79 +1,59 @@
-# README.md
-'''
-# Agente Conversacional com LangGraph
+# ShapeMateAI 🍎💪
 
-Um agente de IA conversacional simples inspirado no ChatGPT, construído com LangGraph e LangChain.
+**ShapeMateAI** é uma plataforma de assistência nutricional inteligente que utiliza Inteligência Artificial para fornecer orientações nutricionais personalizadas.
 
-## Estrutura do Projeto
+## Visão Geral
 
-```
-conversational_agent/
-├── main.py             # Ponto de entrada e interface do agente
-├── agent/              # Módulos do agente
-│   ├── __init__.py
-│   ├── core.py         # Lógica principal e grafo do agente
-│   ├── memory.py       # Gerenciamento de memória da conversa
-│   └── prompts.py      # Templates de prompts
-├── config/             # Configurações
-│   ├── __init__.py
-│   └── settings.py     # Configurações do agente e API
-└── README.md           # Documentação
-```
+O ShapeMateAI funciona por meio de um agente de conversação AI especializado em nutrição, chamado **Nutrion**, que pode:
+- Conversar naturalmente com usuários sobre temas relacionados à nutrição
+- Adaptar suas respostas com base no perfil do usuário
+- Rastrear custos e uso de tokens da API
 
-## Instalação
+## Funcionalidades Atuais
 
-1. Clone este repositório
+### 🤖 Agente Nutrion
+- Conversação em linguagem natural sobre nutrição e alimentação
+- Integração com perfis de usuário para respostas personalizadas
+- Arquitetura modular baseada em grafos de conversa (LangGraph)
+
+### 👤 Gerenciamento de Perfil de Usuário
+- Coleta de dados durante o cadastro (informações pessoais, saúde e preferências alimentares)
+- Armazenamento local de perfis de usuários em formato JSON
+- Respostas personalizadas com base no perfil do usuário
+
+### 💻 Interface Web
+- Interface intuitiva para interação com o Nutrion
+- Sistema de cadastro e login
+- Rastreamento de custos e uso de tokens
+
+## Tecnologias Utilizadas
+
+- **Backend**: Python, LangChain, LangGraph
+- **Frontend**: HTML, CSS, JavaScript, Bootstrap
+- **API de IA**: DeepSeek API
+- **Armazenamento**: JSON local
+
+## Próximas Etapas
+
+- Integração com APIs de dados nutricionais
+- Refinamento dos prompts para melhor qualidade de resposta
+- Adição de ferramentas de monitoramento de progresso
+- Expansão para assistente de bem-estar geral
+
+## Como Iniciar
+
+1. Clone o repositório
 2. Instale as dependências:
    ```
-   pip install langchain langchain-openai langgraph python-dotenv
+   pip install -r requirements.txt
    ```
-3. Crie um arquivo `.env` na raiz do projeto com sua chave da OpenAI:
+3. Configure sua chave de API no arquivo `config/settings.py`
+4. Execute o servidor:
    ```
-   OPENAI_API_KEY=sua_chave_aqui
+   python web/server.py
    ```
+5. Acesse `http://localhost:5000` em seu navegador
 
-## Uso
+## Equipe
 
-### Como Biblioteca
-
-```python
-from main import ConversationalAgent
-
-# Criar o agente
-agent = ConversationalAgent()
-
-# Iniciar a sessão
-welcome_message = agent.start_session()
-print(welcome_message)
-
-# Enviar mensagens
-response = agent.process_message("Olá, como vai você?")
-print(response)
-
-# Encerrar a sessão
-agent.end_session()
-```
-
-### Interface de Linha de Comando
-
-Para usar a interface de linha de comando integrada:
-
-```
-python main.py
-```
-
-Digite "sair", "exit", "quit" ou "tchau" para encerrar a conversa.
-
-## Personalização
-
-Você pode personalizar o agente modificando:
-
-- O prompt de sistema em `prompts.py`
-- O modelo de linguagem em `settings.py`
-- A temperatura e outros parâmetros para ajustar o estilo das respostas
-- A estrutura do grafo em `core.py` para adicionar mais funcionalidades
-
-## Recursos
-
-O agente mantém um histórico completo da conversa e usa esse contexto para gerar respostas mais relevantes e coerentes. Ele é construído com um fluxo simples de processamento de entrada e geração de resposta, mas pode ser facilmente estendido para incluir mais capacidades.
-'''
+Desenvolvido pela Equipe ShapeMate para a FETIN 2025.
