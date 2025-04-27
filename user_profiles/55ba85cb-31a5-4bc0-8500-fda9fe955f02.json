@@ -1,0 +1,50 @@
+{
+  "personal_info": {
+    "name": "ALEXANDRE",
+    "age": 21,
+    "gender": "masculino",
+    "height": 170,
+    "weight": 75,
+    "email": "alexandretoalves@gmail.com"
+  },
+  "health_info": {
+    "activity_level": "muito ativo",
+    "health_conditions": [],
+    "allergies": [],
+    "intolerances": [],
+    "medications": "whey e creatina",
+    "surgeries": ""
+  },
+  "diet_preferences": {
+    "dietary_restrictions": [],
+    "preferred_foods": [],
+    "disliked_foods": [
+      "nada"
+    ],
+    "meal_frequency": 4,
+    "typical_diet": "como de tudo",
+    "meal_source": "cozinha",
+    "water_consumption": "baixo"
+  },
+  "lifestyle": {
+    "daily_routine": "estudo pela manha\ntrabalho a noite",
+    "physical_activity": true,
+    "activity_details": {
+      "frequency": "5-6",
+      "intensity": "intensa",
+      "type": "musculação"
+    },
+    "stress_level": "alto",
+    "sleep_quality": "otima",
+    "family_history": [],
+    "food_relationship": "variavel",
+    "cooking_willingness": "sim",
+    "additional_info": ""
+  },
+  "goals": {
+    "primary_goal": "emagrecimento",
+    "target_weight": 61,
+    "calorie_target": 2890
+  },
+  "updated_at": "2025-04-27T02:43:07.114135"
+}

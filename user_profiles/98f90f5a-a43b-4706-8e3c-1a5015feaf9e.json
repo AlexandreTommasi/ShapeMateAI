@@ -1,0 +1,30 @@
+{
+  "personal_info": {
+    "name": "Usuário",
+    "age": 30,
+    "gender": "não informado",
+    "height": 170,
+    "weight": 70,
+    "email": "usuario@exemplo.com"
+  },
+  "health_info": {
+    "activity_level": "moderado",
+    "health_conditions": [],
+    "allergies": [],
+    "intolerances": []
+  },
+  "diet_preferences": {
+    "dietary_restrictions": [],
+    "disliked_foods": [],
+    "preferred_foods": [],
+    "meal_frequency": 5
+  },
+  "goals": {
+    "primary_goal": "saúde geral",
+    "target_weight": null,
+    "weekly_weight_change": null,
+    "calorie_target": 2000
+  },
+  "created_at": "2025-04-27T01:05:11.124837",
+  "updated_at": "2025-04-27T01:05:11.124845"
+}

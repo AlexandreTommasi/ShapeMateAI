@@ -12,7 +12,7 @@ Simular uma consulta com um nutricionista, oferecendo uma dieta personalizada de
 
 ### Fluxo da Consulta:
 1. **Coleta de Informações**: 
-   O agente começa coletando informações essenciais do cliente, como:
+   O agente começa coletando ou recebendo do cadastro as informações essenciais do cliente, como:
    - Peso, altura, idade, etc.
    - Nível de atividade física (sedentário, moderadamente ativo, ativo).
    
@@ -83,9 +83,9 @@ Criar um **aplicativo inteligente** que facilite a vida do usuário, utilizando 
 - **Base de Dados**: Definir uma base de dados estruturada para informações nutricionais
 - **Roteiro de Consulta**: Estabelecer um fluxo padrão para a consulta nutricional virtual
 - **Geração de Dieta**: Implementar algoritmos para criar dietas personalizadas
-- **Toolbox de Agenda**: Desenvolver funcionalidade para ter uma ideia de "volta" ao nutricionista
+- **Toolbox de Agenda**: Desenvolver funcionalidade para ter uma ideia de "volta" ao nutricionista: "voce deve retornar em 3 meses pra reavaliar sua dieta inicial".
 - **Banco de Dados Compartilhado**: Implementar um sistema de banco de dados acessível por ambos os agentes
-- **API de Dados**: Criar uma API para alimentar o sistema com informações nutricionais atualizadas
+- **API de Dados**: Criar/Utilizar uma API para alimentar o sistema com informações nutricionais atualizadas
 
 ## Assistente do Dia-a-Dia
 - **Sistema de Substituições**: Implementar função para substituir ingredientes (ex: "não quero comer ovo hoje")

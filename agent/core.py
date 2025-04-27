@@ -1,81 +1,172 @@
 # agent/core.py
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, TypedDict, Literal
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, END
+import json
+import uuid
 
 from config.settings import API_KEY, MODEL_NAME, TEMPERATURE, MAX_TOKENS
-from agent.prompts import SYSTEM_PROMPT
+from agent.nutritionist.nutritionist_prompts import SYSTEM_PROMPT as NUTRITIONIST_PROMPT
+from agent.daily_assistant.daily_assistant_prompts import SYSTEM_PROMPT as ASSISTANT_PROMPT
 from agent.memory import ConversationMemory
+from utils.cost_tracker import CostTracker
+from agent.nutritionist.user_profile import UserProfile
 
-# Modelo LLM
+# Tipos de agente disponíveis
+AgentType = Literal["nutricionista", "assistente"]
+
+# Inicializa o rastreador de custos
+cost_tracker = CostTracker(model_name=MODEL_NAME)
+
+# Modelo LLM 
 llm = ChatOpenAI(
-    model=MODEL_NAME,
-    api_key=API_KEY,
+    model_name=MODEL_NAME,
+    openai_api_key=API_KEY,
     temperature=TEMPERATURE,
-    max_tokens=MAX_TOKENS
+    max_tokens=MAX_TOKENS,
+    openai_api_base="https://api.deepseek.com/v1",
 )
 
-# Estado do grafo conversacional
-class ConversationState:
-    """Classe que representa o estado da conversa no grafo."""
-    
-    def __init__(self):
-        self.memory = ConversationMemory(SYSTEM_PROMPT)
-        self.current_step = "process_input"
-        self.user_message = ""
-        self.ai_response = ""
-        self.should_continue = True
+# Definimos o tipo do estado como um dicionário para compatibilidade com LangGraph
+class ConversationStateDict(TypedDict, total=False):
+    memory: ConversationMemory
+    current_step: str
+    user_message: str
+    ai_response: str
+    cost_info: Dict[str, Any]
+    agent_type: AgentType
+    user_id: str
+    user_profile: Dict[str, Any]
+    is_first_interaction: bool
 
 # Nó para processar a entrada do usuário
 def process_input(state: Dict[str, Any]) -> Dict[str, Any]:
     """Processa a mensagem do usuário e atualiza o estado."""
-    # Extraímos a mensagem do usuário do estado
     user_message = state["user_message"]
+    is_first_interaction = len(state["memory"].get_message_history()) <= 1
     
-    # Adicionamos à memória
+    # Carregar perfil do usuário se disponível
+    user_profile = None
+    if "user_id" in state:
+        user_profile = UserProfile.load_profile(state["user_id"])
+    
+    # Adicionar mensagem à memória
     state["memory"].add_user_message(user_message)
     
-    return {
-        **state,
-        "current_step": "generate_response"
-    }
+    # Atualizar estado
+    new_state = state.copy()
+    new_state["current_step"] = "generate_response"
+    new_state["is_first_interaction"] = is_first_interaction
+    new_state["user_profile"] = user_profile or {}
+    
+    return new_state
 
 # Nó para gerar a resposta do assistente
 def generate_response(state: Dict[str, Any]) -> Dict[str, Any]:
     """Gera uma resposta baseada no histórico da conversa."""
-    # Obtemos o histórico completo
     message_history = state["memory"].get_message_history()
     
-    # Enviamos para o LLM
-    response = llm.invoke(message_history)
+    # Adicionar informações do perfil do usuário ao contexto se disponível
+    if state["user_profile"]:
+        profile = state["user_profile"]
+        profile_context = f"Contexto do usuário: {json.dumps(profile, indent=2, ensure_ascii=False)}"
+        
+        message_history = message_history.copy()
+        message_history.insert(1, SystemMessage(content=profile_context))
     
-    # Extraímos o conteúdo da resposta
+    # Calcular tokens de entrada para rastreamento de custos
+    input_text = " ".join([msg.content for msg in message_history])
+    input_tokens = cost_tracker.estimate_tokens(input_text)
+    
+    # Gerar resposta
+    response = llm.invoke(message_history)
     ai_response = response.content
     
-    # Atualizamos o estado
+    # Adicionar resposta à memória
     state["memory"].add_ai_message(ai_response)
-    state["ai_response"] = ai_response
-    state["current_step"] = END
     
-    return state
+    # Calcular custo
+    output_tokens = cost_tracker.estimate_tokens(ai_response)
+    cost_info = cost_tracker.calculate_cost(input_tokens, output_tokens)
+    
+    # Atualizar estado
+    new_state = state.copy()
+    new_state["ai_response"] = ai_response
+    new_state["current_step"] = "end"
+    new_state["cost_info"] = cost_info
+    
+    return new_state
 
 # Função para construir o grafo conversacional
-def build_conversation_graph():
-    """Constrói e retorna o grafo de conversa."""
-    # Inicializamos o grafo
-    graph = StateGraph(ConversationState)
+def build_conversation_graph(agent_type: AgentType = "nutricionista"):
+    """Constrói um grafo de conversa para o tipo de agente especificado."""
+    # Selecionar prompt base
+    system_prompt = NUTRITIONIST_PROMPT if agent_type == "nutricionista" else ASSISTANT_PROMPT
+        
+    # Inicializar grafo
+    workflow = StateGraph(ConversationStateDict)
     
-    # Adicionamos os nós
-    graph.add_node("process_input", process_input)
-    graph.add_node("generate_response", generate_response)
+    # Definir nós
+    workflow.add_node("process_input", process_input)
+    workflow.add_node("generate_response", generate_response)
     
-    # Definimos as conexões
-    graph.add_edge("process_input", "generate_response")
-    graph.add_edge("generate_response", END)
+    # Definir transições
+    workflow.add_edge("process_input", "generate_response")
+    workflow.add_edge("generate_response", END)
     
-    # Definimos o nó inicial
-    graph.set_entry_point("process_input")
+    # Definir ponto de entrada
+    workflow.set_entry_point("process_input")
     
-    # Compilamos o grafo
-    return graph.compile()
+    # Compilar grafo
+    compiled_graph = workflow.compile()
+    
+    return compiled_graph, ConversationMemory(system_prompt)
+
+# Função para criar um agente de conversa
+def create_conversation_agent(agent_type: AgentType = "nutricionista"):
+    """Cria um agente de conversa do tipo especificado."""
+    graph, memory = build_conversation_graph(agent_type)
+    
+    def chat_agent(message: str, user_id: str = None) -> Dict[str, Any]:
+        """
+        Função que processa uma mensagem e retorna a resposta.
+        
+        Args:
+            message: Mensagem do usuário
+            user_id: ID do usuário para acessar seu perfil (opcional)
+        """
+        # Gerar um ID de usuário se não for fornecido
+        if user_id is None:
+            user_id = str(uuid.uuid4())
+            
+        # Estado inicial
+        state = {
+            "memory": memory,
+            "current_step": "process_input",
+            "user_message": message,
+            "agent_type": agent_type,
+            "is_first_interaction": len(memory.get_message_history()) <= 1,
+            "user_id": user_id,
+        }
+        
+        # Executa o grafo conversacional
+        result = graph.invoke(state)
+        
+        # Retorna o resultado final
+        return {
+            "response": result["ai_response"],
+            "cost": result["cost_info"],
+            "user_id": user_id
+        }
+    
+    return chat_agent
+
+# Funções para criar instâncias específicas dos agentes
+def create_nutritionist_agent():
+    """Cria um agente nutricionista."""
+    return create_conversation_agent("nutricionista")
+
+def create_daily_assistant_agent():
+    """Cria um agente assistente do dia a dia."""
+    return create_conversation_agent("assistente")

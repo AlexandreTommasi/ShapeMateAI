@@ -1,0 +1,50 @@
+{
+  "personal_info": {
+    "name": "ALEXANDRE",
+    "age": 20,
+    "gender": "masculino",
+    "height": 170,
+    "weight": 71,
+    "email": "alexandretoalves@gmail.com"
+  },
+  "health_info": {
+    "activity_level": "muito ativo",
+    "health_conditions": [],
+    "allergies": [],
+    "intolerances": [],
+    "medications": "",
+    "surgeries": ""
+  },
+  "diet_preferences": {
+    "dietary_restrictions": [],
+    "preferred_foods": [],
+    "disliked_foods": [
+      "LEGUMES"
+    ],
+    "meal_frequency": 4,
+    "typical_diet": "NO CAFÉ DA MANHÃ COSTUMO COMER PÃO COM MUSSARELA E UMA BANANA COM WHEY\nNO ALMOÇO O NORMAL\nNO LANCHE VITAMINA DE BANANA COM WHEY\nE A NOITE REPITO O ALMOÇÕ",
+    "meal_source": "cozinha",
+    "water_consumption": "muito baixo"
+  },
+  "lifestyle": {
+    "daily_routine": "TRABALHO DE MANHÃ\nE ESTUDO A NOITE",
+    "physical_activity": true,
+    "activity_details": {
+      "frequency": "5-6",
+      "intensity": "intensa",
+      "type": "MUSCULAÇÃO E HIIT"
+    },
+    "stress_level": "alto",
+    "sleep_quality": "ruim",
+    "family_history": [],
+    "food_relationship": "equilibrada",
+    "cooking_willingness": "sim",
+    "additional_info": ""
+  },
+  "goals": {
+    "primary_goal": "emagrecimento",
+    "target_weight": 61,
+    "calorie_target": 2813
+  },
+  "updated_at": "2025-04-27T01:17:38.338877"
+}

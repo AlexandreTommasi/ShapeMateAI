@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShapeMateAI - Cadastro</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="icon" href="images/favicon.png" type="image/png">
+</head>
+<body>
+    <div class="container">
+        <div class="login-container">
+            <div class="text-center">
+                <div class="logo-container">
+                    <img src="images/logo.png" alt="ShapeMateAI Logo" class="logo-login">
+                </div>
+                <h1 class="brand-name">ShapeMateAI</h1>
+                <p class="tagline">Seu assistente nutricional inteligente</p>
+            </div>
+
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-step active" id="step1">1</div>
+                    <div class="progress-step" id="step2">2</div>
+                    <div class="progress-step" id="step3">3</div>
+                    <div class="progress-step" id="step4">4</div>
+                    <div class="progress-step" id="step5">5</div>
+                    <div class="progress-step" id="step6">6</div>
+                </div>
+            </div>
+
+            <!-- ETAPA 1: INFORMAÇÕES DA CONTA -->
+            <div class="step-form active" id="form-step1">
+                <h2>Informações da Conta</h2>
+                <p class="form-description">Para começar, crie uma conta para acessar o ShapeMateAI.</p>
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" placeholder="exemplo@email.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Senha</label>
+                    <input type="password" id="password" name="password" placeholder="Mínimo de 8 caracteres" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm-password">Confirmar senha</label>
+                    <input type="password" id="confirm-password" name="confirm-password" placeholder="Confirme sua senha" required>
+                </div>
+
+                <div class="form-actions">
+                    <a href="login.html" class="btn btn-secondary">Já tenho conta</a>
+                    <button type="button" class="btn btn-primary next-step" data-next="2">Próximo</button>
+                </div>
+            </div>
+
+            <!-- ETAPA 2: INFORMAÇÕES PESSOAIS -->
+            <div class="step-form" id="form-step2">
+                <h2>Informações Pessoais</h2>
+                <p class="form-description">Compartilhe algumas informações básicas sobre você.</p>
+
+                <div class="form-group">
+                    <label for="name">Nome</label>
+                    <input type="text" id="name" name="name" placeholder="Seu nome completo" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group half">
+                        <label for="age">Idade</label>
+                        <input type="number" id="age" name="age" min="12" max="120" placeholder="Anos" required>
+                    </div>
+                    <div class="form-group half">
+                        <label for="gender">Gênero</label>
+                        <select id="gender" name="gender" required>
+                            <option value="" disabled selected>Selecione</option>
+                            <option value="masculino">Masculino</option>
+                            <option value="feminino">Feminino</option>
+                            <option value="outro">Outro / Prefiro não informar</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group half">
+                        <label for="height">Altura (cm)</label>
+                        <input type="number" id="height" name="height" min="100" max="250" placeholder="Em centímetros" required>
+                    </div>
+                    <div class="form-group half">
+                        <label for="weight">Peso (kg)</label>
+                        <input type="number" id="weight" name="weight" min="30" max="250" step="0.1" placeholder="Em quilos" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="goal">Qual seu principal objetivo?</label>
+                    <select id="goal" name="goal" required>
+                        <option value="" disabled selected>Selecione seu objetivo</option>
+                        <option value="emagrecimento">Perda de peso</option>
+                        <option value="hipertrofia">Ganho de massa muscular</option>
+                        <option value="saude_geral">Melhorar saúde geral</option>
+                        <option value="controle_doenças">Controle de doenças</option>
+                        <option value="performance">Performance esportiva</option>
+                        <option value="habitos_saudaveis">Hábitos alimentares mais saudáveis</option>
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary prev-step" data-prev="1">Anterior</button>
+                    <button type="button" class="btn btn-primary next-step" data-next="3">Próximo</button>
+                </div>
+            </div>
+
+            <!-- ETAPA 3: HISTÓRICO DE SAÚDE -->
+            <div class="step-form" id="form-step3">
+                <h2>Histórico de Saúde</h2>
+                <p class="form-description">Estas informações ajudarão a personalizar seu plano nutricional.</p>
+
+                <div class="form-group">
+                    <label>Possui alguma condição de saúde diagnosticada?</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="disease-none" name="diseases" value="nenhuma">
+                            <label for="disease-none">Nenhuma</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="disease-diabetes" name="diseases" value="diabetes">
+                            <label for="disease-diabetes">Diabetes</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="disease-hypertension" name="diseases" value="hipertensão">
+                            <label for="disease-hypertension">Hipertensão</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="disease-cholesterol" name="diseases" value="colesterol elevado">
+                            <label for="disease-cholesterol">Colesterol elevado</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="disease-celiac" name="diseases" value="doença celíaca">
+                            <label for="disease-celiac">Doença celíaca</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="disease-gastritis" name="diseases" value="gastrite">
+                            <label for="disease-gastritis">Gastrite</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="disease-other" name="diseases" value="outro">
+                            <label for="disease-other">Outro</label>
+                        </div>
+                        <div class="hidden-field" id="disease-other-text">
+                            <input type="text" placeholder="Especifique outras condições">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="medications">Utiliza algum medicamento ou suplemento? (Opcional)</label>
+                    <textarea id="medications" name="medications" rows="2" placeholder="Liste os medicamentos ou suplementos que utiliza regularmente"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Possui alergias ou intolerâncias alimentares?</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="allergy-none" name="allergies" value="nenhuma">
+                            <label for="allergy-none">Nenhuma</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="allergy-lactose" name="allergies" value="lactose">
+                            <label for="allergy-lactose">Intolerância à lactose</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="allergy-gluten" name="allergies" value="gluten">
+                            <label for="allergy-gluten">Intolerância ao glúten</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="allergy-nuts" name="allergies" value="oleaginosas">
+                            <label for="allergy-nuts">Oleaginosas (amendoim, castanhas, etc)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="allergy-seafood" name="allergies" value="frutos do mar">
+                            <label for="allergy-seafood">Frutos do mar</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="allergy-other" name="allergies" value="outro">
+                            <label for="allergy-other">Outro</label>
+                        </div>
+                        <div class="hidden-field" id="allergy-other-text">
+                            <input type="text" placeholder="Especifique outras alergias ou intolerâncias">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="surgeries">Já realizou alguma cirurgia digestiva? (Opcional)</label>
+                    <textarea id="surgeries" name="surgeries" rows="2" placeholder="Descreva cirurgias realizadas e quando ocorreram"></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary prev-step" data-prev="2">Anterior</button>
+                    <button type="button" class="btn btn-primary next-step" data-next="4">Próximo</button>
+                </div>
+            </div>
+
+            <!-- ETAPA 4: HÁBITOS ALIMENTARES -->
+            <div class="step-form" id="form-step4">
+                <h2>Hábitos Alimentares</h2>
+                <p class="form-description">Conte-nos sobre sua alimentação atual.</p>
+
+                <div class="form-group">
+                    <label for="meal-frequency">Quantas refeições você faz por dia?</label>
+                    <select id="meal-frequency" name="meal-frequency" required>
+                        <option value="" disabled selected>Selecione</option>
+                        <option value="2">2 refeições</option>
+                        <option value="3">3 refeições</option>
+                        <option value="4">4 refeições</option>
+                        <option value="5">5 refeições</option>
+                        <option value="6">6 refeições ou mais</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="daily-diet">Como é seu dia alimentar típico?</label>
+                    <textarea id="daily-diet" name="daily-diet" rows="4" placeholder="Descreva brevemente o que costuma comer em cada refeição do dia" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Como são obtidas suas refeições na maior parte do tempo?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" id="meal-home" name="meal-source" value="cozinha" required>
+                            <label for="meal-home">Cozinho em casa</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="meal-out" name="meal-source" value="come fora" required>
+                            <label for="meal-out">Como fora</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="meal-delivery" name="meal-source" value="delivery" required>
+                            <label for="meal-delivery">Peço delivery</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="meal-mixed" name="meal-source" value="misto" required>
+                            <label for="meal-mixed">Misto (casa e fora)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="disliked-foods">Existe algum alimento que você não gosta ou não come?</label>
+                    <textarea id="disliked-foods" name="disliked-foods" rows="2" placeholder="Liste alimentos que você não gosta ou evita"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="water-consumption">Como é seu consumo de água diário?</label>
+                    <select id="water-consumption" name="water-consumption" required>
+                        <option value="" disabled selected>Selecione</option>
+                        <option value="muito baixo">Menos de 500ml por dia</option>
+                        <option value="baixo">Entre 500ml e 1 litro</option>
+                        <option value="moderado">Entre 1 e 2 litros</option>
+                        <option value="adequado">Entre 2 e 3 litros</option>
+                        <option value="elevado">Mais de 3 litros</option>
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary prev-step" data-prev="3">Anterior</button>
+                    <button type="button" class="btn btn-primary next-step" data-next="5">Próximo</button>
+                </div>
+            </div>
+
+            <!-- ETAPA 5: ESTILO DE VIDA -->
+            <div class="step-form" id="form-step5">
+                <h2>Estilo de Vida</h2>
+                <p class="form-description">Sua rotina diária impacta suas necessidades nutricionais.</p>
+
+                <div class="form-group">
+                    <label for="daily-routine">Como é sua rotina diária?</label>
+                    <textarea id="daily-routine" name="daily-routine" rows="3" placeholder="Descreva brevemente seus horários, trabalho, rotina de sono, etc." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Você pratica atividade física?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" id="activity-yes" name="physical-activity" value="sim" required>
+                            <label for="activity-yes">Sim</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="activity-no" name="physical-activity" value="não" required>
+                            <label for="activity-no">Não</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="activity-details" class="conditional-section">
+                    <div class="form-group">
+                        <label for="activity-frequency">Com que frequência?</label>
+                        <select id="activity-frequency" name="activity-frequency">
+                            <option value="" disabled selected>Selecione</option>
+                            <option value="1-2">1-2 vezes por semana</option>
+                            <option value="3-4">3-4 vezes por semana</option>
+                            <option value="5-6">5-6 vezes por semana</option>
+                            <option value="daily">Todos os dias</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="activity-intensity">Qual a intensidade?</label>
+                        <select id="activity-intensity" name="activity-intensity">
+                            <option value="" disabled selected>Selecione</option>
+                            <option value="leve">Leve (caminhada leve, alongamento)</option>
+                            <option value="moderada">Moderada (caminhada rápida, ciclismo leve)</option>
+                            <option value="intensa">Intensa (corrida, treino de força)</option>
+                            <option value="muito_intensa">Muito intensa (HIIT, treino competitivo)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="activity-type">Que tipo de atividade você pratica?</label>
+                        <textarea id="activity-type" name="activity-type" rows="2" placeholder="Ex: musculação, corrida, natação, yoga, etc."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="stress-level">Como você classificaria seu nível de estresse?</label>
+                    <select id="stress-level" name="stress-level" required>
+                        <option value="" disabled selected>Selecione</option>
+                        <option value="baixo">Baixo - Raramente me sinto estressado</option>
+                        <option value="moderado">Moderado - Às vezes me sinto estressado</option>
+                        <option value="alto">Alto - Frequentemente me sinto estressado</option>
+                        <option value="muito_alto">Muito alto - Constantemente estressado</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="sleep-quality">Como é a qualidade do seu sono?</label>
+                    <select id="sleep-quality" name="sleep-quality" required>
+                        <option value="" disabled selected>Selecione</option>
+                        <option value="otima">Ótima - Durmo bem todas as noites</option>
+                        <option value="boa">Boa - Geralmente durmo bem</option>
+                        <option value="regular">Regular - Às vezes tenho dificuldade para dormir</option>
+                        <option value="ruim">Ruim - Frequentemente tenho problemas para dormir</option>
+                        <option value="pessima">Péssima - Sofro de insônia crônica</option>
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary prev-step" data-prev="4">Anterior</button>
+                    <button type="button" class="btn btn-primary next-step" data-next="6">Próximo</button>
+                </div>
+            </div>
+
+            <!-- ETAPA 6: INFORMAÇÕES COMPLEMENTARES -->
+            <div class="step-form" id="form-step6">
+                <h2>Informações Complementares</h2>
+                <p class="form-description">Estas últimas informações nos ajudarão a personalizar ainda mais seu plano.</p>
+
+                <div class="form-group">
+                    <label>Existe histórico familiar de doenças relacionadas à alimentação?</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="family-none" name="family-diseases" value="nenhuma">
+                            <label for="family-none">Não tenho histórico familiar</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="family-diabetes" name="family-diseases" value="diabetes">
+                            <label for="family-diabetes">Diabetes</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="family-hypertension" name="family-diseases" value="hipertensão">
+                            <label for="family-hypertension">Hipertensão</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="family-obesity" name="family-diseases" value="obesidade">
+                            <label for="family-obesity">Obesidade</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="family-heart" name="family-diseases" value="doenças cardíacas">
+                            <label for="family-heart">Doenças cardíacas</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="family-other" name="family-diseases" value="outro">
+                            <label for="family-other">Outro</label>
+                        </div>
+                        <div class="hidden-field" id="family-other-text">
+                            <input type="text" placeholder="Especifique outras doenças">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="food-relationship">Como você descreveria sua relação com a comida?</label>
+                    <select id="food-relationship" name="food-relationship" required>
+                        <option value="" disabled selected>Selecione</option>
+                        <option value="equilibrada">Equilibrada - Como quando tenho fome e paro quando estou satisfeito</option>
+                        <option value="prazer">Por prazer - Como principalmente pelo prazer/sabor</option>
+                        <option value="ansiedade">Emocional - Como por ansiedade/estresse</option>
+                        <option value="compulsao">Compulsiva - Tenho episódios de compulsão alimentar</option>
+                        <option value="restritiva">Restritiva - Tenho receio de comer certos alimentos</option>
+                        <option value="variavel">Variável - Depende do dia/humor</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Está disposto a cozinhar/preparar suas refeições?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" id="cooking-yes" name="cooking-willingness" value="sim" required>
+                            <label for="cooking-yes">Sim, regularmente</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="cooking-sometimes" name="cooking-willingness" value="às vezes" required>
+                            <label for="cooking-sometimes">Às vezes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="cooking-no" name="cooking-willingness" value="não" required>
+                            <label for="cooking-no">Prefiro opções prontas/fáceis</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="additional-info">Algo mais que gostaria de compartilhar com o nutricionista? (Opcional)</label>
+                    <textarea id="additional-info" name="additional-info" rows="3" placeholder="Qualquer informação adicional que você considere relevante"></textarea>
+                </div>
+
+                <div class="checkbox-item terms">
+                    <input type="checkbox" id="terms" name="terms" required>
+                    <label for="terms">Li e concordo com os <a href="#" target="_blank">Termos de Uso</a> e <a href="#" target="_blank">Política de Privacidade</a>.</label>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary prev-step" data-prev="5">Anterior</button>
+                    <button type="button" class="btn btn-primary" id="register-btn">Concluir Cadastro</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modal de sucesso -->
+    <div class="modal" id="success-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Cadastro Realizado com Sucesso!</h3>
+            </div>
+            <div class="modal-body">
+                <p>Seu perfil foi criado com sucesso. Agora você será redirecionado para o dashboard.</p>
+                <div class="loading-spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="register.js"></script>
+</body>
+</html>

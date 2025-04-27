@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ambiente virtual
+env/
+venv/
+ENV/
+
+# Configurações sensíveis
+.env
+
+# Logs
+logs/*.json
+!logs/.gitkeep
+
+# Arquivos temporários do Office
+~$*
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShapeMateAI - Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="images/favicon.png" type="image/png">
+</head>
+<body>
+    <!-- Navbar Simplificado -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="#">
+                <img src="images/logo.png" alt="ShapeMateAI Logo">
+                <span class="ms-2">ShapeMateAI</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Conteúdo Principal -->
+    <div class="container mt-4">
+        <!-- Tabs de Navegação -->
+        <ul class="nav nav-tabs mb-3" id="mainTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="nutritionist-tab" data-bs-toggle="tab" data-bs-target="#nutritionist" type="button" role="tab">
+                    <i class="fas fa-user-md me-1"></i> Nutricionista Virtual
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="assistant-tab" data-bs-toggle="tab" data-bs-target="#assistant" type="button" role="tab">
+                    <i class="fas fa-robot me-1"></i> Assistente Dia-a-Dia
+                </button>
+            </li>
+        </ul>
+
+        <!-- Conteúdo das Tabs -->
+        <div class="tab-content" id="mainTabsContent">
+            <!-- Tab Nutricionista Virtual -->
+            <div class="tab-pane fade show active" id="nutritionist" role="tabpanel" aria-labelledby="nutritionist-tab">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-user-md me-1"></i> Chat com Nutricionista Virtual
+                                </div>
+                                <div>
+                                    <button id="clearNutriChat" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash"></i> Limpar Chat
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div id="nutriChatArea" class="chat-area">
+                                    <div class="message assistant">
+                                        <div class="message-content">
+                                            <p>Olá! Sou seu nutricionista virtual. Como posso ajudar você com sua alimentação hoje?</p>
+                                            <p>Estou aqui para:</p>
+                                            <ul>
+                                                <li>Criar um plano alimentar personalizado</li>
+                                                <li>Calcular suas necessidades calóricas</li>
+                                                <li>Ajustar sua dieta com base nos seus objetivos</li>
+                                                <li>Responder dúvidas sobre nutrição</li>
+                                            </ul>
+                                        </div>
+                                        <div class="message-time">14:00</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <div class="input-group">
+                                    <input type="text" id="nutriMessageInput" class="form-control" placeholder="Digite sua mensagem...">
+                                    <button id="nutriSendBtn" class="btn btn-success">
+                                        <i class="fas fa-paper-plane"></i> Enviar
+                                    </button>
+                                </div>
+                                <div id="nutriTypingIndicator" class="typing-indicator mt-2 d-none">
+                                    <span>O nutricionista está digitando...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tab Assistente Dia-a-Dia -->
+            <div class="tab-pane fade" id="assistant" role="tabpanel" aria-labelledby="assistant-tab">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-robot me-1"></i> Chat com Assistente Dia-a-Dia
+                                </div>
+                                <div>
+                                    <button id="clearAssistChat" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash"></i> Limpar Chat
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div id="assistChatArea" class="chat-area">
+                                    <div class="message assistant">
+                                        <div class="message-content">
+                                            <p>Olá! Sou seu assistente do dia-a-dia. Como posso ajudar você hoje?</p>
+                                            <p>Estou aqui para:</p>
+                                            <ul>
+                                                <li>Sugerir substituições para ingredientes da sua dieta</li>
+                                                <li>Analisar cardápios de restaurantes</li>
+                                                <li>Sugerir receitas com os ingredientes que você tem em casa</li>
+                                                <li>Oferecer dicas para se manter na dieta</li>
+                                            </ul>
+                                        </div>
+                                        <div class="message-time">14:05</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <div class="input-group">
+                                    <input type="text" id="assistMessageInput" class="form-control" placeholder="Digite sua mensagem...">
+                                    <button id="assistSendBtn" class="btn btn-success">
+                                        <i class="fas fa-paper-plane"></i> Enviar
+                                    </button>
+                                </div>
+                                <div id="assistTypingIndicator" class="typing-indicator mt-2 d-none">
+                                    <span>O assistente está digitando...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="dashboard.js"></script>
+</body>
+</html>
