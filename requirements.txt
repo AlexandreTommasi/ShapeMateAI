@@ -1,0 +1,9 @@
+kivy>=2.1.0
+pillow
+openai
+langchain
+python-dotenv
+requests
+flask
+flask_cors
+langgraph
