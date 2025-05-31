@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-ShapeMateAI Web Server
+ShapeMateAI Web Server - Nutricionista Virtual
 """
 import os
 import json
@@ -16,7 +16,7 @@ from flask_cors import CORS
 # Importar o agente do ShapeMateAI
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from agent.core import create_nutritionist_agent, create_daily_assistant_agent
+from core.core import create_nutritionist_agent
 from agent.nutritionist.user_profile import UserProfile
 
 # Inicialização do app
@@ -36,9 +36,8 @@ users_db = {}
 # Estrutura para armazenamento temporário de sessões ativas
 active_sessions = {}
 
-# Criar instância dos agentes
+# Criar instância do agente nutricionista
 nutritionist_agent = create_nutritionist_agent()
-daily_assistant_agent = create_daily_assistant_agent()
 
 @app.route('/')
 def index():
@@ -114,13 +113,12 @@ def end_session(session_id):
 @app.route('/api/chat', methods=['POST'])
 def chat():
     """
-    Endpoint para processar mensagens do chat e obter respostas do agente.
+    Endpoint para processar mensagens do chat e obter respostas do nutricionista.
     """
     data = request.json
     message = data.get('message', '')
     user_id = data.get('user_id', None)
     session_id = data.get('session_id', None)
-    agent_type = data.get('agent_type', 'nutricionista')  # Tipo de agente, padrão é nutricionista
     
     # Validar sessão se fornecida
     if session_id and session_id not in active_sessions:
@@ -132,12 +130,8 @@ def chat():
     if not user_id:
         user_id = str(uuid.uuid4())
     
-    # Selecionar o agente correto com base no tipo solicitado
-    if agent_type == 'assistente':
-        result = daily_assistant_agent(message, user_id=user_id)
-    else:
-        # Padrão é o agente nutricionista
-        result = nutritionist_agent(message, user_id=user_id)
+    # Usar o agente nutricionista
+    result = nutritionist_agent(message, user_id=user_id)
     
     # Atualizar estatísticas da sessão, se uma sessão foi fornecida
     if session_id and session_id in active_sessions:

@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # terminal_chat.py
 """
-Interface de terminal para conversar com os agentes do ShapeMateAI.
-Permite escolher entre o nutricionista virtual e o assistente do dia a dia.
+Interface de terminal para conversar com o nutricionista virtual do ShapeMateAI.
 """
 
 import sys
@@ -13,10 +12,9 @@ from datetime import datetime
 # Adicionamos a pasta atual ao path para importar os módulos do projeto
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from agent.memory import ConversationMemory
+from core.memory import ConversationMemory
 from agent.nutritionist.nutritionist_prompts import SYSTEM_PROMPT as NUTRITIONIST_PROMPT
-from agent.daily_assistant.daily_assistant_prompts import SYSTEM_PROMPT as ASSISTANT_PROMPT
-from agent.core import llm, cost_tracker
+from core.core import llm, cost_tracker
 
 # Definir cores para melhor visualização no terminal
 class Colors:
@@ -31,27 +29,19 @@ def clear_screen():
     """Limpa a tela do terminal."""
     os.system('cls' if os.name == 'nt' else 'clear')
 
-def print_header(agent_type):
+def print_header():
     """Exibe o cabeçalho da aplicação no terminal."""
     clear_screen()
     print(f"{Colors.BOLD}{Colors.BLUE}=" * 80)
-    print(f"                           SHAPEMATE AI - CHAT TERMINAL")
+    print(f"                           SHAPEMATE AI - NUTRICIONISTA VIRTUAL")
     print(f"=" * 80)
     
-    if agent_type == 'nutricionista':
-        print(f"\n{Colors.YELLOW}Conversando com: {Colors.BOLD}Nutricionista Virtual{Colors.ENDC}")
-        print("\nO nutricionista pode ajudar com:")
-        print("- Criação de planos alimentares personalizados")
-        print("- Cálculo de necessidades calóricas")
-        print("- Ajustes de dieta baseados em seus objetivos")
-        print("- Resposta a dúvidas sobre nutrição")
-    else:
-        print(f"\n{Colors.YELLOW}Conversando com: {Colors.BOLD}Assistente Dia-a-Dia{Colors.ENDC}")
-        print("\nO assistente pode ajudar com:")
-        print("- Substituições para ingredientes da sua dieta")
-        print("- Análise de cardápios de restaurantes")
-        print("- Sugestões de receitas com ingredientes disponíveis")
-        print("- Dicas para se manter na dieta")
+    print(f"\n{Colors.YELLOW}Conversando com: {Colors.BOLD}Nutricionista Virtual{Colors.ENDC}")
+    print("\nO nutricionista pode ajudar com:")
+    print("- Criação de planos alimentares personalizados")
+    print("- Cálculo de necessidades calóricas")
+    print("- Ajustes de dieta baseados em seus objetivos")
+    print("- Resposta a dúvidas sobre nutrição")
     
     print(f"\n{Colors.BOLD}{Colors.BLUE}=" * 80 + f"{Colors.ENDC}\n")
 
@@ -66,46 +56,18 @@ def format_message(sender, message):
     
     return f"{prefix} {message}"
 
-def get_welcome_message(agent_type):
-    """Retorna a mensagem de boas-vindas para o agente selecionado."""
-    if agent_type == 'nutricionista':
-        return "Olá! Sou seu nutricionista virtual. Como posso ajudar você com sua alimentação hoje?"
-    else:
-        return "Olá! Sou seu assistente do dia-a-dia. Como posso ajudar você hoje?"
-
-def choose_agent():
-    """Permite ao usuário escolher entre o nutricionista e o assistente."""
-    clear_screen()
-    print(f"{Colors.BOLD}{Colors.BLUE}=" * 80)
-    print("                           SHAPEMATE AI - CHAT TERMINAL")
-    print("=" * 80 + f"{Colors.ENDC}\n")
-    
-    print("Escolha qual agente você deseja utilizar:\n")
-    print(f"1. {Colors.BOLD}Nutricionista Virtual{Colors.ENDC}")
-    print(f"2. {Colors.BOLD}Assistente Dia-a-Dia{Colors.ENDC}\n")
-    
-    choice = ""
-    while choice not in ["1", "2"]:
-        choice = input("Digite 1 ou 2 para escolher: ")
-    
-    return "nutricionista" if choice == "1" else "assistente"
+def get_welcome_message():
+    """Retorna a mensagem de boas-vindas do nutricionista."""
+    return "Olá! Sou seu nutricionista virtual. Como posso ajudar você com sua alimentação hoje?"
 
 def main():
     """Função principal que executa o chat no terminal."""
-    agent_type = choose_agent()
-    
-    # Seleciona o sistema de prompts apropriado
-    if agent_type == 'nutricionista':
-        system_prompt = NUTRITIONIST_PROMPT
-    else:
-        system_prompt = ASSISTANT_PROMPT
-    
-    # Inicializa a memória da conversa
-    memory = ConversationMemory(system_prompt)
+    # Inicializa a memória da conversa com o prompt do nutricionista
+    memory = ConversationMemory(NUTRITIONIST_PROMPT)
     
     # Exibe o cabeçalho e a mensagem de boas-vindas
-    print_header(agent_type)
-    welcome_message = get_welcome_message(agent_type)
+    print_header()
+    welcome_message = get_welcome_message()
     print(format_message("AI", welcome_message))
     memory.add_ai_message(welcome_message)
     
@@ -127,9 +89,9 @@ def main():
         
         # Verifica se o usuário quer limpar o chat
         if user_input.lower() in ["limpar", "clear", "cls"]:
-            memory = ConversationMemory(system_prompt)
-            print_header(agent_type)
-            welcome_message = get_welcome_message(agent_type)
+            memory = ConversationMemory(NUTRITIONIST_PROMPT)
+            print_header()
+            welcome_message = get_welcome_message()
             print(format_message("AI", welcome_message))
             memory.add_ai_message(welcome_message)
             continue

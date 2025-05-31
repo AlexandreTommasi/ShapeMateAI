@@ -1,5 +1,5 @@
 # agent/core.py
-from typing import Dict, List, Any, Optional, TypedDict, Literal
+from typing import Dict, List, Any, Optional, TypedDict
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, END
@@ -8,13 +8,9 @@ import uuid
 
 from config.settings import API_KEY, MODEL_NAME, TEMPERATURE, MAX_TOKENS
 from agent.nutritionist.nutritionist_prompts import SYSTEM_PROMPT as NUTRITIONIST_PROMPT
-from agent.daily_assistant.daily_assistant_prompts import SYSTEM_PROMPT as ASSISTANT_PROMPT
-from agent.memory import ConversationMemory
+from core.memory import ConversationMemory
 from utils.cost_tracker import CostTracker
 from agent.nutritionist.user_profile import UserProfile
-
-# Tipos de agente disponíveis
-AgentType = Literal["nutricionista", "assistente"]
 
 # Inicializa o rastreador de custos
 cost_tracker = CostTracker(model_name=MODEL_NAME)
@@ -35,7 +31,6 @@ class ConversationStateDict(TypedDict, total=False):
     user_message: str
     ai_response: str
     cost_info: Dict[str, Any]
-    agent_type: AgentType
     user_id: str
     user_profile: Dict[str, Any]
     is_first_interaction: bool
@@ -62,7 +57,7 @@ def process_input(state: Dict[str, Any]) -> Dict[str, Any]:
     
     return new_state
 
-# Nó para gerar a resposta do assistente
+# Nó para gerar a resposta do nutricionista
 def generate_response(state: Dict[str, Any]) -> Dict[str, Any]:
     """Gera uma resposta baseada no histórico da conversa."""
     message_history = state["memory"].get_message_history()
@@ -99,11 +94,8 @@ def generate_response(state: Dict[str, Any]) -> Dict[str, Any]:
     return new_state
 
 # Função para construir o grafo conversacional
-def build_conversation_graph(agent_type: AgentType = "nutricionista"):
-    """Constrói um grafo de conversa para o tipo de agente especificado."""
-    # Selecionar prompt base
-    system_prompt = NUTRITIONIST_PROMPT if agent_type == "nutricionista" else ASSISTANT_PROMPT
-        
+def build_conversation_graph():
+    """Constrói um grafo de conversa para o nutricionista."""
     # Inicializar grafo
     workflow = StateGraph(ConversationStateDict)
     
@@ -121,12 +113,12 @@ def build_conversation_graph(agent_type: AgentType = "nutricionista"):
     # Compilar grafo
     compiled_graph = workflow.compile()
     
-    return compiled_graph, ConversationMemory(system_prompt)
+    return compiled_graph, ConversationMemory(NUTRITIONIST_PROMPT)
 
-# Função para criar um agente de conversa
-def create_conversation_agent(agent_type: AgentType = "nutricionista"):
-    """Cria um agente de conversa do tipo especificado."""
-    graph, memory = build_conversation_graph(agent_type)
+# Função para criar um agente nutricionista
+def create_nutritionist_agent():
+    """Cria um agente nutricionista."""
+    graph, memory = build_conversation_graph()
     
     def chat_agent(message: str, user_id: str = None) -> Dict[str, Any]:
         """
@@ -145,7 +137,6 @@ def create_conversation_agent(agent_type: AgentType = "nutricionista"):
             "memory": memory,
             "current_step": "process_input",
             "user_message": message,
-            "agent_type": agent_type,
             "is_first_interaction": len(memory.get_message_history()) <= 1,
             "user_id": user_id,
         }
@@ -161,12 +152,3 @@ def create_conversation_agent(agent_type: AgentType = "nutricionista"):
         }
     
     return chat_agent
-
-# Funções para criar instâncias específicas dos agentes
-def create_nutritionist_agent():
-    """Cria um agente nutricionista."""
-    return create_conversation_agent("nutricionista")
-
-def create_daily_assistant_agent():
-    """Cria um agente assistente do dia a dia."""
-    return create_conversation_agent("assistente")
