@@ -7,3 +7,4 @@ requests
 flask
 flask_cors
 langgraph
+bcrypt==4.0.1
