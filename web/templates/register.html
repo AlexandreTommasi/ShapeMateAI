@@ -1,0 +1,1017 @@
+{% extends "base.html" %}
+
+{% block title %}Cadastro - ShapeMateAI{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            <div class="row g-0 shadow rounded overflow-hidden bg-white">
+                <!-- Left side - Motivational Content -->
+                <div class="col-md-4 bg-gradient-primary text-white p-4 d-flex flex-column justify-content-center">
+                    <div class="text-center">
+                        <i class="fas fa-seedling fa-3x mb-3" style="color: rgba(255,255,255,0.9);"></i>
+                        <h4 class="mb-3">Sua Transformação Começa Aqui!</h4>
+                        
+                        <!-- Step motivational content -->
+                        <div id="motivationalContent">
+                            <div class="step-content" id="motiv1">
+                                <i class="fas fa-rocket fa-2x mb-2" style="color: rgba(255,255,255,0.8);"></i>
+                                <p class="lead mb-2">Primeiro Passo</p>
+                                <p class="small">Vamos criar sua conta segura</p>
+                            </div>
+                            <div class="step-content d-none" id="motiv2">
+                                <i class="fas fa-user-heart fa-2x mb-2" style="color: rgba(255,255,255,0.8);"></i>
+                                <p class="lead mb-2">Conhecendo Você</p>
+                                <p class="small">Conte-nos sobre sua personalidade</p>
+                            </div>
+                            <div class="step-content d-none" id="motiv3">
+                                <i class="fas fa-weight fa-2x mb-2" style="color: rgba(255,255,255,0.8);"></i>
+                                <p class="lead mb-2">Suas Medidas</p>
+                                <p class="small">Para calcular suas necessidades</p>
+                            </div>
+                            <div class="step-content d-none" id="motiv4">
+                                <i class="fas fa-bullseye fa-2x mb-2" style="color: rgba(255,255,255,0.8);"></i>
+                                <p class="lead mb-2">Seus Objetivos</p>
+                                <p class="small">Qual é o seu grande sonho?</p>
+                            </div>
+                            <div class="step-content d-none" id="motiv5">
+                                <i class="fas fa-heart-pulse fa-2x mb-2" style="color: rgba(255,255,255,0.8);"></i>
+                                <p class="lead mb-2">Sua Saúde</p>
+                                <p class="small">Vamos cuidar bem de você</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Benefits -->
+                        <div class="mt-4 pt-3 border-top border-light border-opacity-25">
+                            <div class="d-flex flex-column align-items-start gap-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-check-circle me-2" style="color: rgba(255,255,255,0.8);"></i>
+                                    <span class="small">100% Gratuito</span>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-check-circle me-2" style="color: rgba(255,255,255,0.8);"></i>
+                                    <span class="small">IA Personalizada</span>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-check-circle me-2" style="color: rgba(255,255,255,0.8);"></i>
+                                    <span class="small">Resultados Reais</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right side - Registration form -->
+                <div class="col-md-8 p-4">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-user-plus fa-3x mb-3" style="color: #28a745;"></i>
+                        <h3 class="card-title">Criar sua conta</h3>
+                        <p class="text-muted">Complete seu perfil nutricional</p>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="progress mb-4" style="height: 8px;">
+                        <div class="progress-bar" role="progressbar" style="width: 20%; background-color: #28a745;" id="progressBar"></div>
+                    </div>
+
+                    <!-- Step indicators -->
+                    <div class="d-flex justify-content-between mb-4">
+                        <div class="step-indicator active" id="indicator1">
+                            <div class="step-circle">1</div>
+                            <div class="step-label">Acesso</div>
+                        </div>
+                        <div class="step-indicator" id="indicator2">
+                            <div class="step-circle">2</div>
+                            <div class="step-label">Pessoais</div>
+                        </div>
+                        <div class="step-indicator" id="indicator3">
+                            <div class="step-circle">3</div>
+                            <div class="step-label">Físicos</div>
+                        </div>
+                        <div class="step-indicator" id="indicator4">
+                            <div class="step-circle">4</div>
+                            <div class="step-label">Objetivos</div>
+                        </div>
+                        <div class="step-indicator" id="indicator5">
+                            <div class="step-circle">5</div>
+                            <div class="step-label">Saúde</div>
+                        </div>
+                    </div>
+
+                    <!-- Alert para mensagens -->
+                    <div id="registerAlert" class="alert d-none" role="alert"></div>
+
+                    <form id="registerForm">
+                        <!-- Step 1: Dados de Login -->
+                        <div class="step" id="step1">
+                            <h5 class="mb-3"><i class="fas fa-user me-2" style="color: #28a745;"></i>Dados de Acesso</h5>
+                            
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email *</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                                <div class="form-text">Será usado para acessar sua conta</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Senha *</label>
+                                <input type="password" class="form-control" id="password" name="password" required minlength="6">
+                                <div class="form-text">Mínimo de 6 caracteres</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="confirmPassword" class="form-label">Confirmar Senha *</label>
+                                <input type="password" class="form-control" id="confirmPassword" required>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Dados Pessoais -->
+                        <div class="step d-none" id="step2">
+                            <h5 class="mb-4"><i class="fas fa-id-card me-2" style="color: #28a745;"></i>Dados Pessoais</h5>
+                            
+                            <div class="mb-4">
+                                <label for="name" class="form-label fw-bold">Nome Completo *</label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <label for="age" class="form-label fw-bold">Idade *</label>
+                                    <input type="number" class="form-control" id="age" name="age" min="13" max="120" required>
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label fw-bold mb-3">Gênero *</label>
+                                    <input type="hidden" id="gender" name="gender">
+                                    <div class="d-flex flex-column flex-md-row gap-2">
+                                        <div class="gender-card flex-fill" data-value="masculino">
+                                            <i class="fas fa-mars fa-lg mb-1" style="color: #007bff;"></i>
+                                            <div class="fw-bold" style="font-size: 0.85rem;">Masculino</div>
+                                        </div>
+                                        <div class="gender-card flex-fill" data-value="feminino">
+                                            <i class="fas fa-venus fa-lg mb-1" style="color: #e91e63;"></i>
+                                            <div class="fw-bold" style="font-size: 0.85rem;">Feminino</div>
+                                        </div>
+                                        <div class="gender-card flex-fill" data-value="outro">
+                                            <i class="fas fa-genderless fa-lg mb-1" style="color: #28a745;"></i>
+                                            <div class="fw-bold" style="font-size: 0.85rem;">Outro</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Dados Físicos -->
+                        <div class="step d-none" id="step3">
+                            <h5 class="mb-4"><i class="fas fa-weight me-2" style="color: #28a745;"></i>Dados Físicos</h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <label for="weight" class="form-label fw-bold">Peso (kg) *</label>
+                                    <input type="number" class="form-control" id="weight" name="weight" step="0.1" min="20" max="1000" required placeholder="Ex: 70.5">
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <label for="height" class="form-label fw-bold">Altura *</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="height" name="height" step="0.01" min="0.5" max="250" required placeholder="Ex: 175 ou 1.75">
+                                        <select class="form-select" id="heightUnit" style="max-width: 80px;" onchange="convertHeight()">
+                                            <option value="cm">cm</option>
+                                            <option value="m">m</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-text">Informe em centímetros (175) ou metros (1.75)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 4: Objetivos -->
+                        <div class="step d-none" id="step4">
+                            <h5 class="mb-4"><i class="fas fa-target me-2" style="color: #28a745;"></i>Seus Objetivos</h5>
+                            
+                            <!-- Objetivo Principal -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold mb-3">🎯 Qual é o seu objetivo principal?</label>
+                                <input type="hidden" id="primary_goal" name="primary_goal">
+                                <div class="row g-2">
+                                    <div class="col-6 col-md-6">
+                                        <div class="goal-card" data-value="perda_peso">
+                                            <i class="fas fa-weight-hanging fa-2x mb-2" style="color: #28a745;"></i>
+                                            <h6>Perder Peso</h6>
+                                            <p class="small text-muted">Reduzir medidas</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-6">
+                                        <div class="goal-card" data-value="ganho_massa_muscular">
+                                            <i class="fas fa-dumbbell fa-2x mb-2" style="color: #28a745;"></i>
+                                            <h6>Ganhar Músculos</h6>
+                                            <p class="small text-muted">Mais força</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-6">
+                                        <div class="goal-card" data-value="manutencao_peso">
+                                            <i class="fas fa-balance-scale fa-2x mb-2" style="color: #28a745;"></i>
+                                            <h6>Manter Peso</h6>
+                                            <p class="small text-muted">Peso ideal</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-6">
+                                        <div class="goal-card" data-value="melhora_saude_geral">
+                                            <i class="fas fa-heart fa-2x mb-2" style="color: #28a745;"></i>
+                                            <h6>Vida Saudável</h6>
+                                            <p class="small text-muted">Mais energia</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Nível de Atividade -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold mb-3">🏃‍♂️ Com que frequência você se exercita?</label>
+                                <input type="hidden" id="activity_level" name="activity_level">
+                                <div class="activity-buttons">
+                                    <button type="button" class="activity-btn" data-value="sedentario">
+                                        <i class="fas fa-couch me-1"></i>Pouco
+                                    </button>
+                                    <button type="button" class="activity-btn" data-value="leve">
+                                        <i class="fas fa-walking me-1"></i>1-3x
+                                    </button>
+                                    <button type="button" class="activity-btn" data-value="moderado">
+                                        <i class="fas fa-running me-1"></i>3-5x
+                                    </button>
+                                    <button type="button" class="activity-btn" data-value="intenso">
+                                        <i class="fas fa-fire me-1"></i>6-7x
+                                    </button>
+                                    <button type="button" class="activity-btn" data-value="muito_intenso">
+                                        <i class="fas fa-bolt me-1"></i>Intenso
+                                    </button>
+                                </div>
+                                <p class="text-muted small text-center mt-2">💡 Exercícios por semana</p>
+                            </div>
+                        </div>
+
+                        <!-- Step 5: Informações Adicionais -->
+                        <div class="step d-none" id="step5">
+                            <h5 class="mb-4"><i class="fas fa-notes-medical me-2" style="color: #28a745;"></i>Informações de Saúde (Opcional)</h5>
+                            
+                            <!-- Restrições Alimentares -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold mb-3">🥗 Restrições Alimentares</label>
+                                <div class="health-toggle-card mb-3" onclick="toggleRestrictions()">
+                                    <div class="d-flex align-items-center">
+                                        <input class="form-check-input me-3" type="checkbox" id="hasRestrictions">
+                                        <div>
+                                            <div class="fw-bold">Tenho restrições alimentares</div>
+                                            <div class="small text-muted">Clique para especificar suas restrições</div>
+                                        </div>
+                                        <i class="fas fa-chevron-down ms-auto toggle-icon"></i>
+                                    </div>
+                                </div>
+                                <div id="restrictionsField" class="d-none">
+                                    <div class="row g-2">
+                                        <div class="col-md-6">
+                                            <div class="health-option-card" data-target="vegetarian">
+                                                <input class="form-check-input d-none" type="checkbox" id="vegetarian" name="dietary_restrictions[]" value="vegetariano">
+                                                <i class="fas fa-leaf me-2" style="color: #28a745;"></i>
+                                                <span>Vegetariano</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="health-option-card" data-target="vegan">
+                                                <input class="form-check-input d-none" type="checkbox" id="vegan" name="dietary_restrictions[]" value="vegano">
+                                                <i class="fas fa-seedling me-2" style="color: #28a745;"></i>
+                                                <span>Vegano</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="health-option-card" data-target="lactoseIntolerant">
+                                                <input class="form-check-input d-none" type="checkbox" id="lactoseIntolerant" name="dietary_restrictions[]" value="intolerância à lactose">
+                                                <i class="fas fa-glass-whiskey me-2" style="color: #ffc107;"></i>
+                                                <span>Intolerância à lactose</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="health-option-card" data-target="glutenIntolerant">
+                                                <input class="form-check-input d-none" type="checkbox" id="glutenIntolerant" name="dietary_restrictions[]" value="intolerância ao glúten">
+                                                <i class="fas fa-bread-slice me-2" style="color: #fd7e14;"></i>
+                                                <span>Intolerância ao glúten</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="health-option-card" data-target="nutAllergy">
+                                                <input class="form-check-input d-none" type="checkbox" id="nutAllergy" name="dietary_restrictions[]" value="alergia a nozes">
+                                                <i class="fas fa-exclamation-triangle me-2" style="color: #dc3545;"></i>
+                                                <span>Alergia a nozes</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="health-option-card" data-target="seafoodAllergy">
+                                                <input class="form-check-input d-none" type="checkbox" id="seafoodAllergy" name="dietary_restrictions[]" value="alergia a frutos do mar">
+                                                <i class="fas fa-fish me-2" style="color: #17a2b8;"></i>
+                                                <span>Alergia a frutos do mar</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <textarea class="form-control" id="otherRestrictions" name="other_dietary_restrictions" rows="2" placeholder="Outras restrições não listadas acima..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Condições de Saúde -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold mb-3">🏥 Condições de Saúde</label>
+                                <div class="health-toggle-card mb-3" onclick="toggleHealthConditions()">
+                                    <div class="d-flex align-items-center">
+                                        <input class="form-check-input me-3" type="checkbox" id="hasHealthConditions">
+                                        <div>
+                                            <div class="fw-bold">Tenho condições de saúde relevantes</div>
+                                            <div class="small text-muted">Clique para especificar suas condições</div>
+                                        </div>
+                                        <i class="fas fa-chevron-down ms-auto toggle-icon"></i>
+                                    </div>
+                                </div>
+                                <div id="healthConditionsField" class="d-none">
+                                    <div class="row g-2">
+                                        <div class="col-md-6">
+                                            <div class="health-option-card" data-target="diabetes">
+                                                <input class="form-check-input d-none" type="checkbox" id="diabetes" name="health_conditions[]" value="diabetes">
+                                                <i class="fas fa-syringe me-2" style="color: #dc3545;"></i>
+                                                <span>Diabetes</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="health-option-card" data-target="hypertension">
+                                                <input class="form-check-input d-none" type="checkbox" id="hypertension" name="health_conditions[]" value="hipertensão">
+                                                <i class="fas fa-heartbeat me-2" style="color: #dc3545;"></i>
+                                                <span>Hipertensão</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="health-option-card" data-target="heartProblems">
+                                                <input class="form-check-input d-none" type="checkbox" id="heartProblems" name="health_conditions[]" value="problemas cardíacos">
+                                                <i class="fas fa-heart me-2" style="color: #dc3545;"></i>
+                                                <span>Problemas cardíacos</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="health-option-card" data-target="highCholesterol">
+                                                <input class="form-check-input d-none" type="checkbox" id="highCholesterol" name="health_conditions[]" value="colesterol alto">
+                                                <i class="fas fa-flask me-2" style="color: #ffc107;"></i>
+                                                <span>Colesterol alto</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="health-option-card" data-target="thyroidProblems">
+                                                <input class="form-check-input d-none" type="checkbox" id="thyroidProblems" name="health_conditions[]" value="problemas de tireoide">
+                                                <i class="fas fa-prescription-bottle me-2" style="color: #17a2b8;"></i>
+                                                <span>Problemas de tireoide</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="health-option-card" data-target="kidneyProblems">
+                                                <input class="form-check-input d-none" type="checkbox" id="kidneyProblems" name="health_conditions[]" value="problemas renais">
+                                                <i class="fas fa-kidneys me-2" style="color: #6f42c1;"></i>
+                                                <span>Problemas renais</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <textarea class="form-control" id="otherHealthConditions" name="other_health_conditions" rows="2" placeholder="Outras condições de saúde não listadas acima..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Outras Observações -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold mb-3">📝 Outras Observações</label>
+                                <div class="health-toggle-card mb-3" onclick="toggleOtherNotes()">
+                                    <div class="d-flex align-items-center">
+                                        <input class="form-check-input me-3" type="checkbox" id="hasOtherNotes">
+                                        <div>
+                                            <div class="fw-bold">Tenho outras informações importantes</div>
+                                            <div class="small text-muted">Informações adicionais sobre sua saúde ou objetivos</div>
+                                        </div>
+                                        <i class="fas fa-chevron-down ms-auto toggle-icon"></i>
+                                    </div>
+                                </div>
+                                <div id="otherNotesField" class="d-none">
+                                    <textarea class="form-control" id="other_notes" name="other_notes" rows="3" placeholder="Outras informações que considera importantes para seu plano nutricional..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Navigation Buttons -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="button" class="btn btn-secondary" id="prevBtn" onclick="changeStep(-1)" style="display: none;">
+                                <i class="fas fa-arrow-left me-2"></i>Anterior
+                            </button>
+                            
+                            <button type="button" class="btn btn-primary" id="nextBtn" onclick="changeStep(1)">
+                                Próximo<i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                            
+                            <button type="submit" class="btn btn-success d-none" id="submitBtn">
+                                <i class="fas fa-check me-2"></i>Finalizar Cadastro
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="text-center mt-3">
+                        <p class="mb-0">Já tem uma conta?</p>
+                        <a href="{{ url_for('login') }}" class="btn btn-outline-success">
+                            <i class="fas fa-sign-in-alt me-2"></i>Fazer Login
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.step-indicator {
+    text-align: center;
+    flex: 1;
+    position: relative;
+}
+
+.step-circle {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background-color: #e9ecef;
+    border: 2px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 5px;
+    font-weight: bold;
+    color: #6c757d;
+    transition: all 0.3s ease;
+}
+
+.step-indicator.active .step-circle {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: white;
+}
+
+.step-indicator.completed .step-circle {
+    background-color: #20c997;
+    border-color: #20c997;
+    color: white;
+}
+
+.step-label {
+    font-size: 0.8rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.step-indicator.active .step-label {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.step-content {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+/* Goal Cards */
+.goal-card {
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.goal-card:hover {
+    border-color: #28a745;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);
+}
+
+.goal-card.selected {
+    border-color: #28a745;
+    background-color: rgba(40, 167, 69, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.goal-card h6 {
+    margin: 0;
+    font-weight: 600;
+    color: #333;
+}
+
+.goal-card.selected h6 {
+    color: #28a745;
+}
+
+/* Activity Buttons */
+.activity-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
+.activity-btn {
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 20px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #6c757d;
+    flex: 1;
+    min-width: 90px;
+    max-width: 120px;
+    text-align: center;
+}
+
+.activity-btn:hover {
+    border-color: #28a745;
+    color: #28a745;
+    transform: translateY(-1px);
+}
+
+.activity-btn.selected {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+@media (max-width: 768px) {
+    .activity-btn {
+        min-width: 70px;
+        max-width: 100px;
+        font-size: 0.75rem;
+        padding: 8px 12px;
+    }
+    
+    .goal-card {
+        height: 90px;
+        padding: 0.8rem;
+    }
+    
+    .goal-card i {
+        font-size: 1.3rem !important;
+    }
+    
+    .goal-card h6 {
+        font-size: 0.9rem;
+    }
+    
+    .goal-card p {
+        font-size: 0.7rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentStep = 1;
+const totalSteps = 5;
+
+// Functions for health info toggles
+function toggleRestrictions() {
+    const checkbox = document.getElementById('hasRestrictions');
+    const field = document.getElementById('restrictionsField');
+    const card = checkbox.closest('.health-toggle-card');
+    
+    checkbox.checked = !checkbox.checked;
+    field.classList.toggle('d-none', !checkbox.checked);
+    card.classList.toggle('active', checkbox.checked);
+}
+
+function toggleHealthConditions() {
+    const checkbox = document.getElementById('hasHealthConditions');
+    const field = document.getElementById('healthConditionsField');
+    const card = checkbox.closest('.health-toggle-card');
+    
+    checkbox.checked = !checkbox.checked;
+    field.classList.toggle('d-none', !checkbox.checked);
+    card.classList.toggle('active', checkbox.checked);
+}
+
+function toggleOtherNotes() {
+    const checkbox = document.getElementById('hasOtherNotes');
+    const field = document.getElementById('otherNotesField');
+    const card = checkbox.closest('.health-toggle-card');
+    
+    checkbox.checked = !checkbox.checked;
+    field.classList.toggle('d-none', !checkbox.checked);
+    card.classList.toggle('active', checkbox.checked);
+}
+
+// Height conversion function
+function convertHeight() {
+    const heightInput = document.getElementById('height');
+    const heightUnit = document.getElementById('heightUnit');
+    const currentValue = parseFloat(heightInput.value);
+    
+    if (!currentValue) return;
+    
+    if (heightUnit.value === 'cm') {
+        // Converting from meters to cm
+        if (currentValue < 10) { // If value seems to be in meters
+            heightInput.value = (currentValue * 100).toFixed(0);
+            heightInput.setAttribute('min', '50');
+            heightInput.setAttribute('max', '250');
+            heightInput.setAttribute('step', '1');
+            heightInput.setAttribute('placeholder', 'Ex: 175');
+        }
+    } else {
+        // Converting from cm to meters
+        if (currentValue > 10) { // If value seems to be in cm
+            heightInput.value = (currentValue / 100).toFixed(2);
+            heightInput.setAttribute('min', '0.5');
+            heightInput.setAttribute('max', '2.5');
+            heightInput.setAttribute('step', '0.01');
+            heightInput.setAttribute('placeholder', 'Ex: 1.75');
+        }
+    }
+}
+
+// Goal cards selection
+document.addEventListener('DOMContentLoaded', function() {
+    // Gender cards
+    const genderCards = document.querySelectorAll('.gender-card');
+    genderCards.forEach(card => {
+        card.addEventListener('click', function() {
+            // Remove selected class from all cards
+            genderCards.forEach(c => c.classList.remove('selected'));
+            // Add selected class to clicked card
+            this.classList.add('selected');
+            // Set hidden input value
+            document.getElementById('gender').value = this.dataset.value;
+        });
+    });
+
+    // Goal cards
+    const goalCards = document.querySelectorAll('.goal-card');
+    goalCards.forEach(card => {
+        card.addEventListener('click', function() {
+            // Remove selected class from all cards
+            goalCards.forEach(c => c.classList.remove('selected'));
+            // Add selected class to clicked card
+            this.classList.add('selected');
+            // Set hidden input value
+            document.getElementById('primary_goal').value = this.dataset.value;
+        });
+    });
+
+    // Activity buttons
+    const activityBtns = document.querySelectorAll('.activity-btn');
+    activityBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Remove selected class from all buttons
+            activityBtns.forEach(b => b.classList.remove('selected'));
+            // Add selected class to clicked button
+            this.classList.add('selected');
+            // Set hidden input value
+            document.getElementById('activity_level').value = this.dataset.value;
+        });
+    });
+
+    // Health option cards
+    const healthOptionCards = document.querySelectorAll('.health-option-card');
+    healthOptionCards.forEach(card => {
+        card.addEventListener('click', function() {
+            // Toggle selected state
+            this.classList.toggle('selected');
+            
+            // Get the target checkbox
+            const targetId = this.dataset.target;
+            const checkbox = document.getElementById(targetId);
+            
+            // Toggle checkbox state
+            if (checkbox) {
+                checkbox.checked = this.classList.contains('selected');
+            }
+        });
+    });
+
+    // Form submission
+    document.getElementById('registerForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const submitBtn = document.getElementById('submitBtn');
+        
+        // Validate form before submission
+        if (!validateAllSteps()) {
+            return;
+        }
+        
+        // Disable button and show loading
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Criando conta...';
+        
+        try {
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+            
+            // Convert height to meters if needed
+            const heightUnit = document.getElementById('heightUnit').value;
+            const heightValue = parseFloat(data.height);
+            if (heightUnit === 'cm' && heightValue > 10) {
+                data.height = (heightValue / 100).toFixed(2);
+            }
+            
+            // Process checkbox arrays for dietary restrictions
+            const dietaryRestrictions = [];
+            const restrictionCheckboxes = document.querySelectorAll('input[name="dietary_restrictions[]"]:checked');
+            restrictionCheckboxes.forEach(checkbox => {
+                dietaryRestrictions.push(checkbox.value);
+            });
+            
+            // Add other restrictions if filled
+            const otherRestrictions = document.getElementById('otherRestrictions').value;
+            if (otherRestrictions.trim()) {
+                dietaryRestrictions.push(otherRestrictions.trim());
+            }
+            
+            // Process checkbox arrays for health conditions
+            const healthConditions = [];
+            const healthCheckboxes = document.querySelectorAll('input[name="health_conditions[]"]:checked');
+            healthCheckboxes.forEach(checkbox => {
+                healthConditions.push(checkbox.value);
+            });
+            
+            // Add other health conditions if filled
+            const otherHealthConditions = document.getElementById('otherHealthConditions').value;
+            if (otherHealthConditions.trim()) {
+                healthConditions.push(otherHealthConditions.trim());
+            }
+            
+            // Update data object with processed arrays
+            data.dietary_restrictions = dietaryRestrictions.join(', ');
+            data.health_conditions = healthConditions.join(', ');
+            
+            // Remove array fields that were processed
+            delete data['dietary_restrictions[]'];
+            delete data['health_conditions[]'];
+            delete data.other_dietary_restrictions;
+            delete data.other_health_conditions;
+            
+            const response = await fetch('/api/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showAlert('success', result.message);
+                
+                // Redirect to login after short delay
+                setTimeout(() => {
+                    window.location.href = '/login';
+                }, 2000);
+            } else {
+                showAlert('danger', result.message);
+            }
+            
+        } catch (error) {
+            showAlert('danger', 'Erro de conexão. Tente novamente.');
+            console.error('Error:', error);
+        } finally {
+            // Re-enable button
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-check me-2"></i>Finalizar Cadastro';
+        }
+    });
+});
+
+function changeStep(direction) {
+    const currentStepElement = document.getElementById(`step${currentStep}`);
+    
+    // Validate current step before proceeding
+    if (direction > 0 && !validateCurrentStep()) {
+        return;
+    }
+    
+    // Hide current step
+    currentStepElement.classList.add('d-none');
+    
+    // Update step indicators
+    const currentIndicator = document.getElementById(`indicator${currentStep}`);
+    if (direction > 0) {
+        currentIndicator.classList.remove('active');
+        currentIndicator.classList.add('completed');
+    }
+    
+    // Update step
+    currentStep += direction;
+    
+    // Show new step
+    const newStepElement = document.getElementById(`step${currentStep}`);
+    newStepElement.classList.remove('d-none');
+    
+    // Update progress bar
+    const progress = (currentStep / totalSteps) * 100;
+    document.getElementById('progressBar').style.width = `${progress}%`;
+    
+    // Update step indicators
+    updateStepIndicators();
+    
+    // Update motivational content
+    updateMotivationalContent();
+    
+    // Update buttons
+    updateNavigationButtons();
+}
+
+function updateStepIndicators() {
+    for (let i = 1; i <= totalSteps; i++) {
+        const indicator = document.getElementById(`indicator${i}`);
+        indicator.classList.remove('active', 'completed');
+        
+        if (i < currentStep) {
+            indicator.classList.add('completed');
+        } else if (i === currentStep) {
+            indicator.classList.add('active');
+        }
+    }
+}
+
+function updateMotivationalContent() {
+    // Hide all motivational content
+    for (let i = 1; i <= totalSteps; i++) {
+        const content = document.getElementById(`motiv${i}`);
+        if (content) {
+            content.classList.add('d-none');
+        }
+    }
+    
+    // Show current step motivational content
+    const currentContent = document.getElementById(`motiv${currentStep}`);
+    if (currentContent) {
+        currentContent.classList.remove('d-none');
+    }
+}
+
+function validateCurrentStep() {
+    const step = document.getElementById(`step${currentStep}`);
+    const requiredFields = step.querySelectorAll('[required]');
+    
+    for (let field of requiredFields) {
+        if (!field.value.trim()) {
+            field.focus();
+            showAlert('warning', 'Por favor, preencha todos os campos obrigatórios.');
+            return false;
+        }
+    }
+    
+    // Additional validations
+    if (currentStep === 1) {
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        
+        if (password !== confirmPassword) {
+            showAlert('warning', 'As senhas não coincidem.');
+            return false;
+        }
+    }
+    
+    // Step 2 validation for gender selection
+    if (currentStep === 2) {
+        const gender = document.getElementById('gender').value;
+        
+        if (!gender) {
+            showAlert('warning', 'Por favor, selecione seu gênero.');
+            return false;
+        }
+    }
+    
+    // Step 4 validation for goals and activity
+    if (currentStep === 4) {
+        const primaryGoal = document.getElementById('primary_goal').value;
+        const activityLevel = document.getElementById('activity_level').value;
+        
+        if (!primaryGoal) {
+            showAlert('warning', 'Por favor, selecione seu objetivo principal.');
+            return false;
+        }
+        
+        if (!activityLevel) {
+            showAlert('warning', 'Por favor, selecione seu nível de atividade física.');
+            return false;
+        }
+    }
+    
+    // Step 5 doesn't have required fields, so always valid
+    if (currentStep === 5) {
+        return true;
+    }
+    
+    return true;
+}
+
+function validateAllSteps() {
+    // Validate step 1 (login data)
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (!email || !password || !confirmPassword) {
+        showAlert('warning', 'Dados de acesso incompletos.');
+        return false;
+    }
+    
+    if (password !== confirmPassword) {
+        showAlert('warning', 'As senhas não coincidem.');
+        return false;
+    }
+    
+    // Validate step 2 (personal data)
+    const name = document.getElementById('name').value.trim();
+    const age = document.getElementById('age').value;
+    const gender = document.getElementById('gender').value;
+    
+    if (!name || !age || !gender) {
+        showAlert('warning', 'Dados pessoais incompletos.');
+        return false;
+    }
+    
+    // Validate step 3 (physical data)
+    const weight = document.getElementById('weight').value;
+    const height = document.getElementById('height').value;
+    
+    if (!weight || !height) {
+        showAlert('warning', 'Dados físicos incompletos.');
+        return false;
+    }
+    
+    // Validate step 4 (goals)
+    const primaryGoal = document.getElementById('primary_goal').value;
+    const activityLevel = document.getElementById('activity_level').value;
+    
+    if (!primaryGoal || !activityLevel) {
+        showAlert('warning', 'Objetivos e atividade física não selecionados.');
+        return false;
+    }
+    
+    return true;
+}
+
+function updateNavigationButtons() {
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // Show/hide previous button
+    prevBtn.style.display = currentStep > 1 ? 'block' : 'none';
+    
+    // Show/hide next and submit buttons
+    if (currentStep === totalSteps) {
+        nextBtn.classList.add('d-none');
+        submitBtn.classList.remove('d-none');
+        submitBtn.style.display = 'inline-block'; // Force display
+    } else {
+        nextBtn.classList.remove('d-none');
+        submitBtn.classList.add('d-none');
+    }
+}
+
+function showAlert(type, message) {
+    const alert = document.getElementById('registerAlert');
+    alert.className = `alert alert-${type}`;
+    alert.textContent = message;
+    alert.classList.remove('d-none');
+    
+    // Scroll to alert
+    alert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// Initialize navigation buttons
+updateNavigationButtons();
+updateStepIndicators();
+updateMotivationalContent();
+</script>
+{% endblock %}

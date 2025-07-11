@@ -1,0 +1,542 @@
+/* ShapeMateAI Custom Styles */
+
+:root {
+    --primary-color: #28a745;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --info-color: #17a2b8;
+    --light-color: #f8f9fa;
+    --dark-color: #212529;
+    --green-primary: #28a745;
+    --green-secondary: #20c997;
+    --green-dark: #1e7e34;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+/* Navigation */
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Dashboard improvements */
+.hover-card-small {
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 1px solid #dee2e6;
+}
+
+.hover-card-small:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border-color: #28a745;
+}
+
+/* Agent cards */
+.agent-card {
+    transition: all 0.3s ease;
+    border: 2px solid;
+}
+
+.agent-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+/* Forms */
+.form-control {
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+.input-group-text {
+    background-color: #f8f9fa;
+    border-color: #28a745;
+}
+
+.input-group-text i {
+    color: #28a745;
+}
+
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Step form styles */
+.step {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.progress {
+    height: 8px;
+    border-radius: 10px;
+    background-color: #e9ecef;
+}
+
+.progress-bar {
+    border-radius: 10px;
+    transition: width 0.6s ease;
+}
+
+/* Chat styles */
+.chat-container {
+    height: 70vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    background-color: #f8f9fa;
+}
+
+.chat-message {
+    margin-bottom: 1rem;
+    animation: messageSlideIn 0.3s ease-out;
+}
+
+@keyframes messageSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.user-message {
+    text-align: right;
+}
+
+.assistant-message {
+    text-align: left;
+}
+
+.message-bubble {
+    display: inline-block;
+    max-width: 70%;
+    padding: 0.75rem 1rem;
+    border-radius: 1rem;
+    word-wrap: break-word;
+}
+
+.user-message .message-bubble {
+    background-color: var(--primary-color);
+    color: white;
+    border-bottom-right-radius: 0.3rem;
+}
+
+.assistant-message .message-bubble {
+    background-color: white;
+    color: var(--dark-color);
+    border: 1px solid #dee2e6;
+    border-bottom-left-radius: 0.3rem;
+}
+
+/* Dashboard styles */
+.stats-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+}
+
+.feature-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Animations */
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+.slide-up {
+    animation: slideUp 0.6s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Loading states */
+.loading {
+    position: relative;
+    color: transparent !important;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid var(--green-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 1rem;
+    }
+    
+    .card-body {
+        padding: 1.5rem;
+    }
+    
+    .chat-messages {
+        height: 50vh;
+    }
+    
+    .message-bubble {
+        max-width: 85%;
+    }
+}
+
+/* Utility classes */
+.text-shadow {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.bg-gradient-success {
+    background: linear-gradient(135deg, var(--green-secondary) 0%, #17a2b8 100%);
+}
+
+.bg-gradient-warning {
+    background: linear-gradient(135deg, var(--warning-color) 0%, #e0a800 100%);
+}
+
+/* Custom scrollbar */
+.chat-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Theme customizations */
+.bg-primary {
+    background-color: var(--primary-color) !important;
+}
+
+.btn-primary {
+    background-color: var(--green-primary);
+    border-color: var(--green-primary);
+}
+
+.btn-primary:hover {
+    background-color: var(--green-dark);
+    border-color: var(--green-dark);
+}
+
+.btn-success {
+    background-color: var(--green-secondary);
+    border-color: var(--green-secondary);
+}
+
+.btn-success:hover {
+    background-color: #1abc9c;
+    border-color: #1abc9c;
+}
+
+/* Form validations */
+.is-invalid {
+    border-color: var(--danger-color);
+}
+
+.is-valid {
+    border-color: var(--success-color);
+}
+
+.invalid-feedback,
+.valid-feedback {
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+/* Health info checkboxes */
+.form-check-input:checked {
+    background-color: var(--green-primary);
+    border-color: var(--green-primary);
+}
+
+.form-check-input:focus {
+    border-color: var(--green-primary);
+    box-shadow: 0 0 0 0.25rem rgba(40, 167, 69, 0.25);
+}
+
+.form-check-label {
+    font-weight: 500;
+    color: var(--dark-color);
+}
+
+.fw-bold {
+    font-weight: 700 !important;
+    color: var(--green-dark);
+}
+
+/* Progress bar green theme */
+.progress-bar {
+    background-color: var(--green-primary);
+}
+
+/* Icons green theme */
+.text-primary {
+    color: var(--green-primary) !important;
+}
+
+.fa-user-plus, .fa-user, .fa-id-card, .fa-weight, .fa-target, .fa-notes-medical {
+    color: var(--green-primary) !important;
+}
+
+/* Modal improvements */
+.modal-content {
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.modal-header {
+    border-bottom: none;
+}
+
+.btn-close-white {
+    filter: brightness(0) invert(1);
+}
+
+/* Gender cards styling */
+.gender-card {
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 12px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-height: 70px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    min-width: 0; /* Important for flex behavior */
+}
+
+.gender-card:hover {
+    border-color: #28a745;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.15);
+    transform: translateY(-2px);
+}
+
+.gender-card.selected {
+    border-color: #28a745;
+    background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);
+    transform: translateY(-2px);
+}
+
+.gender-card.selected i {
+    color: #28a745 !important;
+}
+
+/* Health toggle cards styling */
+.health-toggle-card {
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 8px;
+}
+
+.health-toggle-card:hover {
+    border-color: #28a745;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.15);
+    transform: translateY(-1px);
+}
+
+.health-toggle-card.active {
+    border-color: #28a745;
+    background: linear-gradient(145deg, #f8fdf8, #e9f5e9);
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);
+}
+
+.health-toggle-card .toggle-icon {
+    transition: transform 0.3s ease;
+    color: #6c757d;
+}
+
+.health-toggle-card.active .toggle-icon {
+    transform: rotate(180deg);
+    color: #28a745;
+}
+
+/* Health option cards styling */
+.health-option-card {
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    min-height: 48px;
+}
+
+.health-option-card:hover {
+    border-color: #28a745;
+    box-shadow: 0 3px 10px rgba(40, 167, 69, 0.15);
+    transform: translateY(-1px);
+}
+
+.health-option-card.selected {
+    border-color: #28a745;
+    background: linear-gradient(145deg, #f8fdf8, #e9f5e9);
+    box-shadow: 0 3px 12px rgba(40, 167, 69, 0.2);
+    transform: translateY(-1px);
+}
+
+.health-option-card.selected::after {
+    content: "✓";
+    margin-left: auto;
+    color: #28a745;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+/* Responsive adjustments for gender cards */
+@media (max-width: 768px) {
+    .gender-card {
+        padding: 10px 6px;
+        min-height: 60px;
+        font-size: 0.85em;
+        margin-bottom: 8px;
+    }
+    
+    .gender-card i {
+        font-size: 1rem !important;
+        margin-bottom: 4px !important;
+    }
+    
+    .gender-card .fw-bold {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .gender-card {
+        padding: 8px 4px;
+        min-height: 55px;
+        font-size: 0.8em;
+    }
+    
+    .gender-card i {
+        font-size: 0.9rem !important;
+    }
+    
+    .gender-card .fw-bold {
+        font-size: 0.75rem;
+    }
+    
+    .health-toggle-card {
+        padding: 12px;
+    }
+    
+    .health-option-card {
+        padding: 10px 12px;
+        font-size: 0.9em;
+    }
+    
+    .health-option-card i {
+        font-size: 0.9em !important;
+    }
+}
+
+/* Submit button fix */
+#submitBtn {
+    display: inline-block !important;
+    z-index: 1000;
+}
+
+#submitBtn.d-none {
+    display: none !important;
+}
