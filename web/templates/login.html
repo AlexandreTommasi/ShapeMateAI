@@ -3,156 +3,124 @@
 {% block title %}Login - ShapeMateAI{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-10 col-lg-8">
-            <div class="row g-0 shadow rounded overflow-hidden">
-                <!-- Left side - Visual/Motivational -->
-                <div class="col-md-6 bg-gradient-primary text-white p-5 d-flex flex-column justify-content-center">
-                    <div class="text-center">
-                        <i class="fas fa-dumbbell fa-4x mb-4" style="color: rgba(255,255,255,0.9);"></i>
-                        <h2 class="mb-4">Bem-vindo de volta!</h2>
-                        <p class="lead mb-4">Continue sua jornada de transformação nutricional</p>
-                        
-                        <!-- Visual elements -->
-                        <div class="row text-center mb-4">
-                            <div class="col-4">
-                                <i class="fas fa-apple-alt fa-2x mb-2" style="color: rgba(255,255,255,0.8);"></i>
-                                <p class="small">Nutrição</p>
-                            </div>
-                            <div class="col-4">
-                                <i class="fas fa-chart-line fa-2x mb-2" style="color: rgba(255,255,255,0.8);"></i>
-                                <p class="small">Progresso</p>
-                            </div>
-                            <div class="col-4">
-                                <i class="fas fa-trophy fa-2x mb-2" style="color: rgba(255,255,255,0.8);"></i>
-                                <p class="small">Resultados</p>
-                            </div>
-                        </div>
-                        
-                        <div class="small opacity-75">
-                            <i class="fas fa-quote-left me-2"></i>
-                            "Sua melhor versão está a um login de distância!"
-                            <i class="fas fa-quote-right ms-2"></i>
-                        </div>
-                    </div>
+<div class="container-fluid login-page">
+    <div class="row justify-content-center align-items-center vh-100">
+        <div class="col-lg-8">
+            <div class="row bg-white rounded-4 shadow-lg overflow-hidden h-100">
+
+                <div class="col-md-6 p-0 d-none d-md-block position-relative">
+                    <img class="img-fluid w-100 h-100" style="object-fit: cover;"
+                        src="{{ url_for('static', filename='images/imgLogin.png') }}" alt="Imagem de login">
                 </div>
-                
-                <!-- Right side - Login form -->
-                <div class="col-md-6 bg-white p-5">
+
+                <div class="col-md-6 p-5 d-flex flex-column justify-content-center">
                     <div class="text-center mb-4">
-                        <i class="fas fa-user-circle fa-3x mb-3" style="color: #28a745;"></i>
-                        <h3 class="card-title text-dark">Entrar na sua conta</h3>
-                        <p class="text-muted">Acesse seu perfil nutricional</p>
+                        <img class="logo-login" src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo">
+                        <h4 class="fw-bold text-success">Bem-vindo de volta!</h4>
+                        <p class="text-muted">Acesse sua conta para continuar</p>
                     </div>
 
-                    <!-- Alert para mensagens -->
-                    <div id="loginAlert" class="alert d-none" role="alert"></div>
-
-                    <form id="loginForm">
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <div class="input-group">
-                                <span class="input-group-text" style="background-color: #f8f9fa; border-color: #28a745;">
-                                    <i class="fas fa-envelope" style="color: #28a745;"></i>
-                                </span>
-                                <input type="email" class="form-control" id="email" name="email" required 
-                                       style="border-color: #28a745;" placeholder="seu@email.com">
-                            </div>
+                    <form id="loginForm" class="login-container">
+                        
+                        <div class="alert alert-danger d-none" id="loginAlert">
+                          
                         </div>
 
-                        <div class="mb-4">
-                            <label for="password" class="form-label">Senha</label>
-                            <div class="input-group">
-                                <span class="input-group-text" style="background-color: #f8f9fa; border-color: #28a745;">
-                                    <i class="fas fa-lock" style="color: #28a745;"></i>
-                                </span>
-                                <input type="password" class="form-control" id="password" name="password" required 
-                                       style="border-color: #28a745;" placeholder="••••••••">
+                        <div class="form-box">
+                            
+                            <div class="input-box">
+                                <input type="email" id="email" name="email" required>
+                                <label for="email">Email</label>
+                                <i class="fas fa-envelope icon"></i>
                             </div>
-                        </div>
 
-                        <div class="d-grid mb-3">
-                            <button type="submit" class="btn btn-success btn-lg" id="loginBtn" 
-                                    style="background-color: #28a745; border-color: #28a745;">
-                                <i class="fas fa-sign-in-alt me-2"></i>Entrar na Plataforma
+                            
+                            <div class="input-box">
+                                <input type="password" id="password" name="password" required>
+                                <label for="password">Senha</label>
+                                <i class="fas fa-lock icon"></i>
+                            </div>
+
+                           
+                            <button type="submit" id="loginBtn" class="btn btn-success w-100 mt-4">
+                                <i class="fas fa-sign-in-alt me-2"></i> Entrar
                             </button>
                         </div>
                     </form>
 
-                    <div class="text-center">
-                        <div class="border-top pt-3">
-                            <p class="mb-2 text-muted">Primeira vez aqui?</p>
-                            <a href="{{ url_for('register') }}" class="btn btn-outline-success">
-                                <i class="fas fa-user-plus me-2"></i>Criar Conta Gratuita
-                            </a>
-                        </div>
+                    <div class="text-center mt-3">
+                        <small class="text-muted">Ainda não tem conta?
+                            <a href="{{ url_for('register') }}" class="text-success fw-bold">Crie uma gratuitamente</a>
+                        </small>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
-document.getElementById('loginForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const btn = document.getElementById('loginBtn');
-    const alert = document.getElementById('loginAlert');
-    
-    // Disable button and show loading
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Entrando...';
-    
-    // Hide previous alerts
-    alert.className = 'alert d-none';
-    
-    try {
-        const formData = new FormData(this);
-        const data = {
-            email: formData.get('email'),
-            password: formData.get('password')
-        };
-        
-        const response = await fetch('/api/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data)
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            // Show success message
-            showAlert('success', result.message);
-            
-            // Redirect to dashboard after short delay
-            setTimeout(() => {
-                window.location.href = '/dashboard';
-            }, 1000);
-        } else {
-            showAlert('danger', result.message);
-        }
-        
-    } catch (error) {
-        showAlert('danger', 'Erro de conexão. Tente novamente.');
-        console.error('Error:', error);
-    } finally {
-        // Re-enable button
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Entrar';
-    }
-});
+    document.getElementById('loginForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
 
-function showAlert(type, message) {
-    const alert = document.getElementById('loginAlert');
-    alert.className = `alert alert-${type}`;
-    alert.textContent = message;
-}
+        const btn = document.getElementById('loginBtn');
+        const alert = document.getElementById('loginAlert');
+
+        // Disable button and show loading
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Entrando...';
+
+        // Hide previous alerts
+        alert.className = 'alert d-none';
+
+        try {
+            const formData = new FormData(this);
+            const data = {
+                email: formData.get('email'),
+                password: formData.get('password')
+            };
+
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Show success message
+                showAlert('success', result.message);
+
+                // Redirect to dashboard after short delay
+                setTimeout(() => {
+                    window.location.href = '/dashboard';
+                }, 1000);
+            } else {
+                showAlert('danger', result.message);
+            }
+
+        } catch (error) {
+            showAlert('danger', 'Erro de conexão. Tente novamente.');
+            console.error('Error:', error);
+        } finally {
+            // Re-enable button
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Entrar';
+        }
+    });
+
+    function showAlert(type, message) {
+        const alert = document.getElementById('loginAlert');
+        alert.className = `alert alert-${type}`;
+        alert.textContent = message;
+    }
 </script>
 {% endblock %}
