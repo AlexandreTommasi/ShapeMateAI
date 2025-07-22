@@ -7,10 +7,10 @@ import json
 import uuid
 
 from config.settings import API_KEY, MODEL_NAME, TEMPERATURE, MAX_TOKENS
-from agent.nutritionist.nutritionist_prompts import SYSTEM_PROMPT as NUTRITIONIST_PROMPT
+from agents.nutritionist.nutritionist_prompts import SYSTEM_PROMPT as NUTRITIONIST_PROMPT
 from core.memory import ConversationMemory
 from utils.cost_tracker import CostTracker
-from agent.nutritionist.user_profile import UserProfile
+from agents.nutritionist.user_profile import UserProfile
 
 # Inicializa o rastreador de custos
 cost_tracker = CostTracker(model_name=MODEL_NAME)

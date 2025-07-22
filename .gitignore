@@ -2,11 +2,50 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
+*.egg-info/
+dist/
+build/
 
 # Ambiente virtual
 env/
 venv/
 ENV/
+.env
+.venv/
+
+# uv (gerenciador de pacotes moderno)
+.uv/
+uv.lock
+
+# Banco de dados
+*.db
+database/*.db
+database/backups/
+
+# Logs e temporários
+*.log
+logs/
+temp/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testes
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Outros
+*.bak
+*~
 
 # Configurações sensíveis
 .env
