@@ -20,7 +20,8 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-light" style="background-color: #28a745;">
         <div class="container">
-            <a class="navbar-brand text-white fw-bold" href="{{ url_for('index') }}">
+            <a class="navbar-brand text-white fw-bold" href="{{ url_for('index') }}" 
+               style="color: white !important; background: none !important; background-clip: unset !important; -webkit-background-clip: unset !important; -webkit-text-fill-color: unset !important;">
                 <i class="fas fa-dumbbell me-2"></i>ShapeMateAI
             </a>
             
@@ -36,10 +37,34 @@
                                 <i class="fas fa-tachometer-alt me-1"></i>Dashboard
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-white" href="{{ url_for('chat') }}">
-                                <i class="fas fa-comments me-1"></i>Chat Nutricionista
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-comments me-1"></i>Agentes IA
                             </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{{ url_for('chat') }}">
+                                    <i class="fas fa-user-md me-2"></i>Nutricionista
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('daily_assistant') }}">
+                                    <i class="fas fa-calendar-day me-2"></i>Assistente Diário
+                                </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-clipboard-list me-1"></i>Minha Nutrição
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{{ url_for('diet_view') }}">
+                                    <i class="fas fa-apple-alt me-2"></i>Minha Dieta
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('shopping_list') }}">
+                                    <i class="fas fa-shopping-cart me-2"></i>Lista de Compras
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('inventory') }}">
+                                    <i class="fas fa-boxes me-2"></i>Estoque em Casa
+                                </a></li>
+                            </ul>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-white" href="#" onclick="logout()">

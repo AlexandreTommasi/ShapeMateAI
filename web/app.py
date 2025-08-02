@@ -9,6 +9,7 @@ from flask_cors import CORS
 import sys
 import os
 import logging
+from werkzeug.utils import secure_filename
 
 # Adicionar o diretório raiz ao path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -23,6 +24,10 @@ from database.config import GENDER_DISPLAY, GOAL_DISPLAY, ACTIVITY_LEVEL_DISPLAY
 # Importar sistema de agentes real
 from core.core import CoreAgentSystem, AgentType, TaskType, TaskPriority, BaseAgent, AgentConfig
 from core.config_loader import get_config_loader
+
+# Importar utilitários
+from utils.diet_manager.diet_storage import diet_manager
+from utils.pdf_processor.diet_extractor import process_uploaded_diet
 
 # Classe de agente nutricionista simples
 class SimpleNutritionistAgent(BaseAgent):
@@ -56,6 +61,38 @@ class SimpleNutritionistAgent(BaseAgent):
             state['confidence_score'] = 0.1
             return state
 
+# Classe de agente Daily Assistant simples
+class SimpleDailyAssistantAgent(BaseAgent):
+    """Agente Daily Assistant simplificado para web"""
+    
+    def __init__(self):
+        config_loader = get_config_loader()
+        config = config_loader.load_agent_config(AgentType.DAILY_ASSISTANT)
+        super().__init__(config)
+    
+    def process_message(self, state):
+        """Processa mensagem usando o novo sistema de memória"""
+        try:
+            # Usar o novo método para preparar mensagens com contexto
+            messages_with_context = self.prepare_messages_with_context(state)
+            
+            # Usar LLM diretamente com todo o histórico
+            response = self.llm.invoke(messages_with_context)
+            
+            # Adicionar resposta ao estado
+            from langchain_core.messages import AIMessage
+            state['messages'].append(AIMessage(content=response.content))
+            state['confidence_score'] = 0.9
+            
+            return state
+            
+        except Exception as e:
+            logger.error(f"Error in SimpleDailyAssistantAgent: {str(e)}")
+            from langchain_core.messages import AIMessage
+            state['messages'].append(AIMessage(content="Desculpe, ocorreu um erro ao processar sua mensagem."))
+            state['confidence_score'] = 0.1
+            return state
+
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -64,6 +101,12 @@ app = Flask(__name__)
 app.secret_key = 'shapemate_secret_key_2025'  # Em produção, usar variável de ambiente
 CORS(app)
 
+# Configuração de upload
+UPLOAD_FOLDER = 'static/uploads'
+ALLOWED_EXTENSIONS = {'pdf'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB max
+
 # Inicializar sistemas
 registration_system = RegistrationSystem()
 db_service = get_database_service()
@@ -71,7 +114,9 @@ db_service = get_database_service()
 # Inicializar sistema de agentes real
 core_system = CoreAgentSystem()
 nutritionist_agent = None
+daily_assistant_agent = None
 nutritionist_available = False
+daily_assistant_available = False
 
 try:
     # Criar e registrar agente nutricionista
@@ -82,6 +127,29 @@ try:
 except Exception as e:
     logger.error(f"❌ Erro ao inicializar agente nutricionista: {e}")
     nutritionist_available = False
+
+try:
+    # Criar e registrar agente daily assistant
+    daily_assistant_agent = SimpleDailyAssistantAgent()
+    core_system.register_agent(daily_assistant_agent)
+    daily_assistant_available = True
+    logger.info("✅ Agente daily assistant registrado com sucesso")
+except Exception as e:
+    logger.error(f"❌ Erro ao inicializar agente daily assistant: {e}")
+    daily_assistant_available = False
+
+def allowed_file(filename):
+    """Verifica se o arquivo é permitido"""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def require_login(f):
+    """Decorator para rotas que requerem login"""
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'message': 'Login required'}), 401
+        return f(*args, **kwargs)
+    decorated_function.__name__ = f.__name__
+    return decorated_function
 
 
 
@@ -97,7 +165,7 @@ def index():
 @app.route('/login')
 def login():
     """Página de login"""
-    return render_template('login.html')
+    return render_template('auth/login.html')
 
 
 @app.route('/register')
@@ -105,7 +173,7 @@ def register():
     """Página de cadastro"""
     # Obter opções para os formulários
     form_options = registration_system.get_form_options()
-    return render_template('register.html', options=form_options)
+    return render_template('auth/register.html', options=form_options)
 
 
 @app.route('/dashboard')
@@ -115,17 +183,25 @@ def dashboard():
         return redirect(url_for('login'))
     
     user_data = session.get('user_data', {})
-    return render_template('dashboard.html', user=user_data)
+    return render_template('shared/dashboard.html', user=user_data)
 
 
 @app.route('/chat')
-def chat():
-    """Página de chat com o nutricionista"""
+@app.route('/chat/<agent>')
+def chat(agent=None):
+    """Página de chat com os agentes"""
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
     user_data = session.get('user_data', {})
-    return render_template('chat.html', user=user_data)
+    
+    # Define qual template usar baseado no agente
+    if agent == 'daily_assistant':
+        return render_template('daily_assistant/chat.html', user=user_data, 
+                             assistant_available=daily_assistant_available)
+    else:
+        # Default para nutritionist
+        return render_template('nutritionist/chat.html', user=user_data)
 
 
 # API Routes
@@ -406,16 +482,272 @@ def api_nutritionist_status():
 
 @app.errorhandler(404)
 def not_found(error):
-    return render_template('error.html', 
+    return render_template('shared/error.html', 
                          error_code=404, 
                          error_message="Página não encontrada"), 404
 
 
 @app.errorhandler(500)
 def internal_error(error):
-    return render_template('error.html', 
+    return render_template('shared/error.html', 
                          error_code=500, 
                          error_message="Erro interno do servidor"), 500
+
+
+# ==========================================
+# NOVAS ROTAS - DAILY ASSISTANT E FUNCIONALIDADES
+# ==========================================
+
+@app.route('/daily-assistant')
+def daily_assistant():
+    """Página do chat com Daily Assistant"""
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    user_data = session.get('user_data', {})
+    return render_template('daily_assistant/chat.html', user=user_data, 
+                         assistant_available=daily_assistant_available)
+
+@app.route('/diet')
+def diet_view():
+    """Página para visualizar a dieta"""
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    user_data = session.get('user_data', {})
+    user_id = session['user_id']
+    
+    # Buscar dieta ativa do usuário
+    diet = diet_manager.get_user_diet(user_id)
+    
+    return render_template('nutritionist/diet_view.html', user=user_data, diet=diet)
+
+@app.route('/shopping-list')
+def shopping_list():
+    """Página de listas de compras"""
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    user_data = session.get('user_data', {})
+    user_id = session['user_id']
+    
+    # Buscar listas do usuário
+    shopping_lists = diet_manager.get_shopping_lists(user_id)
+    
+    return render_template('management/shopping_list.html', user=user_data, shopping_lists=shopping_lists)
+
+@app.route('/inventory')
+def inventory():
+    """Página do estoque em casa"""
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    user_data = session.get('user_data', {})
+    user_id = session['user_id']
+    
+    # Buscar estoque do usuário
+    inventory_items = diet_manager.get_inventory(user_id)
+    
+    return render_template('management/inventory.html', user=user_data, inventory=inventory_items)
+
+# ==========================================
+# APIs PARA DAILY ASSISTANT
+# ==========================================
+
+@app.route('/api/daily-assistant/start', methods=['POST'])
+@require_login
+def start_daily_assistant_session():
+    """Inicia uma sessão com o Daily Assistant"""
+    try:
+        user_id = session['user_id']
+        session_id = f"daily_assistant_{user_id}_{__import__('time').time()}"
+        
+        # Criar configuração do sistema para Daily Assistant
+        system_config = core_system.create_system_config(
+            agent_type=AgentType.DAILY_ASSISTANT,
+            task_type=TaskType.DAILY_SUPPORT,
+            user_id=str(user_id),
+            session_id=session_id,
+            priority=TaskPriority.MEDIUM
+        )
+        
+        return jsonify({
+            'success': True,
+            'session_id': session_id,
+            'message': 'Sessão iniciada com Daily Assistant'
+        })
+        
+    except Exception as e:
+        logger.error(f"Erro ao iniciar sessão Daily Assistant: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'Erro ao iniciar sessão'
+        }), 500
+
+@app.route('/api/daily-assistant/message', methods=['POST'])
+@require_login
+def daily_assistant_message():
+    """Processa mensagem do Daily Assistant"""
+    try:
+        data = request.get_json()
+        user_message = data.get('message', '').strip()
+        
+        if not user_message:
+            return jsonify({
+                'success': False,
+                'message': 'Mensagem não pode estar vazia'
+            }), 400
+        
+        if not daily_assistant_available:
+            return jsonify({
+                'success': False,
+                'message': 'Daily Assistant não está disponível no momento'
+            }), 503
+        
+        try:
+            # Obter dados do usuário
+            user_data = session.get('user_data', {})
+            user_id = session['user_id']
+            session_id = f"daily_assistant_{user_id}"
+            
+            # Salvar mensagem do usuário
+            user_msg_id, user_result = db_service.save_message_to_chat(
+                session_id, 'user', user_message
+            )
+            
+            if not user_result:
+                logger.warning("Falha ao salvar mensagem do usuário")
+            
+            # Criar configuração do sistema para esta sessão
+            system_config = core_system.create_system_config(
+                agent_type=AgentType.DAILY_ASSISTANT,
+                task_type=TaskType.DAILY_SUPPORT,
+                user_id=str(user_id),
+                session_id=session_id,
+                priority=TaskPriority.MEDIUM
+            )
+            
+            # Processar mensagem através do sistema de agentes
+            result = core_system.process_user_message(
+                user_id=str(user_id),
+                session_id=session_id,
+                message=user_message,
+                user_profile=user_data
+            )
+            
+            if result['success']:
+                # Salvar resposta do assistente
+                bot_msg_id, bot_result = db_service.save_message_to_chat(
+                    session_id, 'assistant', result['response']
+                )
+                
+                return jsonify({
+                    'success': True,
+                    'message': 'Mensagem processada com sucesso',
+                    'response': result['response']
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': result.get('error', 'Erro ao processar mensagem')
+                }), 500
+                
+        except Exception as agent_error:
+            logger.error(f"Erro no Daily Assistant: {agent_error}")
+            return jsonify({
+                'success': False,
+                'message': 'Erro interno do assistente'
+            }), 500
+            
+    except Exception as e:
+        logger.error(f"Erro na API Daily Assistant: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'Erro interno do servidor'
+        }), 500
+
+@app.route('/api/shopping-list/create', methods=['POST'])
+@require_login
+def create_shopping_list_api():
+    """Cria uma nova lista de compras"""
+    try:
+        data = request.get_json()
+        list_name = data.get('list_name', '')
+        source = data.get('source', 'custom')
+        custom_items = data.get('custom_items', [])
+        
+        user_id = session['user_id']
+        
+        if source == 'diet':
+            # Criar lista baseada na dieta
+            diet = diet_manager.get_user_diet(user_id)
+            if diet:
+                list_id = diet_manager.create_shopping_list(user_id, diet['id'])
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': 'Você não possui uma dieta ativa'
+                }), 400
+        else:
+            # Criar lista personalizada
+            list_id = diet_manager.create_shopping_list(
+                user_id=user_id,
+                custom_items=custom_items
+            )
+        
+        return jsonify({
+            'success': True,
+            'message': 'Lista criada com sucesso',
+            'list_id': list_id
+        })
+        
+    except Exception as e:
+        logger.error(f"Erro ao criar lista de compras: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'Erro interno do servidor'
+        }), 500
+
+@app.route('/api/inventory/update', methods=['POST'])
+@require_login  
+def update_inventory_api():
+    """Atualiza item no estoque"""
+    try:
+        data = request.get_json()
+        item_name = data.get('item_name', '').strip()
+        quantity = data.get('quantity', '').strip()
+        unit = data.get('unit', 'unidade')
+        category = data.get('category', 'outros')
+        expiration_date = data.get('expiration_date')
+        
+        if not item_name or not quantity:
+            return jsonify({
+                'success': False,
+                'message': 'Nome do item e quantidade são obrigatórios'
+            }), 400
+        
+        user_id = session['user_id']
+        
+        diet_manager.update_inventory_item(
+            user_id=user_id,
+            item_name=item_name,
+            quantity=quantity,
+            unit=unit,
+            category=category,
+            expiration_date=expiration_date
+        )
+        
+        return jsonify({
+            'success': True,
+            'message': 'Item atualizado com sucesso'
+        })
+        
+    except Exception as e:
+        logger.error(f"Erro ao atualizar estoque: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'Erro interno do servidor'
+        }), 500
 
 
 def run_app():

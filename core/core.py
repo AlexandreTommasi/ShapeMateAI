@@ -17,9 +17,6 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Import config loader
-from .config_loader import get_config_loader
-
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -263,8 +260,8 @@ class CoreAgentSystem:
         # Sistema de memória para conversas
         self.conversation_memory: Dict[str, List[BaseMessage]] = {}
         self.memory_limits: Dict[str, int] = {}
-        # Config loader para carregar configurações de tasks
-        self.config_loader = get_config_loader()
+        # Config loader para carregar configurações de tasks (temporariamente desabilitado)
+        # self.config_loader = get_config_loader()
         # Sistema de compartilhamento de dados entre agentes
         self.shared_user_data: Dict[str, Dict[str, Any]] = {}
         
@@ -351,26 +348,27 @@ class CoreAgentSystem:
         agent_config = self.agents[agent_type].config
         
         # Carregar configuração da tarefa específica do agente
-        try:
-            task_config_data = self.config_loader.load_task_config(task_type, agent_type)
-            
-            # Criar TaskConfig com dados carregados + overrides
-            task_config = TaskConfig(
-                task_type=task_type,
-                priority=kwargs.get('priority', TaskPriority(task_config_data.get('priority', 'MEDIUM'))),
-                required_context=kwargs.get('required_context', task_config_data.get('required_context', [])),
-                tools_required=kwargs.get('tools_required', task_config_data.get('tools_required', [])),
-                max_iterations=kwargs.get('max_iterations', task_config_data.get('max_iterations', 10)),
-                timeout_seconds=kwargs.get('timeout_seconds', task_config_data.get('timeout_seconds', 300)),
-                success_criteria=task_config_data.get('success_criteria', {}),
-                fallback_strategy=task_config_data.get('fallback_strategy')
-            )
-        except Exception as e:
-            logger.warning(f"Failed to load task config for {agent_type.value}/{task_type.value}: {e}")
-            # Fallback para configuração padrão
-            task_config = TaskConfig(
-                task_type=task_type,
-                priority=kwargs.get('priority', TaskPriority.MEDIUM),
+        # Temporariamente desabilitado devido a importação circular
+        # try:
+        #     task_config_data = self.config_loader.load_task_config(task_type, agent_type)
+        #     
+        #     # Criar TaskConfig com dados carregados + overrides
+        #     task_config = TaskConfig(
+        #         task_type=task_type,
+        #         priority=kwargs.get('priority', TaskPriority(task_config_data.get('priority', 'MEDIUM'))),
+        #         required_context=kwargs.get('required_context', task_config_data.get('required_context', [])),
+        #         tools_required=kwargs.get('tools_required', task_config_data.get('tools_required', [])),
+        #         max_iterations=kwargs.get('max_iterations', task_config_data.get('max_iterations', 10)),
+        #         timeout_seconds=kwargs.get('timeout_seconds', task_config_data.get('timeout_seconds', 300)),
+        #         success_criteria=task_config_data.get('success_criteria', {}),
+        #         fallback_strategy=task_config_data.get('fallback_strategy')
+        #     )
+        # except Exception as e:
+        #     logger.warning(f"Failed to load task config for {agent_type.value}/{task_type.value}: {e}")
+        #     # Fallback para configuração padrão
+        task_config = TaskConfig(
+            task_type=task_type,
+            priority=kwargs.get('priority', TaskPriority.MEDIUM),
                 required_context=kwargs.get('required_context', []),
                 tools_required=kwargs.get('tools_required', []),
                 max_iterations=kwargs.get('max_iterations', 10),

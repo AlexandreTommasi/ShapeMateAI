@@ -1,0 +1,330 @@
+{% extends "shared/base.html" %}
+
+{% block title %}Lista de Compras - ShapeMateAI{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-shopping-cart me-2"></i>Lista de Compras</h2>
+                <div>
+                    <button class="btn btn-success" onclick="createNewList()">
+                        <i class="fas fa-plus me-2"></i>Nova Lista
+                    </button>
+                    <a href="/daily-assistant" class="btn btn-primary">
+                        <i class="fas fa-calendar-day me-2"></i>Assistente Diário
+                    </a>
+                </div>
+            </div>
+
+            {% if shopping_lists %}
+            <div class="row">
+                {% for shopping_list in shopping_lists %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">{{ shopping_list.name }}</h6>
+                            <span class="badge bg-{{ 'success' if shopping_list.is_completed else 'warning' }}">
+                                {{ 'Concluída' if shopping_list.is_completed else 'Pendente' }}
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <small class="text-muted">Criada em: {{ shopping_list.created_at.split('T')[0] if 'T' in shopping_list.created_at else shopping_list.created_at }}</small>
+                            
+                            <div class="mt-3">
+                                <h6>Itens ({{ shopping_list.items|length }})</h6>
+                                <div class="list-group list-group-flush" style="max-height: 200px; overflow-y: auto;">
+                                    {% for item in shopping_list.items[:5] %}
+                                    <div class="list-group-item px-0 py-1 d-flex justify-content-between align-items-center">
+                                        <span>{{ item }}</span>
+                                        <input type="checkbox" class="form-check-input item-checkbox" 
+                                               data-list-id="{{ shopping_list.id }}" data-item="{{ item }}">
+                                    </div>
+                                    {% endfor %}
+                                    {% if shopping_list.items|length > 5 %}
+                                    <div class="list-group-item px-0 py-1 text-muted">
+                                        ... e mais {{ shopping_list.items|length - 5 }} itens
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer d-flex justify-content-between">
+                            <button class="btn btn-outline-primary btn-sm view-list-btn" data-list-id="{{ shopping_list.id }}">
+                                <i class="fas fa-eye me-1"></i>Ver Completa
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm delete-list-btn" data-list-id="{{ shopping_list.id }}">
+                                <i class="fas fa-trash me-1"></i>Excluir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <!-- Sem listas -->
+            <div class="text-center py-5">
+                <div class="mb-4">
+                    <i class="fas fa-shopping-cart fa-5x text-muted"></i>
+                </div>
+                <h3 class="text-muted">Nenhuma lista de compras criada!</h3>
+                <p class="text-muted mb-4">Crie sua primeira lista baseada na sua dieta ou converse com o assistente diário</p>
+                <div>
+                    <button class="btn btn-success btn-lg me-3" onclick="createNewList()">
+                        <i class="fas fa-plus me-2"></i>Nova Lista
+                    </button>
+                    <a href="/daily-assistant" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-calendar-day me-2"></i>Assistente Diário
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nova Lista -->
+<div class="modal fade" id="newListModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nova Lista de Compras</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="newListForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="listName" class="form-label">Nome da lista</label>
+                        <input type="text" class="form-control" id="listName" name="list_name" 
+                               placeholder="Digite o nome da lista" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Fonte da lista</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="source" id="sourceFromDiet" value="diet" checked>
+                            <label class="form-check-label" for="sourceFromDiet">
+                                Baseada na minha dieta atual
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="source" id="sourceCustom" value="custom">
+                            <label class="form-check-label" for="sourceCustom">
+                                Lista personalizada
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div id="customItemsDiv" class="mb-3" style="display: none;">
+                        <label for="customItems" class="form-label">Itens personalizados (um por linha)</label>
+                        <textarea class="form-control" id="customItems" name="custom_items" rows="6" 
+                                  placeholder="Arroz integral&#10;Frango&#10;Brócolis&#10;..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-plus me-2"></i>Criar Lista
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ver Lista Completa -->
+<div class="modal fade" id="viewListModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewListTitle">Lista de Compras</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="fullListContent">
+                    <!-- Conteúdo será carregado dinamicamente -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-success" onclick="markListComplete()">
+                    <i class="fas fa-check me-2"></i>Marcar como Concluída
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Toggle entre fonte da lista
+document.querySelectorAll('input[name="source"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        const customDiv = document.getElementById('customItemsDiv');
+        if (this.value === 'custom') {
+            customDiv.style.display = 'block';
+        } else {
+            customDiv.style.display = 'none';
+        }
+    });
+});
+
+function createNewList() {
+    // Definir nome padrão com data atual
+    const today = new Date();
+    const defaultName = `Lista ${today.toLocaleDateString('pt-BR')}`;
+    document.getElementById('listName').value = defaultName;
+    
+    const modal = new bootstrap.Modal(document.getElementById('newListModal'));
+    modal.show();
+}
+
+document.getElementById('newListForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    // Mostrar loading
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Criando...';
+    
+    try {
+        const response = await fetch('/api/shopping-list/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                list_name: formData.get('list_name'),
+                source: formData.get('source'),
+                custom_items: formData.get('custom_items') ? formData.get('custom_items').split('\n').filter(item => item.trim()) : []
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Lista criada com sucesso!');
+            location.reload();
+        } else {
+            alert('Erro ao criar lista: ' + result.message);
+        }
+    } catch (error) {
+        alert('Erro de conexão. Tente novamente.');
+        console.error('Create list error:', error);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    }
+});
+
+async function viewFullList(listId) {
+    try {
+        const response = await fetch(`/api/shopping-list/${listId}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            const list = result.shopping_list;
+            document.getElementById('viewListTitle').textContent = list.name;
+            
+            let content = '<div class="row">';
+            
+            // Organizar itens por categoria (simulado)
+            const categories = {
+                'Hortifruti': [],
+                'Carnes': [],
+                'Laticínios': [],
+                'Mercearia': [],
+                'Outros': []
+            };
+            
+            list.items.forEach(item => {
+                const itemLower = item.toLowerCase();
+                if (itemLower.includes('fruta') || itemLower.includes('verdura') || itemLower.includes('legume') || 
+                    ['alface', 'tomate', 'cenoura', 'banana', 'maçã', 'brócolis'].some(veg => itemLower.includes(veg))) {
+                    categories['Hortifruti'].push(item);
+                } else if (['frango', 'carne', 'peixe', 'porco'].some(meat => itemLower.includes(meat))) {
+                    categories['Carnes'].push(item);
+                } else if (['leite', 'queijo', 'iogurte', 'manteiga'].some(dairy => itemLower.includes(dairy))) {
+                    categories['Laticínios'].push(item);
+                } else if (['arroz', 'feijão', 'macarrão', 'farinha', 'açúcar', 'sal'].some(grocery => itemLower.includes(grocery))) {
+                    categories['Mercearia'].push(item);
+                } else {
+                    categories['Outros'].push(item);
+                }
+            });
+            
+            Object.entries(categories).forEach(([category, items]) => {
+                if (items.length > 0) {
+                    content += `
+                        <div class="col-md-6 mb-3">
+                            <h6 class="text-primary">${category}</h6>
+                            <ul class="list-group">
+                    `;
+                    items.forEach(item => {
+                        content += `<li class="list-group-item d-flex justify-content-between align-items-center">
+                            ${item}
+                            <input type="checkbox" class="form-check-input">
+                        </li>`;
+                    });
+                    content += '</ul></div>';
+                }
+            });
+            
+            content += '</div>';
+            document.getElementById('fullListContent').innerHTML = content;
+            
+            const modal = new bootstrap.Modal(document.getElementById('viewListModal'));
+            modal.show();
+        }
+    } catch (error) {
+        alert('Erro ao carregar lista.');
+        console.error('View list error:', error);
+    }
+}
+
+async function deleteList(listId) {
+    if (confirm('Tem certeza que deseja excluir esta lista?')) {
+        try {
+            const response = await fetch(`/api/shopping-list/${listId}`, {
+                method: 'DELETE'
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                location.reload();
+            } else {
+                alert('Erro ao excluir lista: ' + result.message);
+            }
+        } catch (error) {
+            alert('Erro de conexão. Tente novamente.');
+            console.error('Delete list error:', error);
+        }
+    }
+}
+
+// Event listeners para botões
+document.addEventListener('DOMContentLoaded', function() {
+    // View list buttons
+    document.querySelectorAll('.view-list-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const listId = this.dataset.listId;
+            viewFullList(listId);
+        });
+    });
+    
+    // Delete list buttons
+    document.querySelectorAll('.delete-list-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const listId = this.dataset.listId;
+            deleteList(listId);
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -30,10 +30,7 @@ system_prompt: |
 supported_tasks:
   - consultation
   - meal_planning
-  - health_assessment
-  - goal_setting
-  - education
-  - progress_tracking
+  - pdf_generation
 
 tools:
   - calorie_calculator
@@ -56,15 +53,6 @@ specialized_prompts:
     - Praticidade e viabilidade econômica
     - Variedade nutricional
     - Horários e rotina do usuário
-  
-  health_assessment: |
-    Para avaliações de saúde, analise:
-    - Dados antropométricos (IMC, circunferências)
-    - Histórico de saúde e medicamentos
-    - Hábitos alimentares atuais
-    - Nível de atividade física
-    - Objetivos de saúde
-    - Sinais de deficiências nutricionais
   
   consultation: |
     Durante consultas, mantenha:

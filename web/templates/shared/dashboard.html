@@ -1,0 +1,640 @@
+{% extends "shared/base.html" %}
+
+{% block title %}Dashboard - ShapeMateAI{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header Principal -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow rounded overflow-hidden border-0">
+                <div class="row g-0">
+                    <!-- Lado esquerdo - Visual motivacional -->
+                    <div class="col-md-4 text-white p-4 d-flex flex-column justify-content-center" 
+                         style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;">
+                        <div class="text-center">
+                            <i class="fas fa-chart-line fa-3x mb-3" style="color: rgba(255,255,255,0.9);"></i>
+                            <h4 class="mb-2">Bem-vindo de volta!</h4>
+                            <p class="mb-0">{{ user.name or user.full_name or 'Usuário' }}</p>
+                            <small class="opacity-75">Continue sua jornada de transformação</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Lado direito - Estatísticas rápidas -->
+                    <div class="col-md-8 bg-white p-4">
+                        <div class="row text-center">
+                            <div class="col-3">
+                                <div class="border-end">
+                                    <i class="fas fa-comments fa-2x mb-2" style="color: #28a745;"></i>
+                                    <h5 class="mb-1" style="color: #28a745;">0</h5>
+                                    <small class="text-muted">Consultas</small>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="border-end">
+                                    <i class="fas fa-utensils fa-2x mb-2" style="color: #28a745;"></i>
+                                    <h5 class="mb-1" style="color: #28a745;">{{ 'Ativa' if user.primary_goal else 'Pendente' }}</h5>
+                                    <small class="text-muted">Dieta</small>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="border-end">
+                                    <i class="fas fa-target fa-2x mb-2" style="color: #28a745;"></i>
+                                    <h5 class="mb-1" style="color: #28a745;">{{ user.primary_goal|replace('_', ' ')|title if user.primary_goal else 'Definir' }}</h5>
+                                    <small class="text-muted">Objetivo</small>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                {% if user.weight and user.height %}
+                                    {% set imc = (user.weight / (user.height * user.height)) | round(1) %}
+                                    <i class="fas fa-heartbeat fa-2x mb-2" style="color: #28a745;"></i>
+                                    <h5 class="mb-1" style="color: #28a745;">{{ imc }}</h5>
+                                    <small class="text-muted">IMC</small>
+                                {% else %}
+                                    <i class="fas fa-user-edit fa-2x mb-2" style="color: #ffc107;"></i>
+                                    <h5 class="mb-1" style="color: #28a745;">Completar</h5>
+                                    <small class="text-muted">Perfil</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Profile Summary -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow border-0">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0" style="color: #28a745;"><i class="fas fa-user me-2"></i>Seu Perfil</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-2">
+                        <div class="col-6"><strong>Idade:</strong></div>
+                        <div class="col-6">{{ user.age or '-' }} anos</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-6"><strong>Gênero:</strong></div>
+                        <div class="col-6">{{ user.gender|title or '-' }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-6"><strong>Peso:</strong></div>
+                        <div class="col-6">{{ user.weight or '-' }} kg</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-6"><strong>Altura:</strong></div>
+                        <div class="col-6">{{ user.height or '-' }} m</div>
+                    </div>
+                    {% if user.weight and user.height %}
+                    <div class="row mb-2">
+                        <div class="col-6"><strong>IMC:</strong></div>
+                        <div class="col-6">
+                            {% set imc = (user.weight / (user.height * user.height)) | round(1) %}
+                            {{ imc }}
+                            {% if imc < 18.5 %}
+                                <span class="badge bg-warning">Abaixo</span>
+                            {% elif imc < 25 %}
+                                <span class="badge bg-success">Normal</span>
+                            {% elif imc < 30 %}
+                                <span class="badge bg-warning">Sobrepeso</span>
+                            {% else %}
+                                <span class="badge bg-danger">Obesidade</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Progresso Visual -->
+                    <div class="mt-3 pt-3 border-top">
+                        <small class="text-muted mb-2 d-block">Completude do Perfil:</small>
+                        {% set profile_completion = 0 %}
+                        {% if user.age %}{% set profile_completion = profile_completion + 20 %}{% endif %}
+                        {% if user.gender %}{% set profile_completion = profile_completion + 20 %}{% endif %}
+                        {% if user.weight %}{% set profile_completion = profile_completion + 20 %}{% endif %}
+                        {% if user.height %}{% set profile_completion = profile_completion + 20 %}{% endif %}
+                        {% if user.primary_goal %}{% set profile_completion = profile_completion + 20 %}{% endif %}
+                        
+                        <div class="progress mb-2" style="height: 8px;">
+                            <div class="progress-bar bg-success" role="progressbar" id="profileProgress" data-width="{{ profile_completion }}"></div>
+                        </div>
+                        <small class="text-success">{{ profile_completion }}% completo</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Goals and Activity -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow border-0">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0" style="color: #28a745;"><i class="fas fa-target me-2"></i>Objetivos & Atividade</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Objetivo Principal:</strong>
+                        {% if user.primary_goal %}
+                            <p class="text-muted mb-0">{{ user.primary_goal|replace('_', ' ')|title }}</p>
+                            <div class="mt-2">
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check me-1"></i>Definido
+                                </span>
+                            </div>
+                        {% else %}
+                            <p class="text-warning mb-0">Não definido</p>
+                            <button class="btn btn-outline-success btn-sm mt-2" onclick="updateProfile()">
+                                <i class="fas fa-plus me-1"></i>Definir Objetivo
+                            </button>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Nível de Atividade:</strong>
+                        <p class="text-muted mb-0">{{ user.activity_level|replace('_', ' ')|title or 'Não definido' }}</p>
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="mt-4">
+                        <h6 style="color: #28a745;">Ações Rápidas</h6>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-success btn-sm" onclick="updateProfile()">
+                                <i class="fas fa-edit me-2"></i>Editar Perfil
+                            </button>
+                            <button class="btn btn-outline-success btn-sm" onclick="viewProgress()">
+                                <i class="fas fa-chart-line me-2"></i>Ver Progresso
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Health Info -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow border-0">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0" style="color: #28a745;"><i class="fas fa-heart me-2"></i>Informações de Saúde</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Restrições Alimentares:</strong>
+                        <p class="text-muted mb-0">
+                            {{ user.dietary_restrictions or 'Nenhuma informada' }}
+                        </p>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Condições de Saúde:</strong>
+                        <p class="text-muted mb-0">
+                            {{ user.health_conditions or 'Nenhuma informada' }}
+                        </p>
+                    </div>
+                    {% if user.other_notes %}
+                    <div class="mb-3">
+                        <strong>Observações:</strong>
+                        <p class="text-muted mb-0">{{ user.other_notes }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Status de Saúde -->
+                    <div class="mt-3 pt-3 border-top">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="mb-2">
+                                    {% if user.dietary_restrictions %}
+                                        <i class="fas fa-exclamation-triangle text-warning fa-lg"></i>
+                                        <p class="small mb-0 text-warning">Restrições</p>
+                                    {% else %}
+                                        <i class="fas fa-check-circle text-success fa-lg"></i>
+                                        <p class="small mb-0 text-success">Sem Restrições</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="mb-2">
+                                    {% if user.health_conditions %}
+                                        <i class="fas fa-heartbeat fa-lg" style="color: #28a745;"></i>
+                                        <p class="small mb-0" style="color: #28a745;">Acompanhamento</p>
+                                    {% else %}
+                                        <i class="fas fa-heart text-success fa-lg"></i>
+                                        <p class="small mb-0 text-success">Saudável</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Actions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow border-0">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0" style="color: #28a745;"><i class="fas fa-robot me-2"></i>Seus Assistentes Nutricionais</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row text-center">
+                        <!-- Nutricionista Virtual (Nutrion) -->
+                        <div class="col-md-6 mb-4">
+                            <div class="p-4 border rounded hover-card h-100" style="border-color: #28a745 !important; border-width: 2px !important;">
+                                <div class="d-flex align-items-center justify-content-center mb-3">
+                                    <i class="fas fa-user-md fa-4x me-3" style="color: #28a745;"></i>
+                                    <div>
+                                        <h4 class="mb-1" style="color: #28a745;">Nutrion</h4>
+                                        <p class="text-muted small mb-0">Nutricionista Virtual</p>
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-circle me-1"></i>Online
+                                        </span>
+                                    </div>
+                                </div>
+                                <p class="text-muted mb-3">
+                                    <i class="fas fa-sparkles me-2" style="color: #28a745;"></i>
+                                    Converse com nosso nutricionista IA alegre e motivador! Receba orientações personalizadas, 
+                                    planos alimentares e acompanhamento profissional.
+                                </p>
+                                <div class="mb-3">
+                                    <div class="row text-center">
+                                        <div class="col-4">
+                                            <i class="fas fa-apple-alt fa-lg mb-1" style="color: #28a745;"></i>
+                                            <p class="small mb-0">Dietas</p>
+                                        </div>
+                                        <div class="col-4">
+                                            <i class="fas fa-calculator fa-lg mb-1" style="color: #28a745;"></i>
+                                            <p class="small mb-0">TMB</p>
+                                        </div>
+                                        <div class="col-4">
+                                            <i class="fas fa-chart-pie fa-lg mb-1" style="color: #28a745;"></i>
+                                            <p class="small mb-0">Análises</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <a href="{{ url_for('chat') }}" class="btn btn-lg w-100" 
+                                   style="background-color: #28a745; border-color: #28a745; color: white;">
+                                    <i class="fas fa-comments me-2"></i>Conversar com Nutrion
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Assistente do Dia-a-Dia -->
+                        <div class="col-md-6 mb-4">
+                            <div class="p-4 border rounded hover-card h-100" style="border-color: #28a745 !important; border-width: 2px !important;">
+                                <div class="d-flex align-items-center justify-content-center mb-3">
+                                    <i class="fas fa-calendar-day fa-4x me-3" style="color: #28a745;"></i>
+                                    <div>
+                                        <h4 class="mb-1" style="color: #28a745;">Assistente</h4>
+                                        <p class="text-muted small mb-0">Dia-a-Dia</p>
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-circle me-1"></i>Online
+                                        </span>
+                                    </div>
+                                </div>
+                                <p class="text-muted mb-3">
+                                    <i class="fas fa-magic me-2" style="color: #28a745;"></i>
+                                    Seu parceiro diário para manter a dieta! Faça substituições inteligentes, 
+                                    analise cardápios de restaurantes e receba listas de compras personalizadas.
+                                </p>
+                                <div class="mb-3">
+                                    <div class="row text-center">
+                                        <div class="col-4">
+                                            <i class="fas fa-exchange-alt fa-lg mb-1" style="color: #28a745;"></i>
+                                            <p class="small mb-0">Substituições</p>
+                                        </div>
+                                        <div class="col-4">
+                                            <i class="fas fa-utensils fa-lg mb-1" style="color: #28a745;"></i>
+                                            <p class="small mb-0">Cardápios</p>
+                                        </div>
+                                        <div class="col-4">
+                                            <i class="fas fa-shopping-cart fa-lg mb-1" style="color: #28a745;"></i>
+                                            <p class="small mb-0">Compras</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <a href="{{ url_for('chat', agent='daily_assistant') }}" class="btn btn-lg w-100" 
+                                   style="background-color: #28a745; border-color: #28a745; color: white;">
+                                    <i class="fas fa-hands-helping me-2"></i>Conversar com Assistente
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Tools Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow border-0">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0" style="color: #28a745;"><i class="fas fa-bolt me-2"></i>Ações Rápidas</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row text-center">
+                        <div class="col-md-3 mb-3">
+                            <div class="p-3 border rounded hover-card-small text-center">
+                                <i class="fas fa-utensils fa-2x mb-2" style="color: #28a745;"></i>
+                                <h6>Minha Dieta</h6>
+                                <p class="text-muted small">Ver ou fazer upload do seu plano</p>
+                                <div class="d-grid">
+                                    <button class="btn btn-success btn-sm" onclick="requestMealPlan()">
+                                        <i class="fas fa-file-upload me-1"></i>Gerenciar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <div class="p-3 border rounded hover-card-small text-center">
+                                <i class="fas fa-shopping-cart fa-2x mb-2" style="color: #28a745;"></i>
+                                <h6>Lista de Compras</h6>
+                                <p class="text-muted small">Criar lista personalizada</p>
+                                <div class="d-grid">
+                                    <button class="btn btn-success btn-sm" onclick="generateShoppingList()">
+                                        <i class="fas fa-plus me-1"></i>Criar Lista
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <div class="p-3 border rounded hover-card-small text-center">
+                                <i class="fas fa-boxes fa-2x mb-2" style="color: #28a745;"></i>
+                                <h6>Estoque Casa</h6>
+                                <p class="text-muted small">Controle de alimentos</p>
+                                <div class="d-grid">
+                                    <button class="btn btn-success btn-sm" onclick="manageInventory()">
+                                        <i class="fas fa-warehouse me-1"></i>Gerenciar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <div class="p-3 border rounded hover-card-small text-center">
+                                <i class="fas fa-camera fa-2x mb-2" style="color: #28a745;"></i>
+                                <h6>Analisar Refeição</h6>
+                                <p class="text-muted small">Foto ou descrição</p>
+                                <div class="d-grid">
+                                    <button class="btn btn-success btn-sm" onclick="analyzeMeal()">
+                                        <i class="fas fa-search me-1"></i>Analisar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Section -->
+    <div class="row mt-4">
+        <div class="col-md-8">
+            <div class="card shadow border-0">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0" style="color: #28a745;"><i class="fas fa-chart-line me-2"></i>Progresso Semanal</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-3">
+                            <div class="p-2">
+                                <div class="rounded-circle bg-success text-white d-inline-flex align-items-center justify-content-center" 
+                                     style="width: 60px; height: 60px;">
+                                    <strong>85%</strong>
+                                </div>
+                                <p class="small mt-2 mb-0"><strong>Dieta</strong></p>
+                                <small class="text-muted">Seguindo bem!</small>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="p-2">
+                                <div class="rounded-circle text-white d-inline-flex align-items-center justify-content-center" 
+                                     style="width: 60px; height: 60px; background-color: #28a745;">
+                                    <strong>92%</strong>
+                                </div>
+                                <p class="small mt-2 mb-0"><strong>Hidratação</strong></p>
+                                <small class="text-muted">Excelente!</small>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="p-2">
+                                <div class="rounded-circle bg-warning text-white d-inline-flex align-items-center justify-content-center" 
+                                     style="width: 60px; height: 60px;">
+                                    <strong>67%</strong>
+                                </div>
+                                <p class="small mt-2 mb-0"><strong>Exercício</strong></p>
+                                <small class="text-muted">Pode melhorar</small>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="p-2">
+                                <div class="rounded-circle bg-success text-white d-inline-flex align-items-center justify-content-center" 
+                                     style="width: 60px; height: 60px;">
+                                    <strong>7</strong>
+                                </div>
+                                <p class="small mt-2 mb-0"><strong>Sequência</strong></p>
+                                <small class="text-muted">Dias seguidos</small>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="text-center">
+                        <small class="text-success">
+                            <i class="fas fa-trophy me-1"></i>
+                            Meta semanal: 80% - Você está no caminho certo!
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tips and Reminders -->
+        <div class="col-md-4">
+            <div class="card shadow border-0">
+                <div class="card-header bg-white border-bottom">
+                    <h6 class="mb-0" style="color: #28a745;"><i class="fas fa-lightbulb me-2"></i>Dica do Dia</h6>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-leaf fa-3x" style="color: #28a745;"></i>
+                    </div>
+                    <p class="small mb-3" id="dailyTip">
+                        <strong>Dica de hoje:</strong> Consuma alimentos ricos em fibras para melhorar a digestão e aumentar a saciedade!
+                    </p>
+                    <button class="btn btn-outline-success btn-sm" onclick="getNewTip()">
+                        <i class="fas fa-sync-alt me-1"></i>Nova Dica
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow border-0">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0" style="color: #28a745;"><i class="fas fa-clock me-2"></i>Atividade Recente</h5>
+                </div>
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                    <h6 class="text-muted">Nenhuma atividade recente</h6>
+                    <p class="text-muted mb-3">Comece a usar o ShapeMateAI para ver suas atividades aqui</p>
+                    <div class="row justify-content-center">
+                        <div class="col-12">
+                            <a href="{{ url_for('chat', agent='daily_assistant') }}" class="btn me-2" 
+                               style="background-color: #28a745; border-color: #28a745; color: white;">
+                                <i class="fas fa-comments me-1"></i>Chat com Assistente
+                            </a>
+                            <a href="{{ url_for('chat') }}" class="btn" 
+                               style="background-color: transparent; border: 1px solid #28a745; color: #28a745;">
+                                <i class="fas fa-user-md me-1"></i>Chat com Nutrion
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Funções de ação rápida
+function updateProfile() {
+    alert('🔧 Funcionalidade em desenvolvimento!\n\nEm breve você poderá:\n• Atualizar peso e medidas\n• Modificar objetivos\n• Ajustar nível de atividade\n• Editar restrições alimentares');
+}
+
+function viewProgress() {
+    alert('📊 Funcionalidade em desenvolvimento!\n\nEm breve você poderá:\n• Gráficos de evolução\n• Histórico de peso\n• Análise de tendências\n• Relatórios detalhados');
+}
+
+function requestMealPlan() {
+    alert('🥗 Funcionalidade em desenvolvimento!\n\nEm breve você poderá:\n• Upload de PDFs de dieta\n• Visualização organizada\n• Análise nutricional\n• Sugestões de melhorias');
+}
+
+function trackProgress() {
+    alert('📈 Funcionalidade em desenvolvimento!\n\nEm breve você poderá:\n• Acompanhar peso diário\n• Registrar medidas\n• Monitorar objetivos\n• Histórico completo');
+}
+
+function manageInventory() {
+    alert('📦 Funcionalidade em desenvolvimento!\n\nEm breve você poderá:\n• Catalogar alimentos em casa\n• Controlar validades\n• Sugestões de uso\n• Lista de reposição');
+}
+
+function generateShoppingList() {
+    alert('🛒 Funcionalidade em desenvolvimento!\n\nEm breve você poderá:\n• Lista baseada na sua dieta\n• Sugestões de produtos\n• Estimativa de preços\n• Organização por categoria');
+}
+
+function analyzeMeal() {
+    alert('📸 Funcionalidade em desenvolvimento!\n\nEm breve você poderá:\n• Enviar foto da refeição\n• Análise nutricional automática\n• Feedback sobre a escolha\n• Sugestões de melhoria');
+}
+
+// Sistema de dicas rotativas
+function getNewTip() {
+    const tips = [
+        "Consuma alimentos ricos em fibras para melhorar a digestão e aumentar a saciedade!",
+        "Beba pelo menos 2 litros de água por dia para manter-se hidratado.",
+        "Inclua proteínas magras em todas as refeições para manter a massa muscular.",
+        "Prefira carboidratos complexos para ter energia sustentada ao longo do dia.",
+        "Consuma frutas e vegetais de diferentes cores para obter variedade de nutrientes.",
+        "Mastigue bem os alimentos - a digestão começa na boca!",
+        "Evite pular refeições para manter o metabolismo ativo.",
+        "Planeje suas refeições com antecedência para fazer escolhas mais saudáveis.",
+        "Coma devagar e preste atenção aos sinais de saciedade do seu corpo.",
+        "Inclua gorduras boas como abacate, nozes e azeite em sua alimentação."
+    ];
+    
+    const randomTip = tips[Math.floor(Math.random() * tips.length)];
+    document.getElementById('dailyTip').innerHTML = '<strong>Dica de hoje:</strong> ' + randomTip;
+    
+    // Efeito visual
+    const tipElement = document.getElementById('dailyTip');
+    tipElement.style.opacity = '0.5';
+    setTimeout(() => {
+        tipElement.style.opacity = '1';
+    }, 200);
+}
+
+// Inicialização e efeitos
+document.addEventListener('DOMContentLoaded', function() {
+    // Configurar barra de progresso do perfil
+    const profileProgress = document.getElementById('profileProgress');
+    if (profileProgress) {
+        const width = profileProgress.getAttribute('data-width');
+        profileProgress.style.width = width + '%';
+        profileProgress.setAttribute('aria-valuenow', width);
+        profileProgress.setAttribute('aria-valuemin', '0');
+        profileProgress.setAttribute('aria-valuemax', '100');
+    }
+    
+    // Adicionar efeitos hover aos cards principais
+    const hoverCards = document.querySelectorAll('.hover-card');
+    const hoverCardsSmall = document.querySelectorAll('.hover-card-small');
+    
+    hoverCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+            this.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+            this.style.transition = 'all 0.3s ease';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = '';
+        });
+    });
+    
+    hoverCardsSmall.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+            this.style.boxShadow = '0 4px 15px rgba(0,0,0,0.1)';
+            this.style.transition = 'all 0.3s ease';
+            this.style.cursor = 'pointer';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = '';
+        });
+    });
+    
+    // Animação inicial da dica
+    setTimeout(() => {
+        const tipElement = document.getElementById('dailyTip');
+        if (tipElement) {
+            tipElement.style.animation = 'fadeIn 0.5s ease-in';
+        }
+    }, 1000);
+});
+</script>
+
+<style>
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.hover-card-small:hover {
+    border-color: #28a745 !important;
+}
+
+.progress-bar {
+    transition: width 0.6s ease;
+}
+
+/* Hover effects for inline-styled buttons */
+a[style*="background-color: #28a745"]:hover,
+button[style*="background-color: #28a745"]:hover {
+    background-color: #1e7e34 !important;
+    border-color: #1c7430 !important;
+}
+
+a[style*="border: 1px solid #28a745"]:hover {
+    background-color: #28a745 !important;
+    color: white !important;
+}
+</style>
+{% endblock %}

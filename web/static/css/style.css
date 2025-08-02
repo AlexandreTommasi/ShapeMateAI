@@ -1,44 +1,147 @@
 /* ShapeMateAI Custom Styles */
 
 :root {
-    --primary-color: #28a745;
+    --primary-color: #2563eb;
+    --primary-light: #3b82f6;
+    --primary-dark: #1d4ed8;
     --secondary-color: #6c757d;
-    --success-color: #28a745;
-    --warning-color: #ffc107;
-    --danger-color: #dc3545;
-    --info-color: #17a2b8;
-    --light-color: #f8f9fa;
-    --dark-color: #212529;
+    --success-color: #059669;
+    --warning-color: #d97706;
+    --danger-color: #dc2626;
+    --info-color: #0891b2;
+    --light-color: #f8fafc;
+    --dark-color: #1f2937;
     --green-primary: #28a745;
     --green-secondary: #20c997;
     --green-dark: #1e7e34;
+    --gradient-primary: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    --gradient-success: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --gradient-warning: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --box-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f8f9fa;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+    color: var(--dark-color);
+    line-height: 1.6;
 }
 
 /* Navigation */
+.navbar {
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: var(--box-shadow);
+}
+
 .navbar-brand {
     font-weight: 700;
     font-size: 1.5rem;
+    color: white !important;
+    text-decoration: none;
+    background: none !important;
+    -webkit-background-clip: unset !important;
+    -webkit-text-fill-color: unset !important;
+    background-clip: unset !important;
 }
 
-/* Cards */
+.navbar-brand:hover {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Buttons - Force ShapeMate Green Colors */
+.btn-primary {
+    background-color: #28a745 !important;
+    border-color: #28a745 !important;
+    color: white !important;
+}
+
+.btn-primary:hover {
+    background-color: #1e7e34 !important;
+    border-color: #1c7430 !important;
+    color: white !important;
+}
+
+.btn-success {
+    background-color: #28a745 !important;
+    border-color: #28a745 !important;
+    color: white !important;
+}
+
+.btn-success:hover {
+    background-color: #1e7e34 !important;
+    border-color: #1c7430 !important;
+    color: white !important;
+}
+
+.btn-outline-primary {
+    color: #28a745 !important;
+    border-color: #28a745 !important;
+}
+
+.btn-outline-primary:hover {
+    background-color: #28a745 !important;
+    border-color: #28a745 !important;
+    color: white !important;
+}
+
+.btn-outline-success {
+    color: #28a745 !important;
+    border-color: #28a745 !important;
+    background-color: transparent !important;
+}
+
+.btn-outline-success:hover {
+    background-color: #28a745 !important;
+    border-color: #28a745 !important;
+    color: white !important;
+}
+
+/* Override any blue colors */
+.text-primary {
+    color: #28a745 !important;
+}
+
+.bg-primary {
+    background-color: #28a745 !important;
+}
+
+.border-primary {
+    border-color: #28a745 !important;
+}
 .card {
     border: none;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
     transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.95);
 }
 
 .card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    transform: translateY(-5px);
+    box-shadow: var(--box-shadow-lg);
 }
 
 /* Dashboard improvements */
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+    color: white !important;
+}
+
+.bg-gradient-success {
+    background: var(--gradient-success) !important;
+    color: white !important;
+}
+
+.bg-gradient-warning {
+    background: var(--gradient-warning) !important;
+    color: white !important;
+}
+
 .hover-card-small {
     transition: all 0.3s ease;
     cursor: pointer;
@@ -48,10 +151,128 @@ body {
 .hover-card-small:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    border-color: #28a745;
+    border-color: var(--primary-color);
 }
 
 /* Agent cards */
+.card.border-primary {
+    border: 2px solid var(--primary-color) !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.card.border-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--gradient-primary);
+}
+
+.card.border-success {
+    border: 2px solid var(--success-color) !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.card.border-success::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--gradient-success);
+}
+
+/* Botões Melhorados */
+.btn {
+    border-radius: 10px;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
+    border: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn-primary {
+    background: var(--gradient-primary) !important;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3) !important;
+    border-color: #28a745 !important;
+    color: white !important;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4) !important;
+    background-color: #1e7e34 !important;
+    border-color: #1c7430 !important;
+}
+
+.btn-success {
+    background: var(--gradient-primary) !important;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3) !important;
+    border-color: #28a745 !important;
+    color: white !important;
+}
+
+.btn-outline-primary {
+    border: 2px solid #28a745 !important;
+    color: #28a745 !important;
+    background: transparent !important;
+}
+
+.btn-outline-primary:hover {
+    background: #28a745 !important;
+    transform: translateY(-2px);
+    color: white !important;
+    border-color: #28a745 !important;
+}
+
+/* Quick Action Buttons */
+.btn.btn-outline-primary,
+.btn.btn-outline-success,
+.btn.btn-outline-warning,
+.btn.btn-outline-info,
+.btn.btn-outline-secondary,
+.btn.btn-outline-danger {
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    border-radius: 12px;
+}
+
+.btn.btn-outline-primary i,
+.btn.btn-outline-success i,
+.btn.btn-outline-warning i,
+.btn.btn-outline-info i,
+.btn.btn-outline-secondary i,
+.btn.btn-outline-danger i {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
 .agent-card {
     transition: all 0.3s ease;
     border: 2px solid;
@@ -257,10 +478,6 @@ body {
 /* Utility classes */
 .text-shadow {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.bg-gradient-primary {
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
 }
 
 .bg-gradient-success {

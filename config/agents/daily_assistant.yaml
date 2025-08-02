@@ -1,3 +1,4 @@
+agent_type: "daily_assistant"
 name: "Assistente do Dia-a-Dia"
 description: "Especialista em suporte nutricional diário, substituições alimentares e análises práticas"
 
@@ -62,9 +63,11 @@ system_prompt: |
 
 # Tarefas que este agente pode executar
 supported_tasks:
-  - consultation          # Consultas gerais sobre nutrição diária
-  - meal_planning        # Planejamento prático de refeições
-  - education           # Educação sobre substituições e equivalências
+  - daily_support         # Suporte diário geral
+  - shopping_list        # Listas de compras
+  - diet_substitution    # Substituições alimentares
+  - menu_analysis        # Análise de cardápios
+  - meal_suggestion      # Sugestões de refeições
 
 # Configurações do modelo
 model_config:

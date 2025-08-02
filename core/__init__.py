@@ -17,12 +17,12 @@ from .core import (
     get_core_system
 )
 
-# Configuration management
-from .config_loader import (
-    ConfigLoader,
-    ConfigurationError,
-    get_config_loader
-)
+# Configuration management (temporariamente desabilitado devido a importação circular)
+# from .config_loader import (
+#     ConfigLoader,
+#     ConfigurationError,
+#     get_config_loader
+# )
 
 __all__ = [
     # Enums
@@ -43,10 +43,10 @@ __all__ = [
     # System functions
     'get_core_system',
     
-    # Configuration
-    'ConfigLoader',
-    'ConfigurationError',
-    'get_config_loader'
+    # Configuration (temporariamente desabilitado)
+    # 'ConfigLoader',
+    # 'ConfigurationError',
+    # 'get_config_loader'
 ]
 
 # Version info
