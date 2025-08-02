@@ -56,7 +56,7 @@ ShapeMateAI/
 ## 🚀 Instalação e Configuração
 
 ### 1. Pré-requisitos
-- Python 3.8+
+- Python 3.9+
 - [uv](https://github.com/astral-sh/uv) (recomendado) ou pip
 
 ### 2. Instalação do uv (recomendado)
@@ -135,6 +135,10 @@ python app.py
 
 #### Método 2: Com uv (se configurado com scripts)
 ```bash
+# Primeiro sincronizar dependências
+uv sync
+
+# Depois executar o servidor
 uv run shapemate-web
 ```
 

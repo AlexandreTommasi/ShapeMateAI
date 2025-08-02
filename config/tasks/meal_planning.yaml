@@ -1,0 +1,21 @@
+task_type: meal_planning
+priority: 2  # MEDIUM priority
+required_context:
+  - user_profile
+  - dietary_preferences
+  - health_goals
+  - budget_constraints
+  - time_constraints
+tools_required:
+  - calorie_calculator
+  - macro_calculator
+  - meal_planner
+  - nutrition_analyzer
+max_iterations: 8
+timeout_seconds: 300
+success_criteria:
+  nutritional_balance: "optimal"
+  user_preferences_met: "high"
+  practicality: "high"
+  variety: "adequate"
+fallback_strategy: "basic_meal_template"

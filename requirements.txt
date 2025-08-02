@@ -2,9 +2,13 @@ kivy>=2.1.0
 pillow
 openai
 langchain
+langchain-core
+langchain-openai
 python-dotenv
 requests
 flask
 flask_cors
 langgraph
 bcrypt==4.0.1
+pyyaml
+typing-extensions

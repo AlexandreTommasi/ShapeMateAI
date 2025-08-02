@@ -52,13 +52,16 @@
                                         <div class="mt-3">
                                             <p class="mb-1"><strong>Como posso te ajudar hoje?</strong></p>
                                             <div class="d-flex flex-wrap gap-2 mt-2">
-                                                <button class="btn btn-outline-primary btn-sm" onclick="askQuestion('Crie um plano alimentar para mim')">
+                                                <button class="btn btn-outline-primary btn-sm" onclick="askQuestion('Crie um plano alimentar personalizado para mim')">
                                                     📋 Plano alimentar
                                                 </button>
-                                                <button class="btn btn-outline-primary btn-sm" onclick="askQuestion('Quais exercícios recomendam para meu objetivo?')">
-                                                    💪 Exercícios
+                                                <button class="btn btn-outline-primary btn-sm" onclick="askQuestion('Calcule meu IMC e avalie minha situação nutricional')">
+                                                    � Avaliação nutricional
                                                 </button>
-                                                <button class="btn btn-outline-primary btn-sm" onclick="askQuestion('Como posso melhorar minha alimentação?')">
+                                                <button class="btn btn-outline-primary btn-sm" onclick="askQuestion('Quantas calorias devo consumir por dia?')">
+                                                    🔥 Necessidades calóricas
+                                                </button>
+                                                <button class="btn btn-outline-primary btn-sm" onclick="askQuestion('Dê dicas de alimentação saudável para meu objetivo')">
                                                     🥗 Dicas de alimentação
                                                 </button>
                                             </div>
@@ -102,7 +105,7 @@
                         <div class="mt-2">
                             <small class="text-muted">
                                 <i class="fas fa-info-circle me-1"></i>
-                                Sistema em desenvolvimento. Em breve, teremos respostas do nutricionista IA!
+                                Nutricionista IA ativo e pronto para ajudar! 🤖💚
                             </small>
                         </div>
                     </div>
@@ -229,19 +232,17 @@ document.getElementById('chatForm').addEventListener('submit', async function(e)
         // Hide typing indicator
         hideTypingIndicator();
         
-        if (result.success) {
-            // Simulate AI response (placeholder)
-            setTimeout(() => {
-                addMessage('assistant', getPlaceholderResponse(message));
-            }, 1000);
+        if (result.success && result.response) {
+            addMessage('assistant', result.response);
         } else {
-            addMessage('assistant', 'Desculpe, houve um erro ao processar sua mensagem. Tente novamente.');
+            console.error('API Error:', result.message);
+            addMessage('assistant', '⚠️ Erro na comunicação com a IA. Tente novamente.');
         }
         
     } catch (error) {
         hideTypingIndicator();
-        addMessage('assistant', 'Erro de conexão. Verifique sua internet e tente novamente.');
-        console.error('Error:', error);
+        addMessage('assistant', '🔌 Erro de conexão. Verifique sua internet e tente novamente.');
+        console.error('Connection Error:', error);
     }
 });
 
@@ -341,28 +342,6 @@ function startNewChat() {
 function askQuestion(question) {
     document.getElementById('messageInput').value = question;
     document.getElementById('chatForm').dispatchEvent(new Event('submit'));
-}
-
-function getPlaceholderResponse(userMessage) {
-    // Placeholder responses - will be replaced with actual AI responses
-    const responses = {
-        'plano': '📋 Baseado no seu perfil, recomendo um plano alimentar focado em alimentos integrais, proteínas magras e vegetais. Em breve teremos planos personalizados completos!',
-        'exercício': '💪 Para seu objetivo, sugiro exercícios aeróbicos combinados com musculação. O sistema de recomendações detalhadas estará disponível em breve!',
-        'alimentação': '🥗 Dicas importantes: mantenha regularidade nas refeições, hidrate-se bem e inclua variedade de cores no prato. Sistema completo de orientações será lançado em breve!',
-        'default': '🤖 Obrigado pela sua pergunta! Estou em desenvolvimento e em breve poderei fornecer orientações nutricionais completas e personalizadas. Por enquanto, salvo suas perguntas para quando o sistema estiver pronto!'
-    };
-    
-    const lowerMessage = userMessage.toLowerCase();
-    
-    if (lowerMessage.includes('plano') || lowerMessage.includes('cardápio')) {
-        return responses.plano;
-    } else if (lowerMessage.includes('exercício') || lowerMessage.includes('treino')) {
-        return responses.exercício;
-    } else if (lowerMessage.includes('alimentação') || lowerMessage.includes('comer') || lowerMessage.includes('dieta')) {
-        return responses.alimentação;
-    } else {
-        return responses.default;
-    }
 }
 
 // Initialize chat
