@@ -85,14 +85,28 @@ class ConfigLoader:
             logger.error(f"Error saving agent config: {str(e)}")
             raise ConfigurationError(f"Failed to save agent config: {str(e)}")
     
-    def load_task_config(self, task_type: TaskType) -> TaskConfig:
-        """Carrega configuração de uma tarefa específica"""
+    def load_task_config(self, task_type: TaskType, agent_type: AgentType = None) -> TaskConfig:
+        """Carrega configuração de uma tarefa específica para um agente"""
+        if agent_type:
+            # Buscar na pasta específica do agente
+            agent_tasks_dir = self.tasks_dir / agent_type.value
+            config_file = agent_tasks_dir / f"{task_type.value}.yaml"
+            
+            if config_file.exists():
+                try:
+                    with open(config_file, 'r', encoding='utf-8') as f:
+                        config_data = yaml.safe_load(f)
+                    return self._dict_to_task_config(config_data)
+                except Exception as e:
+                    logger.warning(f"Error loading agent-specific task config: {str(e)}")
+        
+        # Fallback para configuração geral na raiz de tasks
         config_file = self.tasks_dir / f"{task_type.value}.yaml"
         
         if not config_file.exists():
             # Criar configuração padrão se não existir
             default_config = self._create_default_task_config(task_type)
-            self.save_task_config(default_config)
+            self.save_task_config(default_config, agent_type)
             return default_config
         
         try:
@@ -105,9 +119,16 @@ class ConfigLoader:
             logger.error(f"Error loading task config for {task_type.value}: {str(e)}")
             raise ConfigurationError(f"Failed to load task config: {str(e)}")
     
-    def save_task_config(self, config: TaskConfig):
+    def save_task_config(self, config: TaskConfig, agent_type: AgentType = None):
         """Salva configuração de uma tarefa"""
-        config_file = self.tasks_dir / f"{config.task_type.value}.yaml"
+        if agent_type:
+            # Salvar na pasta específica do agente
+            agent_tasks_dir = self.tasks_dir / agent_type.value
+            agent_tasks_dir.mkdir(exist_ok=True)
+            config_file = agent_tasks_dir / f"{config.task_type.value}.yaml"
+        else:
+            # Salvar na raiz de tasks
+            config_file = self.tasks_dir / f"{config.task_type.value}.yaml"
         
         try:
             config_dict = config.to_dict()
@@ -208,6 +229,31 @@ class ConfigLoader:
                     'professionalism': 0.95,
                     'patience': 0.9,
                     'encouraging': 0.8
+                }
+            },
+            AgentType.DAILY_ASSISTANT: {
+                'name': 'Assistente do Dia-a-Dia',
+                'description': 'Especialista em suporte nutricional diário e substituições alimentares',
+                'system_prompt': '''Você é o Assistente do Dia-a-Dia da ShapeMateAI, especializado em suporte nutricional prático e cotidiano.
+
+Suas especialidades incluem:
+- Substituições Alimentares: Analise e sugira trocas mantendo valor nutricional
+- Análise de Cardápios: Avalie menus de restaurantes quanto à compatibilidade 
+- Listas de Compras: Gere listas baseadas nas necessidades nutricionais
+- Receitas Compatíveis: Encontre e adapte receitas para dietas específicas
+- Suporte Diário: Resolva dúvidas práticas sobre alimentação
+
+Seja prático, flexível e sempre considere limitações de tempo, dinheiro e disponibilidade.''',
+                'supported_tasks': [
+                    TaskType.CONSULTATION,
+                    TaskType.MEAL_PLANNING,
+                    TaskType.EDUCATION
+                ],
+                'personality_traits': {
+                    'practicality': 0.95,
+                    'flexibility': 0.9,
+                    'helpfulness': 0.9,
+                    'cost_awareness': 0.9
                 }
             },
             AgentType.FITNESS_TRAINER: {

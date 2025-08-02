@@ -1,0 +1,63 @@
+task_type: "SHOPPING_LIST"
+priority: "MEDIUM"
+description: "Criação de lista de supermercado baseada na dieta criada pelo nutricionista"
+
+# Contexto necessário para esta tarefa
+required_context:
+  - diet_plan_pdf
+  - meal_schedule
+  - portion_sizes
+  - user_preferences
+  - budget_considerations
+  - local_availability
+
+# Ferramentas necessárias
+tools_required:
+  - llm_direct
+  - ingredient_extractor
+  - quantity_calculator
+  - list_organizer
+  - price_estimator
+
+# Configurações da tarefa
+max_iterations: 4
+timeout_seconds: 200
+success_criteria:
+  ingredients_extracted: true
+  quantities_calculated: true
+  list_organized: true
+  alternatives_provided: true
+  
+# Estratégia de fallback se a tarefa falhar
+fallback_strategy: "basic_ingredient_list"
+
+# Prompts específicos para esta tarefa
+specialized_prompts:
+  list_creation: |
+    Você vai criar uma lista de supermercado organizada e prática. Inclua:
+    - Todos os ingredientes necessários para a semana
+    - Quantidades precisas baseadas no plano alimentar
+    - Organização por seções do supermercado
+    - Alternativas mais baratas quando possível
+    
+  ingredient_analysis: |
+    Para cada refeição do plano:
+    - Extraia todos os ingredientes necessários
+    - Calcule quantidades para o período desejado
+    - Considere perdas e desperdícios normais
+    - Agrupe ingredientes similares
+    
+  list_organization: |
+    Organize a lista por seções:
+    - Hortifruti (frutas, verduras, legumes)
+    - Açougue (carnes, aves, peixes)
+    - Laticínios e frios
+    - Mercearia (grãos, temperos, enlatados)
+    - Produtos de limpeza e higiene (se aplicável)
+
+# Validações específicas
+validation_rules:
+  - verify_ingredient_completeness
+  - check_quantity_accuracy
+  - ensure_practical_organization
+  - validate_budget_consciousness

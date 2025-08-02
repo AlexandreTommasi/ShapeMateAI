@@ -1,0 +1,87 @@
+task_type: "MEAL_SUGGESTION"
+priority: "MEDIUM"
+description: "Sugestão de refeições baseadas na dieta e preferências do usuário"
+
+# Contexto necessário para esta tarefa
+required_context:
+  - current_diet_plan
+  - meal_time
+  - available_ingredients
+  - user_preferences
+  - nutritional_targets
+  - time_constraints
+
+# Ferramentas necessárias
+tools_required:
+  - llm_direct
+  - recipe_database
+  - nutrition_calculator
+  - ingredient_matcher
+  - time_estimator
+
+# Configurações da tarefa
+max_iterations: 4
+timeout_seconds: 180
+success_criteria:
+  suggestions_provided: true
+  nutrition_aligned: true
+  preferences_considered: true
+  practical_feasibility: true
+  
+# Estratégia de fallback se a tarefa falhar
+fallback_strategy: "simple_balanced_meal"
+
+# Prompts específicos para esta tarefa
+specialized_prompts:
+  suggestion_creation: |
+    Você vai sugerir refeições práticas e saborosas. Considere:
+    - Alinhamento com o plano nutricional
+    - Ingredientes disponíveis ou fáceis de encontrar
+    - Tempo disponível para preparo
+    - Preferências e restrições do usuário
+    
+  meal_planning: |
+    Para cada sugestão, inclua:
+    - Nome da refeição/prato
+    - Lista de ingredientes com quantidades
+    - Tempo estimado de preparo
+    - Instruções simplificadas
+    - Valor nutricional aproximado
+    
+  adaptation_tips: |
+    Sempre ofereça:
+    - Variações da receita principal
+    - Substituições de ingredientes
+    - Dicas para acelerar o preparo
+    - Como ajustar porções
+    - Opções para fazer em maior quantidade
+
+# Banco de sugestões rápidas por refeição
+quick_suggestions:
+  breakfast:
+    - "Overnight oats com frutas"
+    - "Omelete com vegetais"
+    - "Smoothie verde"
+    - "Pão integral com abacate"
+  lunch:
+    - "Salada completa com proteína"
+    - "Bowl nutritivo"
+    - "Sanduíche natural"
+    - "Sopa substanciosa"
+  dinner:
+    - "Peixe grelhado com legumes"
+    - "Frango assado com batata doce"
+    - "Pasta integral com molho de tomate"
+    - "Refogado de tofu com vegetais"
+  snacks:
+    - "Frutas com oleaginosas"
+    - "Iogurte com granola"
+    - "Hummus com vegetais"
+    - "Smoothie de proteína"
+
+# Validações específicas
+validation_rules:
+  - verify_nutritional_compliance
+  - check_ingredient_availability
+  - ensure_preparation_feasibility
+  - validate_taste_compatibility

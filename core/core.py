@@ -17,6 +17,9 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+# Import config loader
+from .config_loader import get_config_loader
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -25,16 +28,22 @@ logger = logging.getLogger(__name__)
 class AgentType(Enum):
     """Tipos de agentes disponíveis no sistema"""
     NUTRITIONIST = "nutritionist"
+    DAILY_ASSISTANT = "daily_assistant"
 
 
 class TaskType(Enum):
     """Tipos de tarefas que os agentes podem executar"""
+    # Nutritionist tasks
     CONSULTATION = "consultation"
-    MEAL_PLANNING = "meal_planning"
-    HEALTH_ASSESSMENT = "health_assessment"
-    GOAL_SETTING = "goal_setting"
-    PROGRESS_TRACKING = "progress_tracking"
-    EDUCATION = "education"
+    MEAL_PLANNING = "meal_planning" 
+    PDF_GENERATION = "pdf_generation"
+    
+    # Daily Assistant tasks
+    DAILY_SUPPORT = "daily_support"
+    SHOPPING_LIST = "shopping_list"
+    DIET_SUBSTITUTION = "diet_substitution"
+    MENU_ANALYSIS = "menu_analysis"
+    MEAL_SUGGESTION = "meal_suggestion"
 
 
 class TaskPriority(Enum):
@@ -254,6 +263,10 @@ class CoreAgentSystem:
         # Sistema de memória para conversas
         self.conversation_memory: Dict[str, List[BaseMessage]] = {}
         self.memory_limits: Dict[str, int] = {}
+        # Config loader para carregar configurações de tasks
+        self.config_loader = get_config_loader()
+        # Sistema de compartilhamento de dados entre agentes
+        self.shared_user_data: Dict[str, Dict[str, Any]] = {}
         
     def _get_memory_key(self, user_id: str, session_id: str) -> str:
         """Gera chave única para memória da sessão"""
@@ -286,6 +299,29 @@ class CoreAgentSystem:
         memory_key = self._get_memory_key(user_id, session_id)
         self.memory_limits[memory_key] = limit
     
+    def update_shared_user_data(self, user_id: str, data_type: str, data: Dict[str, Any]):
+        """Atualiza dados compartilhados entre agentes para um usuário"""
+        if user_id not in self.shared_user_data:
+            self.shared_user_data[user_id] = {}
+        
+        self.shared_user_data[user_id][data_type] = {
+            'data': data,
+            'timestamp': __import__('datetime').datetime.now().isoformat(),
+            'agent_source': data.get('source_agent', 'unknown')
+        }
+        
+        logger.info(f"Updated shared data for user {user_id}: {data_type}")
+    
+    def get_shared_user_data(self, user_id: str, data_type: Optional[str] = None) -> Dict[str, Any]:
+        """Obtém dados compartilhados para um usuário"""
+        if user_id not in self.shared_user_data:
+            return {}
+        
+        if data_type:
+            return self.shared_user_data[user_id].get(data_type, {})
+        
+        return self.shared_user_data[user_id]
+    
     def clear_session_memory(self, user_id: str, session_id: str):
         """Limpa a memória de uma sessão específica"""
         memory_key = self._get_memory_key(user_id, session_id)
@@ -314,15 +350,32 @@ class CoreAgentSystem:
         
         agent_config = self.agents[agent_type].config
         
-        # Configuração da tarefa com valores padrão
-        task_config = TaskConfig(
-            task_type=task_type,
-            priority=kwargs.get('priority', TaskPriority.MEDIUM),
-            required_context=kwargs.get('required_context', []),
-            tools_required=kwargs.get('tools_required', []),
-            max_iterations=kwargs.get('max_iterations', 10),
-            timeout_seconds=kwargs.get('timeout_seconds', 300)
-        )
+        # Carregar configuração da tarefa específica do agente
+        try:
+            task_config_data = self.config_loader.load_task_config(task_type, agent_type)
+            
+            # Criar TaskConfig com dados carregados + overrides
+            task_config = TaskConfig(
+                task_type=task_type,
+                priority=kwargs.get('priority', TaskPriority(task_config_data.get('priority', 'MEDIUM'))),
+                required_context=kwargs.get('required_context', task_config_data.get('required_context', [])),
+                tools_required=kwargs.get('tools_required', task_config_data.get('tools_required', [])),
+                max_iterations=kwargs.get('max_iterations', task_config_data.get('max_iterations', 10)),
+                timeout_seconds=kwargs.get('timeout_seconds', task_config_data.get('timeout_seconds', 300)),
+                success_criteria=task_config_data.get('success_criteria', {}),
+                fallback_strategy=task_config_data.get('fallback_strategy')
+            )
+        except Exception as e:
+            logger.warning(f"Failed to load task config for {agent_type.value}/{task_type.value}: {e}")
+            # Fallback para configuração padrão
+            task_config = TaskConfig(
+                task_type=task_type,
+                priority=kwargs.get('priority', TaskPriority.MEDIUM),
+                required_context=kwargs.get('required_context', []),
+                tools_required=kwargs.get('tools_required', []),
+                max_iterations=kwargs.get('max_iterations', 10),
+                timeout_seconds=kwargs.get('timeout_seconds', 300)
+            )
         
         # Configuração da sessão
         session_config = {
@@ -414,6 +467,12 @@ class CoreAgentSystem:
             agent = self.get_agent(config.agent_config.agent_type)
             if not agent:
                 raise ValueError(f"Agent {config.agent_config.agent_type.value} not found")
+            
+            # Adicionar dados compartilhados ao contexto
+            shared_data = self.get_shared_user_data(user_id)
+            if context is None:
+                context = {}
+            context['shared_agent_data'] = shared_data
             
             # Adicionar mensagem do usuário à memória
             user_message = HumanMessage(content=message)

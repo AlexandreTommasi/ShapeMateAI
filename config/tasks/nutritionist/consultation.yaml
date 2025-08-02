@@ -1,0 +1,53 @@
+task_type: "CONSULTATION"
+priority: "HIGH"  
+description: "Coleta completa de dados do cliente para criação de dieta e recomendações de atividades físicas"
+
+# Contexto necessário para esta tarefa
+required_context:
+  - user_profile
+  - health_history
+  - dietary_preferences
+  - goals_and_objectives
+  - physical_activity_level
+  - medical_restrictions
+  - food_allergies
+  - lifestyle_factors
+  - anthropometric_data
+  - clinical_history
+
+# Ferramentas necessárias
+tools_required:
+  - llm_direct
+  - health_assessor
+  - data_collector
+  - nutrition_calculator
+  - goal_tracker
+
+# Configurações da tarefa
+max_iterations: 8
+timeout_seconds: 300
+success_criteria:
+  complete_anamnesis: true
+  anthropometric_data_collected: true
+  objectives_defined: true
+  restrictions_identified: true
+  user_satisfied: true
+  
+# Estratégia de fallback se a tarefa falhar
+fallback_strategy: "simple_consultation"
+
+# Prompts específicos para esta tarefa
+specialized_prompts:
+  consultation_intro: |
+    Como nutricionista experiente, você está realizando uma consulta personalizada.
+    Considere sempre o perfil completo do usuário e suas necessidades específicas.
+    
+  follow_up_questions: |
+    Após responder, sempre pergunte se o usuário tem outras dúvidas ou precisa
+    de esclarecimentos adicionais sobre a orientação fornecida.
+
+# Validações específicas
+validation_rules:
+  - check_user_profile_completeness
+  - verify_dietary_restrictions
+  - ensure_safe_recommendations
