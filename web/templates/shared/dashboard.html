@@ -279,7 +279,8 @@
                         
                         <!-- Assistente do Dia-a-Dia -->
                         <div class="col-md-6 mb-4">
-                            <div class="p-4 border rounded hover-card h-100" style="border-color: #28a745 !important; border-width: 2px !important;">
+                            {% if has_diet %}
+                            <div class="p-4 border rounded hover-card h-100" style="border-color: #28a745 !important; border-width: 2px !important; cursor: pointer;" onclick="goToDailyAssistant()">
                                 <div class="d-flex align-items-center justify-content-center mb-3">
                                     <i class="fas fa-calendar-day fa-4x me-3" style="color: #28a745;"></i>
                                     <div>
@@ -311,11 +312,56 @@
                                         </div>
                                     </div>
                                 </div>
-                                <a href="{{ url_for('chat', agent='daily_assistant') }}" class="btn btn-lg w-100" 
-                                   style="background-color: #28a745; border-color: #28a745; color: white;">
-                                    <i class="fas fa-hands-helping me-2"></i>Conversar com Assistente
-                                </a>
+                                <button class="btn btn-lg w-100" 
+                                        style="background-color: #28a745; border-color: #28a745; color: white;">
+                                    <i class="fas fa-comments me-2"></i>Conversar com Assistente
+                                </button>
                             </div>
+                            {% else %}
+                            <div class="p-4 border rounded h-100" style="border-color: #dc3545 !important; border-width: 2px !important; opacity: 0.7; cursor: not-allowed;">
+                                <div class="d-flex align-items-center justify-content-center mb-3">
+                                    <i class="fas fa-lock fa-4x me-3" style="color: #dc3545;"></i>
+                                    <div>
+                                        <h4 class="mb-1" style="color: #dc3545;">Assistente</h4>
+                                        <p class="text-muted small mb-0">Dia-a-Dia</p>
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-lock me-1"></i>Bloqueado
+                                        </span>
+                                    </div>
+                                </div>
+                                <p class="text-muted mb-3">
+                                    <i class="fas fa-exclamation-triangle me-2" style="color: #dc3545;"></i>
+                                    Para usar o Assistente Diário, você precisa primeiro gerar sua dieta com o Nutrion 
+                                    ou fazer upload do seu PDF de dieta.
+                                </p>
+                                <div class="mb-3">
+                                    <div class="row text-center">
+                                        <div class="col-4">
+                                            <i class="fas fa-exchange-alt fa-lg mb-1" style="color: #6c757d;"></i>
+                                            <p class="small mb-0 text-muted">Substituições</p>
+                                        </div>
+                                        <div class="col-4">
+                                            <i class="fas fa-utensils fa-lg mb-1" style="color: #6c757d;"></i>
+                                            <p class="small mb-0 text-muted">Cardápios</p>
+                                        </div>
+                                        <div class="col-4">
+                                            <i class="fas fa-shopping-cart fa-lg mb-1" style="color: #6c757d;"></i>
+                                            <p class="small mb-0 text-muted">Compras</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-lg w-100" disabled
+                                        style="background-color: #6c757d; border-color: #6c757d; color: white;">
+                                    <i class="fas fa-lock me-2"></i>Requer Dieta
+                                </button>
+                                <div class="text-center mt-2">
+                                    <small class="text-muted">
+                                        <i class="fas fa-arrow-up me-1"></i>
+                                        Converse primeiro com o Nutrion
+                                    </small>
+                                </div>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -506,6 +552,10 @@
 // Funções de ação rápida
 function updateProfile() {
     alert('🔧 Funcionalidade em desenvolvimento!\n\nEm breve você poderá:\n• Atualizar peso e medidas\n• Modificar objetivos\n• Ajustar nível de atividade\n• Editar restrições alimentares');
+}
+
+function goToDailyAssistant() {
+    window.location.href = '{{ url_for("daily_assistant") }}';
 }
 
 function viewProgress() {

@@ -183,7 +183,24 @@ def dashboard():
         return redirect(url_for('login'))
     
     user_data = session.get('user_data', {})
-    return render_template('shared/dashboard.html', user=user_data)
+    
+    # Verificar se o usuário tem dieta
+    user_id = session['user_id']
+    has_diet = False
+    
+    try:
+        # Verificar se tem dieta no diet_manager
+        user_diets = diet_manager.get_user_diet_list(user_id)
+        if user_diets and len(user_diets) > 0:
+            has_diet = True
+    except Exception as e:
+        logging.error(f"Erro ao verificar dieta do usuário: {e}")
+        has_diet = False
+    
+    # Adicionar informação à sessão
+    session['has_diet'] = has_diet
+    
+    return render_template('shared/dashboard.html', user=user_data, has_diet=has_diet)
 
 
 @app.route('/chat')
@@ -503,6 +520,22 @@ def daily_assistant():
     """Página do chat com Daily Assistant"""
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    
+    # Verificar se o usuário tem dieta antes de permitir acesso
+    user_id = session['user_id']
+    has_diet = False
+    
+    try:
+        user_diets = diet_manager.get_user_diet_list(user_id)
+        if user_diets and len(user_diets) > 0:
+            has_diet = True
+    except Exception as e:
+        logging.error(f"Erro ao verificar dieta do usuário: {e}")
+        has_diet = False
+    
+    # Se não tem dieta, redirecionar para dashboard com mensagem
+    if not has_diet:
+        return redirect(url_for('dashboard'))
     
     user_data = session.get('user_data', {})
     return render_template('daily_assistant/chat.html', user=user_data, 

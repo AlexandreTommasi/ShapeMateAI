@@ -18,14 +18,14 @@
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light" style="background-color: #28a745;">
+    <nav class="navbar navbar-expand-lg navbar-light" style="background-color: white; border-bottom: 2px solid #28a745; z-index: 1050;">
         <div class="container">
-            <a class="navbar-brand text-white fw-bold" href="{{ url_for('index') }}" 
-               style="color: white !important; background: none !important; background-clip: unset !important; -webkit-background-clip: unset !important; -webkit-text-fill-color: unset !important;">
+            <a class="navbar-brand fw-bold" href="{{ url_for('index') }}" 
+               style="color: #28a745 !important;">
                 <i class="fas fa-dumbbell me-2"></i>ShapeMateAI
             </a>
             
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="border-color: #28a745;">
                 <span class="navbar-toggler-icon"></span>
             </button>
             
@@ -33,28 +33,37 @@
                 <ul class="navbar-nav ms-auto">
                     {% if session.user_id %}
                         <li class="nav-item">
-                            <a class="nav-link text-white" href="{{ url_for('dashboard') }}">
+                            <a class="nav-link" href="{{ url_for('dashboard') }}" style="color: #28a745 !important; font-weight: 500;">
                                 <i class="fas fa-tachometer-alt me-1"></i>Dashboard
                             </a>
                         </li>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" style="color: #28a745 !important; font-weight: 500;">
                                 <i class="fas fa-comments me-1"></i>Agentes IA
                             </a>
-                            <ul class="dropdown-menu">
+                            <ul class="dropdown-menu" style="z-index: 1060;">
                                 <li><a class="dropdown-item" href="{{ url_for('chat') }}">
                                     <i class="fas fa-user-md me-2"></i>Nutricionista
                                 </a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('daily_assistant') }}">
-                                    <i class="fas fa-calendar-day me-2"></i>Assistente Diário
-                                </a></li>
+                                <li>
+                                    {% if session.has_diet %}
+                                        <a class="dropdown-item" href="{{ url_for('daily_assistant') }}">
+                                            <i class="fas fa-calendar-day me-2"></i>Assistente Diário
+                                        </a>
+                                    {% else %}
+                                        <a class="dropdown-item text-muted" href="#" onclick="showDietRequiredModal()" style="cursor: pointer;">
+                                            <i class="fas fa-lock me-2"></i>Assistente Diário
+                                            <small class="d-block text-muted">Requer dieta gerada</small>
+                                        </a>
+                                    {% endif %}
+                                </li>
                             </ul>
                         </li>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" style="color: #28a745 !important; font-weight: 500;">
                                 <i class="fas fa-clipboard-list me-1"></i>Minha Nutrição
                             </a>
-                            <ul class="dropdown-menu">
+                            <ul class="dropdown-menu" style="z-index: 1060;">
                                 <li><a class="dropdown-item" href="{{ url_for('diet_view') }}">
                                     <i class="fas fa-apple-alt me-2"></i>Minha Dieta
                                 </a></li>
@@ -67,18 +76,18 @@
                             </ul>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-white" href="#" onclick="logout()">
+                            <a class="nav-link" href="#" onclick="logout()" style="color: #28a745 !important; font-weight: 500;">
                                 <i class="fas fa-sign-out-alt me-1"></i>Sair
                             </a>
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="nav-link text-white" href="{{ url_for('login') }}">
+                            <a class="nav-link" href="{{ url_for('login') }}" style="color: #28a745 !important; font-weight: 500;">
                                 <i class="fas fa-sign-in-alt me-1"></i>Entrar
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-white" href="{{ url_for('register') }}">
+                            <a class="nav-link" href="{{ url_for('register') }}" style="color: #28a745 !important; font-weight: 500;">
                                 <i class="fas fa-user-plus me-1"></i>Cadastrar
                             </a>
                         </li>
@@ -93,6 +102,47 @@
         {% block content %}{% endblock %}
     </main>
 
+    <!-- Modal para Dieta Necessária -->
+    <div class="modal fade" id="dietRequiredModal" tabindex="-1" aria-labelledby="dietRequiredModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="background-color: #28a745; color: white;">
+                    <h5 class="modal-title" id="dietRequiredModalLabel">
+                        <i class="fas fa-lock me-2"></i>Assistente Diário Bloqueado
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-3">
+                        <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                        <h6>Acesso Restrito</h6>
+                    </div>
+                    <p>Para acessar o <strong>Assistente Diário</strong>, você precisa primeiro:</p>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Gerar sua dieta personalizada com o <strong>Nutricionista IA</strong>
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            OU fazer upload do seu PDF de dieta existente
+                        </li>
+                    </ul>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        O Assistente Diário precisa da sua dieta para te ajudar com o planejamento das refeições e acompanhamento diário.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <a href="{{ url_for('chat') }}" class="btn btn-success" style="background-color: #28a745; border-color: #28a745;">
+                        <i class="fas fa-user-md me-2"></i>Ir para Nutricionista
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="bg-dark text-white text-center py-3 mt-5">
         <div class="container">
@@ -105,6 +155,32 @@
     
     <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    
+    <script>
+        function showDietRequiredModal() {
+            var modal = new bootstrap.Modal(document.getElementById('dietRequiredModal'));
+            modal.show();
+        }
+        
+        function logout() {
+            fetch('/api/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '/login';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                window.location.href = '/login';
+            });
+        }
+    </script>
     
     {% block extra_js %}{% endblock %}
 </body>

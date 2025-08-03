@@ -3,69 +3,38 @@
 {% block title %}Chat Nutricionista - ShapeMateAI{% endblock %}
 
 {% block content %}
-<div class="container-fluid h-100">
-    <div class="row h-100">
-        <div class="col-12">
-            <div class="card h-100">
-                <div class="card-header bg-primary text-white">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5 class="mb-0">
-                                <i class="fas fa-comments me-2"></i>
-                                Chat com Nutricionista IA
-                            </h5>
-                            <small>Assistente nutricional personalizado para {{ user.name or 'você' }}</small>
-                        </div>
-                        <div>
-                            <button class="btn btn-light btn-sm" onclick="startNewChat()">
-                                <i class="fas fa-plus me-2"></i>Nova Conversa
-                            </button>
-                        </div>
-                    </div>
+<div class="d-flex flex-column" style="height: 100vh;">
+    <div class="card border-0 h-100" style="border-radius: 0;">
+        <div class="card-header bg-gradient-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">
+                        <i class="fas fa-comments me-2"></i>
+                        Chat com Nutricionista IA
+                    </h5>
+                    <small>Assistente nutricional personalizado para {{ user.name or 'você' }}</small>
                 </div>
-                
-                <div class="card-body d-flex flex-column p-0" style="height: 70vh;">
-                    <!-- Chat Messages Area -->
-                    <div class="flex-grow-1 p-3" id="chatMessages" style="overflow-y: auto; background-color: #f8f9fa;">
-                        <!-- Welcome Message -->
+                <div>
+                    <button class="btn btn-light btn-sm" onclick="startNewChat()" style="background-color: white; color: #28a745; border-color: white;">
+                        <i class="fas fa-plus me-2"></i>Nova Conversa
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-body d-flex flex-column p-0 flex-grow-1">
+            <!-- Chat Messages Area -->
+            <div class="flex-grow-1 p-3" id="chatMessages" style="overflow-y: auto; background-color: #f8f9fa;">
+                <!-- Welcome Message -->
                         <div class="chat-message assistant-message mb-3">
                             <div class="d-flex">
-                                <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                <div class="avatar text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; background-color: #28a745;">
                                     <i class="fas fa-robot"></i>
                                 </div>
                                 <div class="message-content">
                                     <div class="bg-white rounded p-3 shadow-sm">
                                         <p class="mb-2">Olá, {{ user.name or 'usuário' }}! 👋</p>
-                                        <p class="mb-2">Sou seu assistente nutricional personalizado. Estou aqui para ajudar você a alcançar seus objetivos de saúde e nutrição!</p>
-                                        
-                                        <div class="mt-3">
-                                            <strong>Baseado no seu perfil, vejo que:</strong>
-                                            <ul class="mt-2 mb-0">
-                                                <li>Seu objetivo é: <strong>{{ user.primary_goal|replace('_', ' ')|title }}</strong></li>
-                                                <li>Nível de atividade: <strong>{{ user.activity_level|replace('_', ' ')|title }}</strong></li>
-                                                {% if user.dietary_restrictions %}
-                                                <li>Restrições alimentares: <strong>{{ user.dietary_restrictions }}</strong></li>
-                                                {% endif %}
-                                            </ul>
-                                        </div>
-                                        
-                                        <div class="mt-3">
-                                            <p class="mb-1"><strong>Como posso te ajudar hoje?</strong></p>
-                                            <div class="d-flex flex-wrap gap-2 mt-2">
-                                                <button class="btn btn-outline-primary btn-sm" onclick="askQuestion('Crie um plano alimentar personalizado para mim')">
-                                                    📋 Plano alimentar
-                                                </button>
-                                                <button class="btn btn-outline-primary btn-sm" onclick="askQuestion('Calcule meu IMC e avalie minha situação nutricional')">
-                                                    � Avaliação nutricional
-                                                </button>
-                                                <button class="btn btn-outline-primary btn-sm" onclick="askQuestion('Quantas calorias devo consumir por dia?')">
-                                                    🔥 Necessidades calóricas
-                                                </button>
-                                                <button class="btn btn-outline-primary btn-sm" onclick="askQuestion('Dê dicas de alimentação saudável para meu objetivo')">
-                                                    🥗 Dicas de alimentação
-                                                </button>
-                                            </div>
-                                        </div>
+                                        <p class="mb-0">Vamos começar a conversa para gerar sua dieta personalizada.</p>
                                     </div>
                                     <small class="text-muted">Agora</small>
                                 </div>
@@ -78,7 +47,7 @@
                     <!-- Typing Indicator -->
                     <div id="typingIndicator" class="px-3 py-2 d-none">
                         <div class="d-flex align-items-center">
-                            <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 30px; height: 30px;">
+                            <div class="avatar text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 30px; height: 30px; background-color: #28a745;">
                                 <i class="fas fa-robot"></i>
                             </div>
                             <div class="typing-animation">
@@ -97,7 +66,7 @@
                                 <textarea class="form-control" id="messageInput" rows="2" placeholder="Digite sua pergunta sobre nutrição..." required style="resize: none;"></textarea>
                             </div>
                             <div class="d-flex flex-column justify-content-end">
-                                <button type="submit" class="btn btn-primary" id="sendBtn">
+                                <button type="submit" class="btn btn-success" id="sendBtn" style="background-color: #28a745 !important; border-color: #28a745 !important;">
                                     <i class="fas fa-paper-plane"></i>
                                 </button>
                             </div>
@@ -113,11 +82,17 @@
             </div>
         </div>
     </div>
-</div>
 {% endblock %}
 
 {% block extra_css %}
 <style>
+/* Full screen chat layout */
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
 .chat-message {
     margin-bottom: 1rem;
 }
@@ -128,7 +103,7 @@
 }
 
 .user-message .message-content .bg-primary {
-    background-color: #0d6efd !important;
+    background-color: #28a745 !important;
 }
 
 .assistant-message .message-content {
@@ -143,7 +118,7 @@
 .typing-animation span {
     height: 8px;
     width: 8px;
-    background-color: #6c757d;
+    background-color: #28a745;
     border-radius: 50%;
     display: inline-block;
     margin-right: 3px;
@@ -166,11 +141,36 @@
 
 #chatMessages {
     scroll-behavior: smooth;
+    height: calc(100vh - 200px); /* Adjust based on header and input heights */
 }
 
 .hover-suggestion:hover {
     background-color: #e9ecef !important;
     cursor: pointer;
+}
+
+/* Override any blue colors */
+.btn-primary {
+    background-color: #28a745 !important;
+    border-color: #28a745 !important;
+}
+
+.btn-primary:hover {
+    background-color: #1e7e34 !important;
+    border-color: #1c7430 !important;
+}
+
+.bg-primary {
+    background-color: #28a745 !important;
+}
+
+/* Navbar text visibility fix */
+.navbar .nav-link {
+    color: white !important;
+}
+
+.navbar .dropdown-toggle {
+    color: white !important;
 }
 </style>
 {% endblock %}
@@ -324,7 +324,7 @@ function startNewChat() {
         document.getElementById('chatMessages').innerHTML = `
             <div class="chat-message assistant-message mb-3">
                 <div class="d-flex">
-                    <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                    <div class="avatar text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; background-color: #28a745;">
                         <i class="fas fa-robot"></i>
                     </div>
                     <div class="message-content">
@@ -337,11 +337,6 @@ function startNewChat() {
             </div>
         `;
     }
-}
-
-function askQuestion(question) {
-    document.getElementById('messageInput').value = question;
-    document.getElementById('chatForm').dispatchEvent(new Event('submit'));
 }
 
 // Initialize chat
