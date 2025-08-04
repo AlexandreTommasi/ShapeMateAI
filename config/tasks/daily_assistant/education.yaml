@@ -1,0 +1,56 @@
+task_type: "education"
+priority: 1  # LOW
+description: "Educação prática sobre substituições e equivalências alimentares"
+
+# Contexto necessário para esta tarefa
+required_context:
+  - learning_topic
+  - practical_application
+  - user_experience_level
+
+# Ferramentas necessárias
+tools_required:
+  - llm_direct
+  - food_substitution
+  - equivalence_calculator
+
+# Configurações da tarefa
+max_iterations: 3
+timeout_seconds: 100
+success_criteria:
+  practical_knowledge_shared: true
+  examples_provided: true
+  application_demonstrated: true
+  
+# Estratégia de fallback se a tarefa falhar
+fallback_strategy: "basic_substitution_rules"
+
+# Prompts específicos para esta tarefa
+specialized_prompts:
+  education_intro: |
+    Você está ensinando conceitos práticos de nutrição. Seja:
+    - Focado na aplicação prática
+    - Use exemplos do cotidiano
+    - Demonstre com situações reais
+    - Ensine regras simples e memorizáveis
+    
+  practical_teaching: |
+    Ao ensinar substituições e equivalências:
+    - Explique os princípios básicos
+    - Mostre como calcular proporções
+    - Dê exemplos de diferentes categorias
+    - Ensine a avaliar qualidade das trocas
+    
+  hands_on_learning: |
+    Inclua sempre:
+    - Exercícios práticos simples
+    - Regras de bolso úteis
+    - Checklist para avaliar substituições
+    - Dicas para lembrar no supermercado
+
+# Validações específicas
+validation_rules:
+  - verify_practical_applicability
+  - check_rule_accuracy
+  - ensure_easy_comprehension
+  - validate_real_world_relevance

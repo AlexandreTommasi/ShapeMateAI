@@ -4,7 +4,7 @@ Interface web para cadastro e interação com usuários
 Integrado com sistema de agentes Langgraph
 """
 
-from flask import Flask, render_template, request, jsonify, redirect, url_for, session
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session, send_file
 from flask_cors import CORS
 import sys
 import os
@@ -27,39 +27,7 @@ from core.config_loader import get_config_loader
 
 # Importar utilitários
 from utils.diet_manager.diet_storage import diet_manager
-from utils.pdf_processor.diet_extractor import process_uploaded_diet
-
-# Classe de agente nutricionista simples
-class SimpleNutritionistAgent(BaseAgent):
-    """Agente nutricionista simplificado para web"""
-    
-    def __init__(self):
-        config_loader = get_config_loader()
-        config = config_loader.load_agent_config(AgentType.NUTRITIONIST)
-        super().__init__(config)
-    
-    def process_message(self, state):
-        """Processa mensagem usando o novo sistema de memória"""
-        try:
-            # Usar o novo método para preparar mensagens com contexto
-            messages_with_context = self.prepare_messages_with_context(state)
-            
-            # Usar LLM diretamente com todo o histórico
-            response = self.llm.invoke(messages_with_context)
-            
-            # Adicionar resposta ao estado
-            from langchain_core.messages import AIMessage
-            state['messages'].append(AIMessage(content=response.content))
-            state['confidence_score'] = 0.9
-            
-            return state
-            
-        except Exception as e:
-            logger.error(f"Error in SimpleNutritionistAgent: {str(e)}")
-            from langchain_core.messages import AIMessage
-            state['messages'].append(AIMessage(content="Desculpe, ocorreu um erro ao processar sua mensagem."))
-            state['confidence_score'] = 0.1
-            return state
+from utils.pdf_generator import process_uploaded_diet
 
 # Classe de agente Daily Assistant simples
 class SimpleDailyAssistantAgent(BaseAgent):
@@ -119,14 +87,23 @@ nutritionist_available = False
 daily_assistant_available = False
 
 try:
-    # Criar e registrar agente nutricionista
-    nutritionist_agent = SimpleNutritionistAgent()
+    # Importar o agente nutricionista atualizado
+    from core.agents.nutritionist_agent import NutritionistAgent
+    
+    # Criar e registrar agente nutricionista com fluxo estruturado
+    print("🔧 Creating NutritionistAgent...")
+    nutritionist_agent = NutritionistAgent()
+    print("✅ NutritionistAgent created successfully")
+    
     core_system.register_agent(nutritionist_agent)
     nutritionist_available = True
+    print("✅ Agente nutricionista registrado com sucesso")
     logger.info("✅ Agente nutricionista registrado com sucesso")
 except Exception as e:
-    logger.error(f"❌ Erro ao inicializar agente nutricionista: {e}")
+    print(f"❌ Erro crítico ao inicializar agente nutricionista: {e}")
+    logger.error(f"❌ Erro crítico ao inicializar agente nutricionista: {e}")
     nutritionist_available = False
+    nutritionist_agent = None
 
 try:
     # Criar e registrar agente daily assistant
@@ -135,8 +112,9 @@ try:
     daily_assistant_available = True
     logger.info("✅ Agente daily assistant registrado com sucesso")
 except Exception as e:
-    logger.error(f"❌ Erro ao inicializar agente daily assistant: {e}")
+    logger.error(f"❌ Erro crítico ao inicializar agente daily assistant: {e}")
     daily_assistant_available = False
+    daily_assistant_agent = None
 
 def allowed_file(filename):
     """Verifica se o arquivo é permitido"""
@@ -217,7 +195,7 @@ def chat(agent=None):
         return render_template('daily_assistant/chat.html', user=user_data, 
                              assistant_available=daily_assistant_available)
     else:
-        # Default para nutritionist
+        # Default para nutritionist - usar o template principal do chat
         return render_template('nutritionist/chat.html', user=user_data)
 
 
@@ -413,8 +391,12 @@ def api_send_message():
                         'message': 'Mensagem processada com sucesso',
                         'user_message_id': user_msg_id,
                         'bot_message_id': bot_msg_id,
-                        'response': result['response'],
-                        'confidence': result.get('confidence_score', 0.9)
+                        'current_message': result['response'],
+                        'confidence': result.get('confidence_score', 0.9),
+                        'show_option_buttons': result.get('show_option_buttons', False),
+                        'is_decision_point': result.get('is_decision_point', False),
+                        'current_phase': result.get('current_phase', ''),
+                        'diet_generated': result.get('diet_generated', False)
                     })
                 else:
                     # Se falhou, retornar erro para tentar novamente
@@ -495,6 +477,269 @@ def api_nutritionist_status():
     })
 
 
+# =================== APIS DO FLUXO ESTRUTURADO ===================
+
+@app.route('/api/nutritionist/consultation/start', methods=['POST'])
+def api_start_structured_consultation():
+    """API para iniciar consulta estruturada com o Nutrion"""
+    print("🚀 API START CONSULTATION CALLED")
+    
+    if 'user_id' not in session:
+        print("❌ User not authenticated")
+        return jsonify({'success': False, 'message': 'Usuário não autenticado'}), 401
+    
+    if not nutritionist_available or not nutritionist_agent:
+        print(f"❌ Nutritionist not available: {nutritionist_available}, agent: {nutritionist_agent}")
+        return jsonify({'success': False, 'message': 'Nutricionista não disponível'}), 503
+    
+    try:
+        user_data = session.get('user_data', {})
+        user_id = session['user_id']
+        print(f"📋 User data: {user_data}")
+        
+        # Verificar se já existe uma consulta em andamento
+        if 'consultation_state' in session:
+            consultation_state = session['consultation_state']
+            # Verificar se tem mensagem válida
+            if consultation_state.get('conversation_history'):
+                last_message = consultation_state['conversation_history'][-1]['message']
+                print(f"📨 Returning existing consultation with message: {last_message[:100]}...")
+                return jsonify({
+                    'success': True,
+                    'consultation_state': consultation_state,
+                    'current_message': last_message,
+                    'current_phase': consultation_state.get('current_phase', 'greeting'),
+                    'message': 'Consulta em andamento recuperada'
+                })
+        
+        # Iniciar nova consulta estruturada
+        print("🆕 Starting new structured consultation")
+        consultation_state = nutritionist_agent.start_structured_consultation(user_data)
+        print(f"✅ Consultation state created: {consultation_state.keys()}")
+        
+        # Salvar estado na sessão
+        session['consultation_state'] = consultation_state
+        
+        # Obter primeira mensagem
+        first_message = consultation_state.get('last_response_content') or consultation_state['conversation_history'][-1]['message']
+        print(f"📨 First message: {first_message[:100]}...")
+        
+        return jsonify({
+            'success': True,
+            'consultation_state': consultation_state,
+            'current_message': first_message,
+            'current_phase': consultation_state.get('current_phase', 'greeting')
+        })
+        
+    except Exception as e:
+        print(f"❌ Error starting consultation: {e}")
+        logger.error(f"Erro ao iniciar consulta estruturada: {e}")
+        return jsonify({
+            'success': False,
+            'message': f'Erro ao iniciar consulta: {str(e)}'
+        }), 500
+
+
+@app.route('/api/nutritionist/consultation/respond', methods=['POST'])
+def api_respond_structured_consultation():
+    """API para responder na consulta estruturada"""
+    print("🗣️ API RESPOND CONSULTATION CALLED")
+    
+    if 'user_id' not in session:
+        print("❌ User not authenticated")
+        return jsonify({'success': False, 'message': 'Usuário não autenticado'}), 401
+    
+    if not nutritionist_available or not nutritionist_agent:
+        print(f"❌ Nutritionist not available: {nutritionist_available}, agent: {nutritionist_agent}")
+        return jsonify({'success': False, 'message': 'Nutricionista não disponível'}), 503
+    
+    try:
+        data = request.get_json()
+        print(f"📨 Received data: {data}")
+        
+        if not data or 'response' not in data:
+            print("❌ Missing response field")
+            return jsonify({'success': False, 'message': 'Resposta é obrigatória'}), 400
+        
+        user_response = data['response'].strip()
+        if not user_response:
+            print("❌ Empty response")
+            return jsonify({'success': False, 'message': 'Resposta não pode estar vazia'}), 400
+        
+        # Verificar se existe consulta em andamento
+        if 'consultation_state' not in session:
+            print("❌ No consultation in progress")
+            return jsonify({'success': False, 'message': 'Nenhuma consulta em andamento'}), 400
+        
+        consultation_state = session['consultation_state']
+        print(f"📋 Current consultation state keys: {consultation_state.keys()}")
+        
+        # Continuar consulta estruturada
+        print("🔄 Continuing structured consultation...")
+        updated_state = nutritionist_agent.continue_structured_consultation(
+            consultation_state, user_response
+        )
+        
+        # Atualizar estado na sessão
+        session['consultation_state'] = updated_state
+        print("✅ Session updated with new state")
+        
+        # Obter última mensagem do agente
+        latest_message = updated_state['conversation_history'][-1]['message']
+        print(f"📨 Latest message: {latest_message[:100]}...")
+        
+        # Verificar se chegou ao ponto de decisão
+        is_decision_point = updated_state.get('ready_for_summary', False)
+        show_buttons = 'summary_and_decision' in updated_state['current_phase']
+        
+        response_data = {
+            'success': True,
+            'consultation_state': updated_state,
+            'current_message': latest_message,
+            'current_phase': updated_state['current_phase'],
+            'is_decision_point': is_decision_point,
+            'show_action_buttons': show_buttons,
+            'diet_generated': updated_state.get('current_phase') == 'diet_generated'
+        }
+        print(f"✅ Sending response: success={response_data['success']}, message_length={len(latest_message)}, diet_generated={response_data['diet_generated']}")
+        
+        return jsonify(response_data)
+        
+    except Exception as e:
+        print(f"❌ Error in respond consultation: {e}")
+        logger.error(f"Erro ao responder consulta estruturada: {e}")
+        return jsonify({
+            'success': False,
+            'message': f'Erro ao processar resposta: {str(e)}'
+        }), 500
+
+
+@app.route('/api/nutritionist/consultation/action', methods=['POST'])
+def api_consultation_action():
+    """API para executar ação na consulta (gerar dieta ou adicionar informações)"""
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'message': 'Usuário não autenticado'}), 401
+    
+    try:
+        data = request.get_json()
+        if not data or 'action' not in data:
+            return jsonify({'success': False, 'message': 'Ação é obrigatória'}), 400
+        
+        action = data['action'].lower()
+        consultation_state = session.get('consultation_state', {})
+        
+        if action == 'generate_diet':
+            # NOVA FUNCIONALIDADE: Gerar dieta real usando agente com TMB
+            try:
+                # Verificar se o agente nutricionista está disponível
+                if not nutritionist_available or not nutritionist_agent:
+                    return jsonify({
+                        'success': False,
+                        'message': 'Sistema de geração de dietas não disponível'
+                    }), 503
+                
+                # Gerar dieta usando o agente nutricionista
+                diet_json = nutritionist_agent.generate_diet_json(consultation_state)
+                
+                # Salvar dieta para o usuário (aqui você pode implementar salvamento no banco)
+                user_id = session['user_id']
+                
+                # Mensagem de sucesso com detalhes dos cálculos
+                tmb_info = diet_json.get('tmb_calculations', {})
+                patient_info = diet_json.get('patient_info', {})
+                
+                success_message = f"""🎉 **DIETA PERSONALIZADA CRIADA COM SUCESSO!** 
+
+Uhuuul! Sua dieta personalizada está pronta! ✨
+
+## 📊 **SEUS CÁLCULOS NUTRICIONAIS:**
+- **TMB (Taxa Metabólica Basal):** {tmb_info.get('tmb_kcal', 'N/A')} kcal
+- **Gasto Energético Total:** {tmb_info.get('get_kcal', 'N/A')} kcal  
+- **Meta Calórica Diária:** {tmb_info.get('daily_target_kcal', 'N/A')} kcal
+- **Estratégia:** {tmb_info.get('objective_adjustment', 'Personalizada')}
+
+## 🎯 **SEU PLANO PERSONALIZADO:**
+Baseei tudo nas suas preferências, objetivos e estilo de vida. Considerando que você:
+- **Objetivo:** {patient_info.get('primary_objective', 'Melhoria da saúde')}
+- **Nível de Atividade:** {patient_info.get('activity_level', 'Personalizado')}
+- **Preferências:** {', '.join(patient_info.get('food_preferences', [])[:3])}
+
+## 📋 **O QUE VOCÊ TERÁ:**
+🍽️ **Cardápio semanal completo** com horários
+🛒 **Lista de compras inteligente**  
+📊 **Valores nutricionais detalhados**
+🔄 **Opções de substituições**
+⚖️ **Controle de macronutrientes**
+
+Sua dieta já está disponível na área "Minhas Dietas" do dashboard!
+
+Estou aqui sempre que precisar de ajustes! Vamos nessa jornada juntos! 💪"""
+
+                # Limpar estado da consulta
+                if 'consultation_state' in session:
+                    del session['consultation_state']
+                
+                return jsonify({
+                    'success': True,
+                    'action': 'diet_generated',
+                    'message': success_message,
+                    'diet_data': diet_json,
+                    'redirect_to': 'dashboard'
+                })
+                
+            except Exception as diet_error:
+                logger.error(f"Erro ao gerar dieta: {diet_error}")
+                return jsonify({
+                    'success': False,
+                    'message': f'Erro ao gerar dieta personalizada: {str(diet_error)}'
+                }), 500
+            
+        elif action == 'add_information':
+            # Voltar para coleta de informações adicionais
+            consultation_state['current_phase'] = 'additional_information_gathering'
+            session['consultation_state'] = consultation_state
+            
+            return jsonify({
+                'success': True,
+                'action': 'continue_consultation',
+                'message': 'Continuando coleta de informações...',
+                'consultation_state': consultation_state
+            })
+        else:
+            return jsonify({'success': False, 'message': 'Ação inválida'}), 400
+            
+    except Exception as e:
+        logger.error(f"Erro ao executar ação da consulta: {e}")
+        return jsonify({
+            'success': False,
+            'message': f'Erro ao executar ação: {str(e)}'
+        }), 500
+
+
+@app.route('/api/nutritionist/consultation/reset', methods=['POST'])
+def api_reset_consultation():
+    """API para resetar/limpar consulta estruturada"""
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'message': 'Usuário não autenticado'}), 401
+    
+    try:
+        # Limpar estado da consulta
+        if 'consultation_state' in session:
+            del session['consultation_state']
+        
+        return jsonify({
+            'success': True,
+            'message': 'Consulta resetada com sucesso'
+        })
+        
+    except Exception as e:
+        logger.error(f"Erro ao resetar consulta: {e}")
+        return jsonify({
+            'success': False,
+            'message': f'Erro ao resetar consulta: {str(e)}'
+        }), 500
+
+
 # Error handlers
 
 @app.errorhandler(404)
@@ -554,6 +799,37 @@ def diet_view():
     diet = diet_manager.get_user_diet(user_id)
     
     return render_template('nutritionist/diet_view.html', user=user_data, diet=diet)
+
+@app.route('/api/diet/download-pdf')
+@require_login
+def download_diet_pdf():
+    """Baixa o PDF da dieta do usuário"""
+    try:
+        user_id = session['user_id']
+        user_data = session.get('user_data', {})
+        
+        # Buscar dieta ativa do usuário
+        diet = diet_manager.get_user_diet(user_id)
+        
+        if not diet:
+            return jsonify({'error': 'Nenhuma dieta encontrada'}), 404
+        
+        # Verificar se o PDF existe
+        pdf_path = diet.get('pdf_path')
+        if not pdf_path or not os.path.exists(pdf_path):
+            return jsonify({'error': 'PDF não encontrado'}), 404
+        
+        # Enviar arquivo PDF
+        return send_file(
+            pdf_path,
+            as_attachment=True,
+            download_name=f"dieta_{user_data.get('name', 'paciente')}.pdf",
+            mimetype='application/pdf'
+        )
+        
+    except Exception as e:
+        logging.error(f"Erro ao baixar PDF da dieta: {str(e)}")
+        return jsonify({'error': 'Erro interno do servidor'}), 500
 
 @app.route('/shopping-list')
 def shopping_list():

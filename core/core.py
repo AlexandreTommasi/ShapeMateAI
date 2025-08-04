@@ -32,6 +32,7 @@ class TaskType(Enum):
     """Tipos de tarefas que os agentes podem executar"""
     # Nutritionist tasks
     CONSULTATION = "consultation"
+    JSON_GENERATION = "json_generation"
     MEAL_PLANNING = "meal_planning" 
     PDF_GENERATION = "pdf_generation"
     
@@ -106,6 +107,11 @@ class AgentConfig:
     max_context_length: int = 8000
     specialized_prompts: Dict[str, str] = field(default_factory=dict)
     personality_traits: Dict[str, Any] = field(default_factory=dict)
+    contexts: Dict[str, str] = field(default_factory=dict)
+    task_keywords: Dict[str, List[str]] = field(default_factory=dict)
+    context_mapping: Dict[str, List[str]] = field(default_factory=dict)
+    confidence_scores: Dict[str, float] = field(default_factory=dict)
+    error_responses: Dict[str, str] = field(default_factory=dict)
     
     def to_dict(self) -> Dict[str, Any]:
         """Converte a configuração para dicionário"""
@@ -121,7 +127,12 @@ class AgentConfig:
             'max_tokens': self.max_tokens,
             'max_context_length': self.max_context_length,
             'specialized_prompts': self.specialized_prompts,
-            'personality_traits': self.personality_traits
+            'personality_traits': self.personality_traits,
+            'contexts': self.contexts,
+            'task_keywords': self.task_keywords,
+            'context_mapping': self.context_mapping,
+            'confidence_scores': self.confidence_scores,
+            'error_responses': self.error_responses
         }
 
 
@@ -497,7 +508,11 @@ class CoreAgentSystem:
                         'confidence_score': result_state.get('confidence_score', 0.0),
                         'tools_used': result_state.get('tools_used', []),
                         'next_action': result_state.get('next_action'),
-                        'memory_size': len(self._get_conversation_memory(user_id, session_id))
+                        'memory_size': len(self._get_conversation_memory(user_id, session_id)),
+                        'show_option_buttons': result_state.get('show_option_buttons', False),
+                        'is_decision_point': result_state.get('is_decision_point', False),
+                        'current_phase': result_state.get('current_phase', ''),
+                        'diet_generated': result_state.get('diet_generated', False)
                     }
             
             return {

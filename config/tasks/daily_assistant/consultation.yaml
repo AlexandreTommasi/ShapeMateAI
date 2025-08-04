@@ -1,0 +1,56 @@
+task_type: "consultation"
+priority: 2  # MEDIUM
+description: "Suporte prático para dúvidas nutricionais do dia a dia"
+
+# Contexto necessário para esta tarefa
+required_context:
+  - user_profile
+  - current_diet_plan
+  - immediate_situation
+
+# Ferramentas necessárias
+tools_required:
+  - llm_direct
+  - food_substitution
+  - equivalence_calculator
+
+# Configurações da tarefa
+max_iterations: 4
+timeout_seconds: 120
+success_criteria:
+  practical_solution_provided: true
+  alternatives_suggested: true
+  user_confidence_increased: true
+  
+# Estratégia de fallback se a tarefa falhar
+fallback_strategy: "general_practical_advice"
+
+# Prompts específicos para esta tarefa
+specialized_prompts:
+  consultation_intro: |
+    Você está fornecendo suporte prático e imediato. Seja:
+    - Direto e objetivo nas soluções
+    - Considere limitações reais (tempo, dinheiro, disponibilidade)
+    - Ofereça múltiplas alternativas
+    - Explique o raciocínio de forma simples
+    
+  problem_solving: |
+    Ao resolver problemas práticos:
+    - Identifique a questão principal
+    - Considere o contexto da situação
+    - Ofereça soluções imediatas e de longo prazo
+    - Mantenha foco no objetivo nutricional
+    
+  practical_guidance: |
+    Sempre forneça:
+    - Soluções implementáveis no momento
+    - Alternativas para diferentes cenários
+    - Dicas para evitar situações similares
+    - Recursos e ferramentas úteis
+
+# Validações específicas
+validation_rules:
+  - verify_solution_practicality
+  - check_nutritional_coherence
+  - ensure_cost_effectiveness
+  - validate_time_feasibility

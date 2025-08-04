@@ -55,10 +55,7 @@ class ConfigLoader:
         config_file = self.agents_dir / f"{agent_type.value}.yaml"
         
         if not config_file.exists():
-            # Criar configuração padrão se não existir
-            default_config = self._create_default_agent_config(agent_type)
-            self.save_agent_config(default_config)
-            return default_config
+            raise ConfigurationError(f"Arquivo de configuração não encontrado: {config_file}")
         
         try:
             with open(config_file, 'r', encoding='utf-8') as f:
@@ -67,8 +64,8 @@ class ConfigLoader:
             return self._dict_to_agent_config(config_data)
             
         except Exception as e:
-            logger.error(f"Error loading agent config for {agent_type.value}: {str(e)}")
-            raise ConfigurationError(f"Failed to load agent config: {str(e)}")
+            logger.error(f"Erro crítico ao carregar agent config para {agent_type.value}: {str(e)}")
+            raise ConfigurationError(f"Falha ao carregar agent config: {str(e)}") from e
     
     def save_agent_config(self, config: AgentConfig):
         """Salva configuração de um agente"""
@@ -98,26 +95,22 @@ class ConfigLoader:
                         config_data = yaml.safe_load(f)
                     return self._dict_to_task_config(config_data)
                 except Exception as e:
-                    logger.warning(f"Error loading agent-specific task config: {str(e)}")
+                    logger.error(f"Erro crítico ao carregar configuração de task específica: {str(e)}")
+                    raise ConfigurationError(f"Falha ao carregar task config para {task_type.value}: {str(e)}") from e
         
-        # Fallback para configuração geral na raiz de tasks
+        # Buscar configuração geral na raiz de tasks - sem fallback
         config_file = self.tasks_dir / f"{task_type.value}.yaml"
         
         if not config_file.exists():
-            # Criar configuração padrão se não existir
-            default_config = self._create_default_task_config(task_type)
-            self.save_task_config(default_config, agent_type)
-            return default_config
+            raise ConfigurationError(f"Arquivo de configuração não encontrado: {config_file}")
         
         try:
             with open(config_file, 'r', encoding='utf-8') as f:
                 config_data = yaml.safe_load(f)
-            
             return self._dict_to_task_config(config_data)
-            
         except Exception as e:
-            logger.error(f"Error loading task config for {task_type.value}: {str(e)}")
-            raise ConfigurationError(f"Failed to load task config: {str(e)}")
+            logger.error(f"Erro crítico ao carregar task config: {str(e)}")
+            raise ConfigurationError(f"Falha ao carregar task config: {str(e)}") from e
     
     def save_task_config(self, config: TaskConfig, agent_type: AgentType = None):
         """Salva configuração de uma tarefa"""
@@ -179,7 +172,12 @@ class ConfigLoader:
                 max_tokens=config_data.get('max_tokens', 2000),
                 max_context_length=config_data.get('max_context_length', 8000),
                 specialized_prompts=config_data.get('specialized_prompts', {}),
-                personality_traits=config_data.get('personality_traits', {})
+                personality_traits=config_data.get('personality_traits', {}),
+                contexts=config_data.get('contexts', {}),
+                task_keywords=config_data.get('task_keywords', {}),
+                context_mapping=config_data.get('context_mapping', {}),
+                confidence_scores=config_data.get('confidence_scores', {}),
+                error_responses=config_data.get('error_responses', {})
             )
         except KeyError as e:
             raise ConfigurationError(f"Missing required field in agent config: {e}")

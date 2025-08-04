@@ -1,6 +1,6 @@
 {% extends "shared/base.html" %}
 
-{% block title %}Chat Nutricionista - ShapeMateAI{% endblock %}
+{% block title %}Consulta Nutricional - ShapeMateAI{% endblock %}
 
 {% block content %}
 <div class="d-flex flex-column" style="height: 100vh;">
@@ -9,90 +9,139 @@
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h5 class="mb-0">
-                        <i class="fas fa-comments me-2"></i>
-                        Chat com Nutricionista IA
+                        <i class="fas fa-stethoscope me-2"></i>
+                        Consulta com Nutrion
                     </h5>
-                    <small>Assistente nutricional personalizado para {{ user.name or 'você' }}</small>
+                    <small>Nutricionista virtual personalizado • {{ user.name or 'Paciente' }}</small>
                 </div>
                 <div>
-                    <button class="btn btn-light btn-sm" onclick="startNewChat()" style="background-color: white; color: #28a745; border-color: white;">
-                        <i class="fas fa-plus me-2"></i>Nova Conversa
+                    <button class="btn btn-light btn-sm" onclick="resetConsultation()" style="background-color: white; color: #28a745; border-color: white;">
+                        <i class="fas fa-refresh me-2"></i>Recomeçar
                     </button>
                 </div>
             </div>
         </div>
         
+        <!-- Progress Indicator -->
+        <div class="progress-container bg-light" style="height: 8px;">
+            <div id="consultationProgress" class="progress-bar bg-success" style="width: 0%; transition: width 0.3s ease;"></div>
+        </div>
+        
+        <!-- Phase Indicator -->
+        <div class="bg-light px-3 py-2 border-bottom">
+            <small class="text-muted">
+                <i class="fas fa-compass me-2"></i>
+                <span id="currentPhase">Carregando...</span>
+            </small>
+        </div>
+        
         <div class="card-body d-flex flex-column p-0 flex-grow-1">
             <!-- Chat Messages Area -->
             <div class="flex-grow-1 p-3" id="chatMessages" style="overflow-y: auto; background-color: #f8f9fa;">
-                <!-- Welcome Message -->
-                        <div class="chat-message assistant-message mb-3">
-                            <div class="d-flex">
-                                <div class="avatar text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; background-color: #28a745;">
-                                    <i class="fas fa-robot"></i>
-                                </div>
-                                <div class="message-content">
-                                    <div class="bg-white rounded p-3 shadow-sm">
-                                        <p class="mb-2">Olá, {{ user.name or 'usuário' }}! 👋</p>
-                                        <p class="mb-0">Vamos começar a conversa para gerar sua dieta personalizada.</p>
-                                    </div>
-                                    <small class="text-muted">Agora</small>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Dynamic messages will be added here -->
+                <!-- Loading message -->
+                <div id="loadingMessage" class="text-center py-5">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Carregando...</span>
                     </div>
+                    <p class="mt-3 text-muted">Preparando sua consulta personalizada...</p>
+                </div>
+                
+                <!-- Dynamic messages will be added here -->
+            </div>
 
-                    <!-- Typing Indicator -->
-                    <div id="typingIndicator" class="px-3 py-2 d-none">
-                        <div class="d-flex align-items-center">
-                            <div class="avatar text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 30px; height: 30px; background-color: #28a745;">
-                                <i class="fas fa-robot"></i>
-                            </div>
-                            <div class="typing-animation">
-                                <span></span>
-                                <span></span>
-                                <span></span>
-                            </div>
-                            <small class="text-muted ms-2">Nutricionista está digitando...</small>
-                        </div>
+            <!-- Action Buttons (shown during decision phase) -->
+            <div id="actionButtons" class="p-3 bg-white border-top d-none">
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <button class="btn btn-success w-100" onclick="executeAction('generate_diet')">
+                            <i class="fas fa-clipboard-list me-2"></i>
+                            🎯 Gerar Dieta Personalizada
+                        </button>
                     </div>
+                    <div class="col-md-6">
+                        <button class="btn btn-outline-success w-100" onclick="executeAction('add_information')">
+                            <i class="fas fa-plus me-2"></i>
+                            📝 Adicionar Mais Informações
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-                    <!-- Chat Input -->
-                    <div class="border-top p-3 bg-white">
-                        <form id="chatForm" class="d-flex">
-                            <div class="flex-grow-1 me-2">
-                                <textarea class="form-control" id="messageInput" rows="2" placeholder="Digite sua pergunta sobre nutrição..." required style="resize: none;"></textarea>
-                            </div>
-                            <div class="d-flex flex-column justify-content-end">
-                                <button type="submit" class="btn btn-success" id="sendBtn" style="background-color: #28a745 !important; border-color: #28a745 !important;">
-                                    <i class="fas fa-paper-plane"></i>
-                                </button>
-                            </div>
-                        </form>
-                        <div class="mt-2">
-                            <small class="text-muted">
-                                <i class="fas fa-info-circle me-1"></i>
-                                Nutricionista IA ativo e pronto para ajudar! 🤖💚
-                            </small>
-                        </div>
+            <!-- Message Input Area -->
+            <div id="messageInputArea" class="p-3 bg-white border-top">
+                <div class="input-group">
+                    <input type="text" 
+                           class="form-control" 
+                           id="messageInput" 
+                           placeholder="Digite sua resposta..." 
+                           disabled>
+                    <button class="btn btn-success" 
+                            type="button" 
+                            id="sendButton" 
+                            onclick="sendMessage()"
+                            disabled>
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                
+                <!-- Quick suggestions (shown for specific questions) -->
+                <div id="quickSuggestions" class="mt-2 d-none">
+                    <small class="text-muted mb-2 d-block">Sugestões rápidas:</small>
+                    <div class="d-flex flex-wrap gap-2" id="suggestionsList">
+                        <!-- Suggestions will be added here dynamically -->
                     </div>
+                </div>
+            </div>
+
+            <!-- Typing Indicator -->
+            <div id="typingIndicator" class="px-3 py-2 d-none">
+                <div class="d-flex align-items-center">
+                    <div class="avatar text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 30px; height: 30px; background-color: #28a745;">
+                        <i class="fas fa-stethoscope"></i>
+                    </div>
+                    <div class="typing-animation">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        <span style="margin-right: 0;"></span>
+                    </div>
+                    <small class="text-muted ms-2">Nutrion está respondendo...</small>
                 </div>
             </div>
         </div>
     </div>
+</div>
+
+<!-- Consultation Success Modal -->
+<div class="modal fade" id="consultationSuccessModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Consulta Finalizada!
+                </h5>
+            </div>
+            <div class="modal-body text-center">
+                <div class="mb-4">
+                    <i class="fas fa-clipboard-check text-success" style="font-size: 3rem;"></i>
+                </div>
+                <h6>Sua dieta personalizada foi criada com sucesso!</h6>
+                <p class="text-muted">Baseada em todas as suas preferências e objetivos.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" onclick="goToDashboard()">
+                    <i class="fas fa-home me-2"></i>
+                    Ir para Dashboard
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_css %}
 <style>
-/* Full screen chat layout */
-body {
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-}
-
 .chat-message {
     margin-bottom: 1rem;
 }
@@ -141,12 +190,32 @@ body {
 
 #chatMessages {
     scroll-behavior: smooth;
-    height: calc(100vh - 200px); /* Adjust based on header and input heights */
+    height: calc(100vh - 300px);
 }
 
-.hover-suggestion:hover {
-    background-color: #e9ecef !important;
+.suggestion-chip {
+    background-color: #e9ecef;
+    border: 1px solid #ced4da;
+    border-radius: 20px;
+    padding: 8px 16px;
     cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.suggestion-chip:hover {
+    background-color: #28a745;
+    color: white;
+    border-color: #28a745;
+}
+
+.progress-container {
+    position: relative;
+    overflow: hidden;
+}
+
+.phase-indicator {
+    font-size: 0.9rem;
+    font-weight: 500;
 }
 
 /* Override any blue colors */
@@ -164,38 +233,84 @@ body {
     background-color: #28a745 !important;
 }
 
-/* Navbar text visibility fix */
-.navbar .nav-link {
-    color: white !important;
-}
-
-.navbar .dropdown-toggle {
-    color: white !important;
+.bg-gradient-primary {
+    background: linear-gradient(45deg, #28a745, #20c997) !important;
 }
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-let currentChatSession = null;
+let consultationState = null;
+let isWaitingForResponse = false;
 
-// Auto-resize textarea
-document.getElementById('messageInput').addEventListener('input', function() {
-    this.style.height = 'auto';
-    this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+// Phase mapping for progress indicator
+const phaseProgress = {
+    'greeting_and_introduction': 10,
+    'goals_clarification': 20,
+    'preferences_collection': 60,
+    'lifestyle_assessment': 80,
+    'social_economic_context': 90,
+    'summary_and_decision': 100
+};
+
+const phaseNames = {
+    'greeting_and_introduction': 'Apresentação e boas-vindas',
+    'goals_clarification': 'Definindo seus objetivos',
+    'preferences_collection': 'Descobrindo seus gostos',
+    'lifestyle_assessment': 'Entendendo seu estilo de vida',
+    'social_economic_context': 'Contexto social e econômico',
+    'summary_and_decision': 'Resumo e decisão',
+    'additional_information_gathering': 'Informações adicionais'
+};
+
+// Initialize consultation when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    initializeConsultation();
 });
 
-// Handle Enter key
+// Handle Enter key in message input
 document.getElementById('messageInput').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey && !this.disabled) {
         e.preventDefault();
-        document.getElementById('chatForm').dispatchEvent(new Event('submit'));
+        sendMessage();
     }
 });
 
-// Handle form submission
-document.getElementById('chatForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
+async function initializeConsultation() {
+    try {
+        showTypingIndicator();
+        
+        const response = await fetch('/api/nutritionist/consultation/start', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        const result = await response.json();
+        
+        hideTypingIndicator();
+        document.getElementById('loadingMessage').style.display = 'none';
+        
+        if (result.success) {
+            consultationState = result.consultation_state;
+            updateUI(result);
+            addMessage('assistant', result.current_message);
+            enableInput();
+        } else {
+            showError(result.message || 'Erro ao iniciar consulta');
+        }
+        
+    } catch (error) {
+        hideTypingIndicator();
+        showError('Erro de conexão ao iniciar consulta');
+        console.error('Error initializing consultation:', error);
+    }
+}
+
+async function sendMessage() {
+    if (isWaitingForResponse) return;
     
     const messageInput = document.getElementById('messageInput');
     const message = messageInput.value.trim();
@@ -205,46 +320,160 @@ document.getElementById('chatForm').addEventListener('submit', async function(e)
     // Add user message to chat
     addMessage('user', message);
     
-    // Clear input
+    // Clear input and disable
     messageInput.value = '';
-    messageInput.style.height = 'auto';
+    disableInput();
+    isWaitingForResponse = true;
+    
+    // Hide suggestions and action buttons
+    hideQuickSuggestions();
+    hideActionButtons();
     
     // Show typing indicator
     showTypingIndicator();
     
     try {
-        // Start chat session if needed
-        if (!currentChatSession) {
-            await startChatSession();
-        }
-        
-        // Send message to API (currently just saves to database)
-        const response = await fetch('/api/chat/message', {
+        const response = await fetch('/api/nutritionist/consultation/respond', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ message: message })
+            body: JSON.stringify({ response: message })
         });
         
         const result = await response.json();
         
-        // Hide typing indicator
         hideTypingIndicator();
+        isWaitingForResponse = false;
         
-        if (result.success && result.response) {
-            addMessage('assistant', result.response);
+        if (result.success) {
+            consultationState = result.consultation_state;
+            updateUI(result);
+            addMessage('assistant', result.current_message);
+            
+            // Show action buttons if decision point
+            if (result.show_action_buttons) {
+                showActionButtons();
+            } else {
+                enableInput();
+            }
         } else {
-            console.error('API Error:', result.message);
-            addMessage('assistant', '⚠️ Erro na comunicação com a IA. Tente novamente.');
+            showError(result.message || 'Erro ao processar resposta');
+            enableInput();
         }
         
     } catch (error) {
         hideTypingIndicator();
-        addMessage('assistant', '🔌 Erro de conexão. Verifique sua internet e tente novamente.');
-        console.error('Connection Error:', error);
+        isWaitingForResponse = false;
+        enableInput();
+        showError('Erro de conexão ao enviar mensagem');
+        console.error('Error sending message:', error);
     }
-});
+}
+
+async function executeAction(action) {
+    try {
+        hideActionButtons();
+        
+        if (action === 'generate_pdf') {
+            // Mostrar indicador especial para geração do PDF final
+            addMessage('assistant', '📄 **GERANDO PDF DA SUA DIETA PERSONALIZADA**\n\n' +
+                '✅ Dados nutricionais verificados\n' +
+                '📊 Cardápio semanal organizado\n' +
+                '🎨 Formatando documento profissional\n' +
+                '💾 Salvando no seu perfil\n\n' +
+                '⏳ Aguarde, estou finalizando sua dieta...');
+        } else if (action === 'modify_diet') {
+            addMessage('assistant', '🔄 **MODO DE MODIFICAÇÃO ATIVADO**\n\n' +
+                'Me diga o que você gostaria de alterar na sua dieta:\n' +
+                '• Trocar algum alimento específico\n' +
+                '• Ajustar quantidades\n' +
+                '• Modificar horários das refeições\n' +
+                '• Alterar distribuição de macronutrientes\n\n' +
+                'O que você gostaria de modificar?');
+            
+            // Reativar input para modificações
+            enableInput();
+            return;
+        } else if (action === 'generate_diet') {
+            // Ação antiga - manter compatibilidade
+            addMessage('assistant', '🧮 **INICIANDO GERAÇÃO DA DIETA PERSONALIZADA**\n\n' +
+                '📊 Calculando sua Taxa Metabólica Basal (TMB)...\n' +
+                '⚡ Aplicando fator de atividade física...\n' +
+                '🎯 Ajustando calorias para seu objetivo...\n' +
+                '🥗 Distribuindo macronutrientes...\n' +
+                '📋 Criando cardápio com seus alimentos preferidos...\n\n' +
+                '⏳ Aguarde, estou analisando todas as suas informações...');
+        }
+        
+        showTypingIndicator();
+        
+        const response = await fetch('/api/nutritionist/consultation/action', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ action: action })
+        });
+        
+        const result = await response.json();
+        
+        hideTypingIndicator();
+        
+        if (result.success) {
+            if (result.action === 'diet_generated' || result.action === 'pdf_generated') {
+                addMessage('assistant', result.message);
+                
+                // Redirecionar para dashboard após 3 segundos
+                setTimeout(() => {
+                    window.location.href = '/dashboard';
+                }, 3000);
+            } else if (result.action === 'continue_consultation') {
+                consultationState = result.consultation_state;
+                addMessage('assistant', result.message);
+                enableInput();
+                // Reexibir input de mensagem se voltou para consulta
+                document.getElementById('messageInput').style.display = 'block';
+                document.getElementById('sendButton').style.display = 'block';
+            } else if (result.action === 'modification_mode') {
+                // Modo de modificação ativado
+                consultationState = result.consultation_state;
+                enableInput();
+            }
+        } else {
+            showError(result.message || 'Erro ao executar ação');
+            showActionButtons(); // Show buttons again
+        }
+        
+    } catch (error) {
+        hideTypingIndicator();
+        showActionButtons();
+        showError('Erro de conexão ao executar ação');
+        console.error('Error executing action:', error);
+    }
+}
+
+async function resetConsultation() {
+    if (confirm('Tem certeza que deseja recomeçar a consulta? Todas as informações serão perdidas.')) {
+        try {
+            await fetch('/api/nutritionist/consultation/reset', { method: 'POST' });
+            location.reload();
+        } catch (error) {
+            console.error('Error resetting consultation:', error);
+            location.reload();
+        }
+    }
+}
+
+function updateUI(result) {
+    // Update progress bar
+    const progress = phaseProgress[result.current_phase] || 0;
+    document.getElementById('consultationProgress').style.width = progress + '%';
+    
+    // Update phase indicator
+    const phaseName = phaseNames[result.current_phase] || 'Processando...';
+    document.getElementById('currentPhase').textContent = phaseName;
+}
 
 function addMessage(type, content) {
     const chatMessages = document.getElementById('chatMessages');
@@ -260,12 +489,12 @@ function addMessage(type, content) {
         messageDiv.innerHTML = `
             <div class="d-flex justify-content-end">
                 <div class="message-content">
-                    <div class="bg-primary text-white rounded p-3">
-                        <p class="mb-0">${content}</p>
+                    <div class="bg-primary text-white rounded p-3 shadow-sm">
+                        ${content.replace(/\n/g, '<br>')}
                     </div>
-                    <small class="text-muted float-end">${now}</small>
+                    <small class="text-muted d-block text-end mt-1">${now}</small>
                 </div>
-                <div class="avatar bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center ms-3" style="width: 40px; height: 40px;">
+                <div class="avatar text-white rounded-circle d-flex align-items-center justify-content-center ms-3" style="width: 40px; height: 40px; background-color: #007bff;">
                     <i class="fas fa-user"></i>
                 </div>
             </div>
@@ -273,75 +502,175 @@ function addMessage(type, content) {
     } else {
         messageDiv.innerHTML = `
             <div class="d-flex">
-                <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                    <i class="fas fa-robot"></i>
+                <div class="avatar text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; background-color: #28a745;">
+                    <i class="fas fa-stethoscope"></i>
                 </div>
                 <div class="message-content">
                     <div class="bg-white rounded p-3 shadow-sm">
-                        <p class="mb-0">${content}</p>
+                        ${content.replace(/\n/g, '<br>')}
                     </div>
-                    <small class="text-muted">${now}</small>
+                    <small class="text-muted d-block mt-1">${now}</small>
                 </div>
             </div>
         `;
     }
     
     chatMessages.appendChild(messageDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    scrollToBottom();
+    
+    // NOVA FUNCIONALIDADE: Detectar "AÇÃO_DIETA_PRONTA" e mostrar botões
+    if (type === 'assistant' && content.includes('AÇÃO_DIETA_PRONTA')) {
+        // Remover o código interno da mensagem exibida
+        const cleanContent = content.replace('AÇÃO_DIETA_PRONTA', '').trim();
+        
+        // Atualizar o conteúdo da mensagem para remover o código
+        const messageContentDiv = messageDiv.querySelector('.bg-white');
+        if (messageContentDiv) {
+            messageContentDiv.innerHTML = cleanContent.replace(/\n/g, '<br>');
+        }
+        
+        // Esconder o input de mensagem
+        document.getElementById('messageInput').style.display = 'none';
+        document.getElementById('sendButton').style.display = 'none';
+        
+        // Mostrar os botões de ação específicos para dieta
+        showDietActionButtons();
+        
+        // Atualizar progresso para 100%
+        document.getElementById('consultationProgress').style.width = '100%';
+        document.getElementById('currentPhase').textContent = 'Dieta Pronta - Escolha sua próxima ação';
+    }
+    
+    // Manter compatibilidade com código antigo
+    else if (type === 'assistant' && content.includes('ESCOLHA_OPCOES_FINAIS')) {
+        // Remover o código interno da mensagem exibida
+        const cleanContent = content.replace('ESCOLHA_OPCOES_FINAIS', '').trim();
+        
+        // Atualizar o conteúdo da mensagem para remover o código
+        const messageContentDiv = messageDiv.querySelector('.bg-white');
+        if (messageContentDiv) {
+            messageContentDiv.innerHTML = cleanContent.replace(/\n/g, '<br>');
+        }
+        
+        // Esconder o input de mensagem
+        document.getElementById('messageInput').style.display = 'none';
+        document.getElementById('sendButton').style.display = 'none';
+        
+        // Mostrar os botões de ação
+        document.getElementById('actionButtons').classList.remove('d-none');
+        
+        // Atualizar progresso para 100%
+        document.getElementById('consultationProgress').style.width = '100%';
+        document.getElementById('currentPhase').textContent = 'Consulta Finalizada - Escolha sua próxima ação';
+    }
 }
 
 function showTypingIndicator() {
     document.getElementById('typingIndicator').classList.remove('d-none');
-    const chatMessages = document.getElementById('chatMessages');
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    scrollToBottom();
 }
 
 function hideTypingIndicator() {
     document.getElementById('typingIndicator').classList.add('d-none');
 }
 
-async function startChatSession() {
-    try {
-        const response = await fetch('/api/chat/start', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-        
-        const result = await response.json();
-        if (result.success) {
-            currentChatSession = result.session_id;
-        }
-    } catch (error) {
-        console.error('Error starting chat session:', error);
-    }
+function enableInput() {
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+    
+    messageInput.disabled = false;
+    sendButton.disabled = false;
+    messageInput.focus();
 }
 
-function startNewChat() {
-    if (confirm('Deseja iniciar uma nova conversa? A conversa atual será salva.')) {
-        currentChatSession = null;
-        document.getElementById('chatMessages').innerHTML = `
-            <div class="chat-message assistant-message mb-3">
-                <div class="d-flex">
-                    <div class="avatar text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; background-color: #28a745;">
-                        <i class="fas fa-robot"></i>
-                    </div>
-                    <div class="message-content">
-                        <div class="bg-white rounded p-3 shadow-sm">
-                            <p class="mb-0">Nova conversa iniciada! Como posso ajudar você hoje?</p>
-                        </div>
-                        <small class="text-muted">Agora</small>
-                    </div>
-                </div>
+function disableInput() {
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+    
+    messageInput.disabled = true;
+    sendButton.disabled = true;
+}
+
+function showActionButtons() {
+    document.getElementById('actionButtons').classList.remove('d-none');
+    document.getElementById('messageInputArea').classList.add('d-none');
+    scrollToBottom();
+}
+
+function hideActionButtons() {
+    document.getElementById('actionButtons').classList.add('d-none');
+    document.getElementById('messageInputArea').classList.remove('d-none');
+}
+
+function showDietActionButtons() {
+    // Atualizar os botões para ações específicas da dieta
+    const actionButtons = document.getElementById('actionButtons');
+    
+    // Limpar botões existentes e adicionar novos
+    actionButtons.innerHTML = `
+        <div class="row g-2">
+            <div class="col-md-6">
+                <button class="btn btn-success w-100" onclick="executeAction('generate_pdf')">
+                    <i class="fas fa-file-pdf me-2"></i>
+                    Gerar PDF da Dieta
+                </button>
             </div>
-        `;
-    }
+            <div class="col-md-6">
+                <button class="btn btn-outline-success w-100" onclick="executeAction('modify_diet')">
+                    <i class="fas fa-edit me-2"></i>
+                    Modificar Dieta
+                </button>
+            </div>
+        </div>
+    `;
+    
+    actionButtons.classList.remove('d-none');
+    document.getElementById('messageInputArea').classList.add('d-none');
+    scrollToBottom();
 }
 
-// Initialize chat
-document.addEventListener('DOMContentLoaded', function() {
-    startChatSession();
-});
+function showQuickSuggestions(suggestions) {
+    const suggestionsContainer = document.getElementById('quickSuggestions');
+    const suggestionsList = document.getElementById('suggestionsList');
+    
+    suggestionsList.innerHTML = '';
+    
+    suggestions.forEach(suggestion => {
+        const chip = document.createElement('span');
+        chip.className = 'suggestion-chip';
+        chip.textContent = suggestion;
+        chip.onclick = () => {
+            document.getElementById('messageInput').value = suggestion;
+            hideQuickSuggestions();
+        };
+        suggestionsList.appendChild(chip);
+    });
+    
+    suggestionsContainer.classList.remove('d-none');
+}
+
+function hideQuickSuggestions() {
+    document.getElementById('quickSuggestions').classList.add('d-none');
+}
+
+function showSuccessModal() {
+    const modal = new bootstrap.Modal(document.getElementById('consultationSuccessModal'));
+    modal.show();
+}
+
+function goToDashboard() {
+    window.location.href = '/dashboard';
+}
+
+function showError(message) {
+    addMessage('assistant', `❌ ${message}`);
+}
+
+function scrollToBottom() {
+    const chatMessages = document.getElementById('chatMessages');
+    setTimeout(() => {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }, 100);
+}
 </script>
 {% endblock %}

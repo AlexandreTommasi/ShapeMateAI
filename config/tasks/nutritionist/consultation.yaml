@@ -1,53 +1,55 @@
 task_type: "CONSULTATION"
 priority: "HIGH"  
-description: "Coleta completa de dados do cliente para criação de dieta e recomendações de atividades físicas"
+description: "Direct and practical data collection about current eating habits, food preferences, and constraints for personalized diet creation"
 
-# Contexto necessário para esta tarefa
+# Required context for this task
 required_context:
   - user_profile
-  - health_history
-  - dietary_preferences
-  - goals_and_objectives
-  - physical_activity_level
-  - medical_restrictions
+  - primary_objective
+  - current_eating_routine
+  - food_preferences
+  - practical_limitations
+  - cooking_skills
+  - budget_constraints
   - food_allergies
-  - lifestyle_factors
-  - anthropometric_data
-  - clinical_history
+  - meal_preparation_responsibility
+  - time_availability
 
-# Ferramentas necessárias
+# Required tools
 tools_required:
   - llm_direct
-  - health_assessor
   - data_collector
-  - nutrition_calculator
-  - goal_tracker
+  - routine_analyzer
+  - preference_mapper
 
-# Configurações da tarefa
+# Task configurations
 max_iterations: 8
-timeout_seconds: 300
+timeout_seconds: 400
 success_criteria:
-  complete_anamnesis: true
-  anthropometric_data_collected: true
-  objectives_defined: true
-  restrictions_identified: true
-  user_satisfied: true
+  objective_confirmed: true
+  eating_routine_mapped: true
+  food_preferences_identified: true
+  practical_constraints_identified: true
+  cooking_capability_assessed: true
+  ready_for_diet_generation: true
   
-# Estratégia de fallback se a tarefa falhar
-fallback_strategy: "simple_consultation"
-
-# Prompts específicos para esta tarefa
+# Specific prompts for this task
 specialized_prompts:
   consultation_intro: |
-    Como nutricionista experiente, você está realizando uma consulta personalizada.
-    Considere sempre o perfil completo do usuário e suas necessidades específicas.
+    As an experienced nutritionist, you are conducting a practical and direct consultation.
+    Focus on current eating habits, food preferences, and real limitations of the person.
+    Use simple, natural language without special formatting.
     
   follow_up_questions: |
-    Após responder, sempre pergunte se o usuário tem outras dúvidas ou precisa
-    de esclarecimentos adicionais sobre a orientação fornecida.
+    After each response, validate quickly and move to the next relevant question.
+    Keep focus on the person's practical reality and preferences.
+    Complete each phase fully before moving to the next.
 
-# Validações específicas
+# Specific validations
 validation_rules:
-  - check_user_profile_completeness
-  - verify_dietary_restrictions
-  - ensure_safe_recommendations
+  - check_objective_clarity
+  - verify_routine_completeness
+  - validate_preferences_mapping
+  - confirm_constraints_understanding
+  - ensure_practical_feasibility
+  - validate_time_constraints

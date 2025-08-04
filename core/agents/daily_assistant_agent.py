@@ -24,13 +24,12 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 import os
 import sys
 
-# Adicionar o diretório pai ao path para permitir importações relativas
-current_dir = os.path.dirname(os.path.abspath(__file__))
-parent_dir = os.path.dirname(current_dir)
-sys.path.insert(0, parent_dir)
+# Add project root to path for absolute imports
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, project_root)
 
-from core import BaseAgent, AgentConfig, AgentState, AgentType, TaskType
-from config_loader import get_config_loader
+from core.core import BaseAgent, AgentConfig, AgentState, AgentType, TaskType
+from core.config_loader import get_config_loader
 
 logger = logging.getLogger(__name__)
 
@@ -130,15 +129,9 @@ class DailyAssistantAgent(BaseAgent):
             return result
             
         except Exception as e:
-            logger.error(f"Error processing message in DailyAssistantAgent: {str(e)}")
-            # Resposta de fallback
-            error_response = AIMessage(
-                content="Desculpe, ocorreu um erro ao processar sua solicitação. "
-                       "Por favor, tente reformular sua pergunta ou entre em contato com o suporte."
-            )
-            state['messages'].append(error_response)
-            state['confidence_score'] = 0.1
-            return state
+            logger.error(f"Erro crítico no DailyAssistantAgent: {str(e)}")
+            # Propagar erro em vez de fallback
+            raise RuntimeError(f"Falha no processamento da mensagem: {str(e)}") from e
     
     def _process_with_llm(self, state: AgentState, messages: List[BaseMessage]) -> AgentState:
         """Processa mensagem diretamente com a LLM usando histórico completo"""
