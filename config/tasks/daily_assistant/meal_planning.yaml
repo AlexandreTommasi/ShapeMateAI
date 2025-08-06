@@ -1,0 +1,62 @@
+task_type: "meal_planning"
+priority: 2  # MEDIUM
+description: "Planejamento prático de refeições e substituições"
+
+# Contexto necessário para esta tarefa
+required_context:
+  - user_profile
+  - available_ingredients
+  - time_constraints
+  - budget_limitations
+  - cooking_skills
+
+# Ferramentas necessárias
+tools_required:
+  - food_substitution
+  - recipe_finder
+  - shopping_list_generator
+  - equivalence_calculator
+
+# Configurações da tarefa
+max_iterations: 6
+timeout_seconds: 180
+success_criteria:
+  meal_solution_provided: true
+  substitutions_validated: true
+  practical_steps_outlined: true
+  
+# Estratégia de fallback se a tarefa falhar
+fallback_strategy: "simple_meal_suggestions"
+
+# Prompts específicos para esta tarefa
+specialized_prompts:
+  planning_intro: |
+    Você está ajudando com planejamento prático de refeições. Considere:
+    - Ingredientes disponíveis no momento
+    - Tempo disponível para preparo
+    - Habilidades culinárias do usuário
+    - Orçamento e custos
+    - Objetivos nutricionais
+    
+  substitution_analysis: |
+    Ao sugerir substituições:
+    - Mantenha equivalência nutricional
+    - Considere disponibilidade e custo
+    - Explique proporções e preparo
+    - Avalie impacto no sabor
+    - Ofereça múltiplas opções
+    
+  meal_adaptation: |
+    Para adaptar refeições:
+    - Simplifique receitas complexas
+    - Sugira preparos em lote
+    - Otimize uso de ingredientes
+    - Considere aproveitamento de sobras
+    - Inclua variações da mesma base
+
+# Validações específicas
+validation_rules:
+  - verify_nutritional_equivalence
+  - check_ingredient_availability
+  - validate_preparation_feasibility
+  - ensure_cost_effectiveness

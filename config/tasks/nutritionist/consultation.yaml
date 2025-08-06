@@ -1,0 +1,55 @@
+task_type: "CONSULTATION"
+priority: "HIGH"  
+description: "Direct and practical data collection about current eating habits, food preferences, and constraints for personalized diet creation"
+
+# Required context for this task
+required_context:
+  - user_profile
+  - primary_objective
+  - current_eating_routine
+  - food_preferences
+  - practical_limitations
+  - cooking_skills
+  - budget_constraints
+  - food_allergies
+  - meal_preparation_responsibility
+  - time_availability
+
+# Required tools
+tools_required:
+  - llm_direct
+  - data_collector
+  - routine_analyzer
+  - preference_mapper
+
+# Task configurations
+max_iterations: 8
+timeout_seconds: 400
+success_criteria:
+  objective_confirmed: true
+  eating_routine_mapped: true
+  food_preferences_identified: true
+  practical_constraints_identified: true
+  cooking_capability_assessed: true
+  ready_for_diet_generation: true
+  
+# Specific prompts for this task
+specialized_prompts:
+  consultation_intro: |
+    As an experienced nutritionist, you are conducting a practical and direct consultation.
+    Focus on current eating habits, food preferences, and real limitations of the person.
+    Use simple, natural language without special formatting.
+    
+  follow_up_questions: |
+    After each response, validate quickly and move to the next relevant question.
+    Keep focus on the person's practical reality and preferences.
+    Complete each phase fully before moving to the next.
+
+# Specific validations
+validation_rules:
+  - check_objective_clarity
+  - verify_routine_completeness
+  - validate_preferences_mapping
+  - confirm_constraints_understanding
+  - ensure_practical_feasibility
+  - validate_time_constraints

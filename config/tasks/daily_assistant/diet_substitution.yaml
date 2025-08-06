@@ -1,0 +1,75 @@
+task_type: "DIET_SUBSTITUTION"
+priority: "HIGH"
+description: "Realização de substituições na dieta conforme pedidos do usuário"
+
+# Contexto necessário para esta tarefa
+required_context:
+  - current_diet_plan
+  - substitution_request
+  - user_restrictions
+  - nutritional_targets
+  - available_alternatives
+
+# Ferramentas necessárias
+tools_required:
+  - llm_direct
+  - substitution_database
+  - nutrition_calculator
+  - equivalence_finder
+  - safety_checker
+
+# Configurações da tarefa
+max_iterations: 6
+timeout_seconds: 240
+success_criteria:
+  substitution_found: true
+  nutrition_maintained: true
+  restrictions_respected: true
+  alternatives_provided: true
+  
+# Estratégia de fallback se a tarefa falhar
+fallback_strategy: "nutritionist_consultation_needed"
+
+# Prompts específicos para esta tarefa
+specialized_prompts:
+  substitution_analysis: |
+    Você vai realizar substituições inteligentes na dieta. Considere:
+    - Manter valores nutricionais similares
+    - Respeitar todas as restrições alimentares
+    - Oferecer opções práticas e disponíveis
+    - Explicar o impacto nutricional da mudança
+    
+  equivalence_finding: |
+    Para encontrar substitutos adequados:
+    - Analise macro e micronutrientes do alimento original
+    - Busque alimentos com perfil nutricional similar
+    - Considere textura, sabor e função na refeição
+    - Ajuste quantidades para manter equivalência
+    
+  safety_validation: |
+    Antes de sugerir qualquer substituição:
+    - Verifique compatibilidade com restrições médicas
+    - Confirme ausência de alérgenos problemáticos
+    - Avalie impacto no objetivo nutricional
+    - Sugira consulta ao nutricionista se necessário
+
+# Base de dados de substituições comuns
+substitution_database:
+  proteins:
+    chicken: ["turkey", "fish", "tofu", "tempeh"]
+    beef: ["pork", "lamb", "seitan", "legumes"]
+    fish: ["chicken", "eggs", "dairy", "plant_proteins"]
+  carbs:
+    rice: ["quinoa", "sweet_potato", "pasta", "bread"]
+    pasta: ["rice", "quinoa", "zucchini_noodles"]
+    bread: ["rice_cakes", "sweet_potato", "oats"]
+  vegetables:
+    spinach: ["kale", "arugula", "lettuce", "cabbage"]
+    broccoli: ["cauliflower", "brussels_sprouts", "green_beans"]
+
+# Validações específicas
+validation_rules:
+  - verify_nutritional_equivalence
+  - check_allergy_safety
+  - ensure_goal_compatibility
+  - validate_practical_availability

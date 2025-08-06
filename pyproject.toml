@@ -7,14 +7,13 @@ authors = [
 ]
 readme = "README_NEW.md"
 license = {text = "MIT"}
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 keywords = ["nutrition", "ai", "health", "flask", "sqlite"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Healthcare Industry",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -29,12 +28,16 @@ dependencies = [
     "pillow>=8.0.0",
     "openai>=1.0.0",
     "langchain>=0.1.0",
+    "langchain-core>=0.1.0",
+    "langchain-openai>=0.1.0",
     "python-dotenv>=0.19.0",
     "requests>=2.25.0",
     "flask>=2.0.0",
     "flask-cors>=3.0.0",
-    "langgraph>=0.1.0",
-    "bcrypt>=4.0.1",
+    "langgraph>=0.6.0",
+    "bcrypt==4.0.1",
+    "pyyaml>=6.0",
+    "typing-extensions>=4.0.0",
 ]
 
 [project.optional-dependencies]
@@ -61,24 +64,25 @@ docs = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/your-username/shapemate-ai"
-"Bug Tracker" = "https://github.com/your-username/shapemate-ai/issues"
-"Documentation" = "https://github.com/your-username/shapemate-ai/wiki"
+"Homepage" = "https://github.com/AlexandreTommasi/ShapeMateAI"
+"Bug Tracker" = "https://github.com/AlexandreTommasi/ShapeMateAI/issues"
+"Documentation" = "https://github.com/AlexandreTommasi/ShapeMateAI/wiki"
 
 [project.scripts]
 shapemate-init = "init_system:main"
-shapemate-web = "web.app:main"
+shapemate-web = "web.app:run_app"
+shapemate-test = "test_agent_system:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["database", "register", "web", "agent", "api", "config", "core", "utils"]
+packages = ["database", "register", "web", "core", "config", "utils"]
 
 [tool.black]
 line-length = 88
-target-version = ['py38']
+target-version = ['py39']
 include = '\.pyi?$'
 extend-exclude = '''
 /(
@@ -95,7 +99,7 @@ extend-exclude = '''
 '''
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.9"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -127,7 +131,7 @@ python_functions = [
 ]
 
 [tool.coverage.run]
-source = ["database", "register", "web", "agent", "api", "config", "core", "utils"]
+source = ["database", "register", "web", "core", "config", "utils"]
 omit = [
     "*/tests/*",
     "*/test_*",

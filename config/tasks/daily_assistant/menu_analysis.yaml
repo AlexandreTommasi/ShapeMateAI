@@ -1,0 +1,70 @@
+task_type: "MENU_ANALYSIS"
+priority: "MEDIUM"
+description: "Análise de cardápios para identificar alimentos que menos afetam a dieta"
+
+# Contexto necessário para esta tarefa
+required_context:
+  - menu_to_analyze
+  - current_diet_plan
+  - nutritional_targets
+  - user_restrictions
+  - meal_context
+
+# Ferramentas necessárias
+tools_required:
+  - llm_direct
+  - nutrition_analyzer
+  - menu_parser
+  - impact_calculator
+  - recommendation_engine
+
+# Configurações da tarefa
+max_iterations: 5
+timeout_seconds: 200
+success_criteria:
+  menu_analyzed: true
+  best_options_identified: true
+  impact_calculated: true
+  recommendations_provided: true
+  
+# Estratégia de fallback se a tarefa falhar
+fallback_strategy: "general_healthy_choices"
+
+# Prompts específicos para esta tarefa
+specialized_prompts:
+  menu_evaluation: |
+    Você vai analisar um cardápio e identificar as melhores opções. Considere:
+    - Compatibilidade com o plano alimentar atual
+    - Impacto calórico e nutricional
+    - Facilidade de adaptação (remover/adicionar ingredientes)
+    - Qualidade nutricional geral das opções
+    
+  option_ranking: |
+    Para cada item do menu, avalie:
+    - Valor calórico e macronutrientes
+    - Presença de ingredientes restritos
+    - Qualidade dos ingredientes
+    - Método de preparo (grelhado vs frito)
+    - Facilidade de customização
+    
+  recommendation_format: |
+    Apresente as recomendações assim:
+    1. MELHOR OPÇÃO: [item] - justificativa
+    2. OPÇÃO ACEITÁVEL: [item] - com modificações necessárias
+    3. EVITAR: [items] - motivos específicos
+    4. DICAS: Como adaptar as opções escolhidas
+
+# Critérios de avaliação
+evaluation_criteria:
+  calories: "Compatível com meta diária"
+  macros: "Balanceamento adequado"
+  ingredients: "Sem restrições alimentares"
+  preparation: "Métodos saudáveis preferidos"
+  customization: "Possibilidade de modificação"
+
+# Validações específicas
+validation_rules:
+  - verify_nutritional_analysis
+  - check_restriction_compliance
+  - ensure_practical_recommendations
+  - validate_impact_assessment

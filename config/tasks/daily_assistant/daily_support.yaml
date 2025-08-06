@@ -1,0 +1,63 @@
+task_type: "DAILY_SUPPORT"
+priority: "MEDIUM"
+description: "Auxílio durante o dia sobre como está sendo seguir a dieta e sugestões de substituições"
+
+# Contexto necessário para esta tarefa
+required_context:
+  - current_diet_plan
+  - user_progress
+  - daily_challenges
+  - meal_adherence
+  - user_feedback
+
+# Ferramentas necessárias
+tools_required:
+  - llm_direct
+  - diet_tracker
+  - substitution_engine
+  - progress_monitor
+  - motivation_support
+
+# Configurações da tarefa
+max_iterations: 5
+timeout_seconds: 180
+success_criteria:
+  support_provided: true
+  concerns_addressed: true
+  substitutions_offered: true
+  motivation_given: true
+  
+# Estratégia de fallback se a tarefa falhar
+fallback_strategy: "general_encouragement"
+
+# Prompts específicos para esta tarefa
+specialized_prompts:
+  daily_check: |
+    Você é um assistente diário que acompanha o progresso da dieta. Seja:
+    - Empático e encorajador
+    - Prático nas soluções oferecidas
+    - Flexível para adaptações necessárias
+    - Focado em manter a motivação alta
+    
+  progress_inquiry: |
+    Pergunte sobre:
+    - Como foi seguir a dieta ontem/hoje
+    - Quais foram as principais dificuldades
+    - Se há necessidade de substituições
+    - Como está se sentindo fisicamente
+    - Nivel de satisfação com as refeições
+    
+  support_response: |
+    Baseado no feedback, ofereça:
+    - Elogios pelo progresso alcançado
+    - Soluções práticas para dificuldades
+    - Substituições adequadas quando necessário
+    - Dicas para manter a motivação
+    - Lembretes dos objetivos de longo prazo
+
+# Validações específicas
+validation_rules:
+  - verify_empathy_level
+  - check_practical_solutions
+  - ensure_goal_alignment
+  - validate_substitution_adequacy

@@ -1,0 +1,336 @@
+{% extends "shared/base.html" %}
+
+{% block title %}Estoque em Casa - ShapeMateAI{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-boxes me-2"></i>Estoque em Casa</h2>
+                <div>
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addItemModal">
+                        <i class="fas fa-plus me-2"></i>Adicionar Item
+                    </button>
+                    <a href="/daily-assistant" class="btn btn-primary">
+                        <i class="fas fa-calendar-day me-2"></i>Assistente Diário
+                    </a>
+                </div>
+            </div>
+
+            {% if inventory %}
+            <div class="row">
+                {% set categories = {} %}
+                {% for item in inventory %}
+                    {% if item.category not in categories %}
+                        {% set _ = categories.update({item.category: []}) %}
+                    {% endif %}
+                    {% set _ = categories[item.category].append(item) %}
+                {% endfor %}
+
+                {% for category, items in categories.items() %}
+                <div class="col-lg-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-folder me-2"></i>{{ category.title() }}
+                                <span class="badge bg-light text-dark ms-2">{{ items|length }}</span>
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Item</th>
+                                            <th>Quantidade</th>
+                                            <th>Validade</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in items %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ item.name }}</strong>
+                                                <br><small class="text-muted">Atualizado: {{ item.updated_at.split('T')[0] if 'T' in item.updated_at else item.updated_at }}</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info">{{ item.quantity }} {{ item.unit }}</span>
+                                            </td>
+                                            <td>
+                                                {% if item.expiration_date %}
+                                                <small class="text-warning">{{ item.expiration_date }}</small>
+                                                {% else %}
+                                                <small class="text-muted">-</small>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-outline-warning btn-sm me-1 edit-item-btn" 
+                                                        data-name="{{ item.name }}" 
+                                                        data-quantity="{{ item.quantity }}" 
+                                                        data-unit="{{ item.unit }}" 
+                                                        data-category="{{ item.category }}" 
+                                                        data-expiration="{{ item.expiration_date or '' }}">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-outline-danger btn-sm delete-item-btn" data-name="{{ item.name }}">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Estatísticas -->
+            <div class="row mt-4">
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h4 class="text-primary">{{ inventory|length }}</h4>
+                            <p class="mb-0">Total de itens</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h4 class="text-success">{{ categories|length }}</h4>
+                            <p class="mb-0">Categorias</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h4 class="text-warning">{{ inventory|selectattr('expiration_date')|list|length }}</h4>
+                            <p class="mb-0">Com validade</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h4 class="text-info">100%</h4>
+                            <p class="mb-0">Organizado</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <!-- Sem estoque -->
+            <div class="text-center py-5">
+                <div class="mb-4">
+                    <i class="fas fa-boxes fa-5x text-muted"></i>
+                </div>
+                <h3 class="text-muted">Seu estoque está vazio!</h3>
+                <p class="text-muted mb-4">Comece adicionando os itens que você tem em casa para melhor controle</p>
+                <div>
+                    <button class="btn btn-success btn-lg me-3" data-bs-toggle="modal" data-bs-target="#addItemModal">
+                        <i class="fas fa-plus me-2"></i>Adicionar Primeiro Item
+                    </button>
+                    <a href="/daily-assistant" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-calendar-day me-2"></i>Conversar com Assistente
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal Adicionar/Editar Item -->
+<div class="modal fade" id="addItemModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="itemModalTitle">Adicionar Item ao Estoque</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="itemForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="itemName" class="form-label">Nome do item</label>
+                        <input type="text" class="form-control" id="itemName" name="item_name" required>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="itemQuantity" class="form-label">Quantidade</label>
+                                <input type="text" class="form-control" id="itemQuantity" name="quantity" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="itemUnit" class="form-label">Unidade</label>
+                                <select class="form-control" id="itemUnit" name="unit" required>
+                                    <option value="unidade">Unidade(s)</option>
+                                    <option value="kg">Quilograma(s)</option>
+                                    <option value="g">Grama(s)</option>
+                                    <option value="l">Litro(s)</option>
+                                    <option value="ml">Mililitro(s)</option>
+                                    <option value="pacote">Pacote(s)</option>
+                                    <option value="lata">Lata(s)</option>
+                                    <option value="caixa">Caixa(s)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="itemCategory" class="form-label">Categoria</label>
+                        <select class="form-control" id="itemCategory" name="category" required>
+                            <option value="hortifruti">Hortifruti</option>
+                            <option value="carnes">Carnes</option>
+                            <option value="laticínios">Laticínios</option>
+                            <option value="mercearia">Mercearia</option>
+                            <option value="bebidas">Bebidas</option>
+                            <option value="congelados">Congelados</option>
+                            <option value="limpeza">Limpeza</option>
+                            <option value="outros">Outros</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="itemExpiration" class="form-label">Data de validade (opcional)</label>
+                        <input type="date" class="form-control" id="itemExpiration" name="expiration_date">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save me-2"></i>Salvar Item
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let editingItem = null;
+
+document.getElementById('itemForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    // Mostrar loading
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Salvando...';
+    
+    try {
+        const response = await fetch('/api/inventory/update', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                item_name: formData.get('item_name'),
+                quantity: formData.get('quantity'),
+                unit: formData.get('unit'),
+                category: formData.get('category'),
+                expiration_date: formData.get('expiration_date') || null
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Item salvo com sucesso!');
+            location.reload();
+        } else {
+            alert('Erro ao salvar item: ' + result.message);
+        }
+    } catch (error) {
+        alert('Erro de conexão. Tente novamente.');
+        console.error('Save item error:', error);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    }
+});
+
+function editItem(name, quantity, unit, category, expiration) {
+    editingItem = name;
+    
+    document.getElementById('itemModalTitle').textContent = 'Editar Item do Estoque';
+    document.getElementById('itemName').value = name;
+    document.getElementById('itemQuantity').value = quantity;
+    document.getElementById('itemUnit').value = unit;
+    document.getElementById('itemCategory').value = category;
+    document.getElementById('itemExpiration').value = expiration;
+    
+    const modal = new bootstrap.Modal(document.getElementById('addItemModal'));
+    modal.show();
+}
+
+async function deleteItem(itemName) {
+    if (confirm(`Tem certeza que deseja remover "${itemName}" do estoque?`)) {
+        try {
+            const response = await fetch('/api/inventory/delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ item_name: itemName })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                location.reload();
+            } else {
+                alert('Erro ao remover item: ' + result.message);
+            }
+        } catch (error) {
+            alert('Erro de conexão. Tente novamente.');
+            console.error('Delete item error:', error);
+        }
+    }
+}
+
+// Reset modal quando fechar
+document.getElementById('addItemModal').addEventListener('hidden.bs.modal', function() {
+    editingItem = null;
+    document.getElementById('itemModalTitle').textContent = 'Adicionar Item ao Estoque';
+    document.getElementById('itemForm').reset();
+});
+
+// Event listeners para botões edit e delete
+document.addEventListener('DOMContentLoaded', function() {
+    // Edit buttons
+    document.querySelectorAll('.edit-item-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const name = this.dataset.name;
+            const quantity = this.dataset.quantity;
+            const unit = this.dataset.unit;
+            const category = this.dataset.category;
+            const expiration = this.dataset.expiration;
+            
+            editItem(name, quantity, unit, category, expiration);
+        });
+    });
+    
+    // Delete buttons
+    document.querySelectorAll('.delete-item-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const itemName = this.dataset.name;
+            deleteItem(itemName);
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,81 @@
+task_type: "JSON_GENERATION"
+priority: "HIGH"
+description: "Generate complete structured JSON diet plan with USDA FoodData Central API integration - NEW WORKFLOW: Preview first, then PDF"
+
+# Required context for this task
+required_context:
+  - user_profile
+  - consultation_data
+  - food_preferences
+  - nutritional_requirements
+  - practical_constraints
+  - cooking_skills
+  - budget_constraints
+  - meal_timing_preferences
+  - diet_preview_data
+
+# Required tools
+tools_required:
+  - llm_direct
+  - nutrition_api_usda
+  - json_validator
+  - usda_food_mapper
+  - pdf_generator
+  - database_storage
+
+# Task configurations
+max_iterations: 2
+timeout_seconds: 180
+success_criteria:
+  valid_json_structure: true
+  nutritional_accuracy: true
+  food_preferences_respected: true
+  practical_feasibility_confirmed: true
+  usda_integration_successful: true
+  pdf_generation_ready: true
+
+# NEW WORKFLOW CONFIGURATION
+workflow_stages:
+  1_data_collection: "Consultation with 18 structured questions"
+  2_diet_preview: "Generate complete diet preview with USDA API data"
+  3_user_decision: "Show preview and let user choose: Generate PDF or Modify"
+  4_final_generation: "Generate PDF and save to database"
+
+# Specific prompts for this task
+specialized_prompts:
+  diet_preview_intro: |
+    NEW WORKFLOW: Generate a complete diet preview showing TMB calculations, 
+    macronutrient distribution, sample daily menu with USDA nutritional data,
+    and scientific explanations. This preview will be shown to user BEFORE 
+    PDF generation for approval or modifications.
+    
+  json_generation_intro: |
+    Generate a complete JSON diet plan using USDA FoodData Central API data.
+    Ensure all food names are in English for API compatibility.
+    Include precise nutritional calculations and practical meal timing.
+    This JSON will be used for PDF generation after user approves the preview.
+    
+  food_mapping_guidance: |
+    Map Brazilian foods to English equivalents for USDA API:
+    - "arroz branco cozido" → "cooked white rice"
+    - "feijão preto cozido" → "cooked black beans" 
+    - "frango grelhado" → "grilled chicken breast"
+    Use the exact English names for accurate nutritional data retrieval.
+
+# ERROR HANDLING - NO FALLBACKS
+error_handling:
+  on_api_failure: "RAISE_ERROR"  # No fallback values
+  on_calculation_error: "RAISE_ERROR"  # No default TMB
+  on_food_selection_error: "RAISE_ERROR"  # No basic food list
+  fallback_mode: "DISABLED"  # Force error propagation
+  
+# Specific validations
+validation_rules:
+  - validate_json_schema
+  - verify_nutritional_balance
+  - confirm_food_name_english
+  - check_portion_sizes
+  - ensure_meal_distribution
+  - validate_usda_compatibility
+  - verify_tmb_calculations
+  - confirm_user_preferences_match

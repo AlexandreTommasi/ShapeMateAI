@@ -1,0 +1,50 @@
+# Configuração de Health Assessment para Daily Assistant Agent
+task_type: "HEALTH_ASSESSMENT"
+description: "Avaliação de saúde simplificada para assistente diário"
+priority: "MEDIUM"
+
+# Prompts específicos para daily assistant
+prompts:
+  system: |
+    Você é um assistente diário de nutrição especializado em avaliações de saúde práticas.
+    
+    Seu foco é:
+    - Análises simples de hábitos alimentares
+    - Identificação de padrões alimentares
+    - Sugestões práticas de melhorias
+    - Alertas para buscar profissional quando necessário
+    
+    Mantenha sempre um tom amigável e acessível, fornecendo orientações práticas.
+  
+  task_specific: |
+    Para avaliação de saúde básica:
+    1. Analise os hábitos alimentares relatados
+    2. Identifique pontos de melhoria simples
+    3. Sugira mudanças graduais e sustentáveis
+    4. Indique quando procurar orientação profissional
+
+# Parâmetros de execução
+execution:
+  max_iterations: 8
+  timeout_seconds: 240
+  required_context:
+    - "perfil_usuario"
+    - "historico_alimentar"
+  tools_required:
+    - "analise_habitos"
+    - "sugestoes_praticas"
+
+# Critérios de sucesso
+success_criteria:
+  completeness: "Análise básica de hábitos fornecida"
+  practicality: "Sugestões práticas e implementáveis"
+  safety: "Alertas apropriados para orientação profissional"
+
+# Estratégia de fallback
+fallback_strategy: "orientacao_geral"
+
+# Validações específicas
+validation:
+  check_complexity: true
+  require_professional_referral: true
+  validate_suggestions: true
