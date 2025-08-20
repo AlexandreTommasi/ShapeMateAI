@@ -1,0 +1,306 @@
+task_type: "diet_creation"
+priority: 3
+description: "Generate complete personalized diet using TMB calculations and USDA FoodData Central API with multiple meal options"
+
+# Required context for this task
+required_context:
+  - consultation_data
+  - anthropometric_data
+  - food_preferences
+  - practical_constraints
+  - nutritional_requirements
+  - activity_level
+  - primary_objective
+
+# Required tools
+tools_required:
+  - llm_direct
+  - usda_api
+  - nutrition_calculator
+  - json_generator
+  - pdf_generator
+
+# Task configurations
+max_iterations: 3
+timeout_seconds: 300
+success_criteria:
+  tmb_calculated: true
+  macros_distributed: true
+  usda_data_integrated: true
+  weekly_menu_generated: true
+  multiple_options_per_meal: true
+  pdf_created: true
+  database_saved: true
+
+# Specialized prompts for diet creation
+specialized_prompts:
+  creation_intro: |
+    Generate a complete structured diet plan based on collected consultation data.
+    
+    **MANDATORY SCIENTIFIC APPROACH:**
+    - Calculate precise TMB using Mifflin-St Jeor equation from collected data
+    - Apply activity factor based on exercise routine described
+    - Adjust calories for stated objective (weight loss/gain/maintenance)
+    - Distribute macronutrients according to goal and scientific guidelines
+    - Use USDA FoodData Central API for all nutritional values
+    
+    **USDA API INTEGRATION:**
+    - All food names must be in English for USDA compatibility
+    - System will automatically fetch precise nutritional data per 100g
+    - Calculate portions to meet caloric targets for each meal
+    - Ensure macronutrient balance across daily intake
+    
+    **MEAL PLANNING REQUIREMENTS:**
+    - Create 3-5 options for each main meal (breakfast, lunch, dinner)
+    - Create 2-3 options for each snack
+    - Each option must be within ±7% of meal's caloric target
+    - Respect all stated food preferences and aversions
+    - Consider practical constraints (time, cooking skills, budget)
+
+  tmb_calculation_instructions: |
+    **TMB CALCULATION FROM CONSULTATION DATA:**
+    
+    Extract from consultation responses:
+    - Weight and height (from user profile or consultation answers)
+    - Age (from user profile)
+    - Gender (from user profile) 
+    - Activity level (from exercise questions 3-6)
+    - Primary objective (from consultation context)
+    
+    **FORMULAS:**
+    - Men: TMB = 88.362 + (13.397 × weight_kg) + (4.799 × height_cm) - (5.677 × age_years)
+    - Women: TMB = 447.593 + (9.247 × weight_kg) + (3.098 × height_cm) - (4.330 × age_years)
+    
+    **ACTIVITY FACTORS:**
+    - No exercise/sedentary: 1.2
+    - Light exercise 1-3 days/week: 1.375
+    - Moderate exercise 3-5 days/week: 1.55
+    - Heavy exercise 6-7 days/week: 1.725
+    - Very heavy exercise/physical job: 1.9
+    
+    **CALORIC ADJUSTMENTS:**
+    - Weight loss: GET - 400 kcal
+    - Maintenance: GET (no adjustment)
+    - Weight gain: GET + 400 kcal
+
+  macronutrient_distribution: |
+    **MACRONUTRIENT DISTRIBUTION BY OBJECTIVE:**
+    
+    **Weight Loss:**
+    - Carbohydrates: 40% of total calories
+    - Proteins: 30% of total calories  
+    - Fats: 30% of total calories
+    
+    **Maintenance:**
+    - Carbohydrates: 50% of total calories
+    - Proteins: 20% of total calories
+    - Fats: 30% of total calories
+    
+    **Weight Gain:**
+    - Carbohydrates: 55% of total calories
+    - Proteins: 25% of total calories
+    - Fats: 20% of total calories
+    
+    **CONVERSION TO GRAMS:**
+    - Carbohydrates & Proteins: kcal ÷ 4 = grams
+    - Fats: kcal ÷ 9 = grams
+
+  food_selection_strategy: |
+    **FOOD SELECTION FROM CONSULTATION DATA:**
+    
+    Analyze consultation responses to extract:
+    - Current foods mentioned in meal descriptions
+    - Explicitly stated preferences ("foods I love")
+    - Explicitly stated aversions ("foods I don't eat")
+    - Practical constraints (time, cooking skills, budget)
+    - Cultural/regional preferences from food choices
+    
+    **SELECTION CRITERIA:**
+    - Include preferred foods when nutritionally appropriate
+    - Avoid all stated aversions completely
+    - Ensure variety across all food groups
+    - Consider preparation time based on stated constraints
+    - Use English names for USDA API compatibility
+    
+    **REQUIRED FOOD GROUPS:**
+    - Lean proteins (animal and plant-based)
+    - Complex carbohydrates
+    - Healthy fats
+    - Vegetables (variety of colors)
+    - Fruits (different types)
+    - Dairy or alternatives
+    - Legumes and nuts
+
+  meal_options_generation: |
+    **MULTIPLE OPTIONS PER MEAL:**
+    
+    For each meal, create multiple combinations that:
+    - Meet the meal's caloric target (±7% tolerance)
+    - Provide balanced macronutrients
+    - Use different food combinations for variety
+    - Respect user preferences and constraints
+    
+    **MEAL STRUCTURE GUIDELINES:**
+    - Breakfast: 3-4 options (dairy/protein + carbs + fruit)
+    - Morning snack: 2-3 options (fruit + protein or healthy fat)
+    - Lunch: 4-5 options (protein + carbs + vegetables + fat)
+    - Afternoon snack: 2-3 options (varied combinations)
+    - Dinner: 4-5 options (protein + vegetables + carbs + fat)
+    
+    **CALORIC DISTRIBUTION:**
+    - Breakfast: 25% of daily calories
+    - Morning snack: 10% of daily calories
+    - Lunch: 35% of daily calories
+    - Afternoon snack: 10% of daily calories  
+    - Dinner: 20% of daily calories
+
+  json_structure_requirements: |
+    **COMPLETE JSON STRUCTURE:**
+    
+    ```json
+    {
+      "generated_at": "ISO_DATETIME",
+      "diet_id": "unique_identifier",
+      "patient_info": {
+        "name": "extracted_from_consultation",
+        "age": "number",
+        "gender": "string",
+        "weight_kg": "number",
+        "height_cm": "number", 
+        "activity_level": "extracted_from_exercise_questions",
+        "primary_objective": "extracted_from_consultation"
+      },
+      "nutritional_calculations": {
+        "tmb_kcal": "calculated_value",
+        "activity_factor": "applied_factor",
+        "get_kcal": "tmb_x_activity_factor",
+        "daily_target_kcal": "adjusted_for_objective",
+        "objective_adjustment": "description",
+        "macronutrients": {
+          "carbohydrates": {
+            "kcal_per_day": "number",
+            "grams_per_day": "number",
+            "percentage": "number"
+          },
+          "proteins": {
+            "kcal_per_day": "number", 
+            "grams_per_day": "number",
+            "percentage": "number"
+          },
+          "fats": {
+            "kcal_per_day": "number",
+            "grams_per_day": "number", 
+            "percentage": "number"
+          }
+        }
+      },
+      "weekly_menu": {
+        "Monday": {
+          "breakfast": {
+            "target_kcal": "number",
+            "options": [
+              {
+                "name": "Option 1",
+                "items": [
+                  {
+                    "name_en": "usda_compatible_name",
+                    "portion_grams": "number",
+                    "kcal": "calculated_from_usda",
+                    "protein_g": "calculated_from_usda",
+                    "carbs_g": "calculated_from_usda", 
+                    "fat_g": "calculated_from_usda"
+                  }
+                ],
+                "totals": {
+                  "kcal": "sum_of_items",
+                  "protein_g": "sum_of_items",
+                  "carbs_g": "sum_of_items",
+                  "fat_g": "sum_of_items"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "shopping_list": {
+        "items": [
+          {
+            "name_en": "usda_name",
+            "name_pt": "portuguese_translation", 
+            "estimated_weekly_amount": "calculated_amount",
+            "category": "food_group"
+          }
+        ]
+      },
+      "nutrition_data_source": {
+        "primary_source": "USDA FoodData Central API",
+        "foods_analyzed": "count",
+        "data_accuracy": "per_100g_values",
+        "last_updated": "ISO_DATETIME"
+      },
+      "nutritional_database": {
+        "food_name_en": {
+          "per_100g": {
+            "kcal": "usda_value",
+            "protein_g": "usda_value",
+            "carbs_g": "usda_value", 
+            "fat_g": "usda_value"
+          }
+        }
+      }
+    }
+    ```
+
+  usda_integration_requirements: |
+    **USDA API INTEGRATION REQUIREMENTS:**
+    
+    - All food names in English for API compatibility
+    - Fetch real nutritional data per 100g for each food
+    - Calculate portions based on caloric targets
+    - Store complete nutritional database in JSON
+    - Verify data accuracy before including in diet
+    
+    **ERROR HANDLING:**
+    - If food not found in USDA, select alternative
+    - Ensure all foods have complete nutritional profiles
+    - Validate portion calculations for accuracy
+    - Cross-check total daily calories with target
+
+  practical_guidance_generation: |
+    **PRACTICAL GUIDANCE BASED ON CONSULTATION:**
+    
+    Generate personalized guidance covering:
+    - Meal timing based on stated routine
+    - Preparation tips considering cooking skills
+    - Shopping advice considering budget constraints
+    - Hydration reminders based on current intake
+    - Adaptation strategies for weekend changes
+    - Solutions for stated eating challenges
+    
+    Make recommendations specific to user's:
+    - Work schedule and lifestyle
+    - Cooking experience level
+    - Time availability
+    - Budget considerations
+    - Food preferences and aversions
+
+# Validation rules for diet creation
+validation_rules:
+  - verify_tmb_calculation_accuracy
+  - validate_macronutrient_percentages
+  - confirm_usda_data_integration
+  - check_meal_caloric_targets
+  - ensure_multiple_options_per_meal
+  - validate_json_structure_completeness
+  - verify_food_preference_compliance
+  - confirm_practical_constraint_consideration
+
+# Success metrics
+success_metrics:
+  tmb_accuracy: "within_5_percent_of_standard_calculation"
+  caloric_distribution: "all_meals_within_7_percent_target"
+  macronutrient_balance: "daily_totals_match_calculated_distribution"
+  food_variety: "minimum_25_different_foods_weekly"
+  option_variety: "minimum_3_options_per_main_meal"
+  usda_integration: "100_percent_foods_have_usda_data"
+  preference_compliance: "zero_aversion_foods_included"

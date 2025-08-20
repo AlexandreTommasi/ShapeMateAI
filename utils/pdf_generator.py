@@ -1,5 +1,5 @@
 """
-PDF Generator para Dietas Personalizadas do ShapeMateAI
+PDF Generator para Dietas Personalizadas - Sem traduções hardcoded
 """
 
 import os
@@ -24,18 +24,18 @@ logger = logging.getLogger(__name__)
 
 
 class ShapeMatePDFGenerator:
-    """Gerador de PDF personalizado para dietas do ShapeMateAI"""
+    """Gerador de PDF para dietas - usando dados diretos do JSON"""
     
     def __init__(self):
         self.page_width, self.page_height = A4
         self.margin = 2 * cm
         
         # Cores do ShapeMateAI
-        self.primary_color = HexColor('#2E7D32')      # Verde principal
-        self.secondary_color = HexColor('#4CAF50')    # Verde secundário
-        self.accent_color = HexColor('#66BB6A')       # Verde claro
-        self.text_color = HexColor('#1B5E20')         # Verde escuro
-        self.bg_color = HexColor('#F1F8E9')           # Verde muito claro
+        self.primary_color = HexColor('#2E7D32')
+        self.secondary_color = HexColor('#4CAF50')
+        self.accent_color = HexColor('#66BB6A')
+        self.text_color = HexColor('#1B5E20')
+        self.bg_color = HexColor('#F1F8E9')
         
         # Configurar estilos
         self.styles = self._create_custom_styles()
@@ -106,9 +106,12 @@ class ShapeMatePDFGenerator:
         return custom_styles
     
     def generate_diet_pdf(self, diet_data: Dict[str, Any], output_path: str) -> str:
-        """Gera PDF completo da dieta personalizada"""
+        """Gera PDF completo da dieta personalizada usando dados diretos do JSON"""
         try:
-            logger.info(f"🎨 Gerando PDF da dieta personalizada: {output_path}")
+            logger.info(f"🎨 Gerando PDF da dieta: {output_path}")
+            
+            # Validar estrutura do JSON
+            self._validate_diet_data(diet_data)
             
             # Criar documento PDF
             doc = SimpleDocTemplate(
@@ -143,11 +146,12 @@ class ShapeMatePDFGenerator:
             elements.extend(self._create_shopping_list_section(diet_data))
             elements.append(PageBreak())
             
-            # 6. Orientações práticas
-            elements.extend(self._create_practical_guidance_section(diet_data))
+            # 6. Orientações práticas (se existir)
+            if diet_data.get('practical_guidance'):
+                elements.extend(self._create_practical_guidance_section(diet_data))
             
-            # 7. Rodapé com dados da API
-            elements.extend(self._create_footer_section(diet_data))
+            # 7. Dados da fonte nutricional
+            elements.extend(self._create_data_source_section(diet_data))
             
             # Gerar PDF
             doc.build(elements, onFirstPage=self._add_header_footer, onLaterPages=self._add_header_footer)
@@ -159,14 +163,35 @@ class ShapeMatePDFGenerator:
             logger.error(f"Erro ao gerar PDF: {str(e)}")
             raise RuntimeError(f"Falha na geração do PDF: {str(e)}") from e
     
+    def _validate_diet_data(self, diet_data: Dict[str, Any]):
+        """Valida se o JSON da dieta tem a estrutura necessária"""
+        required_sections = ['patient_info', 'nutritional_calculations', 'weekly_menu']
+        
+        for section in required_sections:
+            if section not in diet_data:
+                raise ValueError(f"Seção obrigatória '{section}' não encontrada no JSON da dieta")
+        
+        # Validar seções específicas
+        patient_info = diet_data['patient_info']
+        if not isinstance(patient_info, dict) or not patient_info.get('name'):
+            raise ValueError("Nome do paciente não encontrado ou formato inválido")
+        
+        nutritional_calc = diet_data['nutritional_calculations']
+        if not nutritional_calc.get('daily_target_kcal'):
+            raise ValueError("Meta calórica diária não encontrada")
+        
+        weekly_menu = diet_data['weekly_menu']
+        if not weekly_menu:
+            raise ValueError("Menu semanal não encontrado")
+    
     def _create_cover_page(self, diet_data: Dict[str, Any]) -> List:
-        """Cria página de capa do PDF"""
+        """Cria página de capa usando dados do JSON"""
         elements = []
         
-        # Logo e título principal
         elements.append(Spacer(1, 1 * cm))
         
-        title = Paragraph("🏃‍♂️ ShapeMateAI", self.styles['title'])
+        # Logo e título
+        title = Paragraph("🍃 ShapeMateAI", self.styles['title'])
         elements.append(title)
         
         subtitle = Paragraph("Plano Alimentar Personalizado", self.styles['subtitle'])
@@ -175,23 +200,39 @@ class ShapeMatePDFGenerator:
         elements.append(Spacer(1, 2 * cm))
         
         # Nome do paciente
-        patient_name = diet_data.get('patient_info', {}).get('name', 'Paciente')
+        patient_info = diet_data['patient_info']
+        if isinstance(patient_info, dict):
+            patient_name = patient_info.get('name', 'Paciente')
+        else:
+            patient_name = 'Paciente'
         patient_title = Paragraph(f"Elaborado para: <b>{patient_name}</b>", self.styles['section_header'])
         elements.append(patient_title)
         
         elements.append(Spacer(1, 1 * cm))
         
         # Data de geração
-        generated_date = datetime.now().strftime("%d/%m/%Y às %H:%M")
-        date_text = Paragraph(f"Gerado em: {generated_date}", self.styles['normal_text'])
+        generated_at = diet_data.get('generated_at', datetime.now().isoformat())
+        try:
+            # Parse da data ISO
+            gen_date = datetime.fromisoformat(generated_at.replace('Z', '+00:00'))
+            formatted_date = gen_date.strftime("%d/%m/%Y às %H:%M")
+        except:
+            formatted_date = datetime.now().strftime("%d/%m/%Y às %H:%M")
+        
+        date_text = Paragraph(f"Gerado em: {formatted_date}", self.styles['normal_text'])
         elements.append(date_text)
         
-        # Informações da API
+        # Informações da fonte de dados
         elements.append(Spacer(1, 2 * cm))
+        data_source = diet_data.get('nutrition_data_source', {})
+        source_name = data_source.get('primary_source', 'USDA FoodData Central API')
+        foods_analyzed = data_source.get('foods_analyzed', 'N/A')
+        
         api_info = Paragraph(
-            "<b>Dados Nutricionais:</b> USDA FoodData Central API<br/>"
-            "<b>Cálculos:</b> Taxa Metabólica Basal (TMB) personalizada<br/>"
-            "<b>Precisão:</b> Dados oficiais do Departamento de Agricultura dos EUA",
+            f"<b>Dados Nutricionais:</b> {source_name}<br/>"
+            f"<b>Alimentos Analisados:</b> {foods_analyzed}<br/>"
+            f"<b>Cálculos:</b> Taxa Metabólica Basal (TMB) personalizada<br/>"
+            f"<b>Precisão:</b> Dados oficiais per 100g",
             self.styles['normal_text']
         )
         elements.append(api_info)
@@ -201,13 +242,23 @@ class ShapeMatePDFGenerator:
     def _create_patient_info_section(self, diet_data: Dict[str, Any]) -> List:
         """Cria seção com informações do paciente"""
         elements = []
-        patient_info = diet_data.get('patient_info', {})
+        patient_info = diet_data['patient_info']
+        if not isinstance(patient_info, dict):
+            # Se não for dicionário, criar um dicionário padrão
+            patient_info = {
+                'name': 'Paciente',
+                'age': 'Não informado',
+                'gender': 'Não informado',
+                'weight_kg': 'Não informado',
+                'height_cm': 'Não informado',
+                'activity_level': 'Não informado',
+                'primary_objective': 'Não informado'
+            }
         
-        # Título da seção
         section_title = Paragraph("📋 Informações do Paciente", self.styles['section_header'])
         elements.append(section_title)
         
-        # Tabela com informações
+        # Formatar dados do paciente
         patient_data = [
             ['Nome:', patient_info.get('name', 'Não informado')],
             ['Idade:', f"{patient_info.get('age', 'Não informado')} anos"],
@@ -231,15 +282,13 @@ class ShapeMatePDFGenerator:
         ]))
         
         elements.append(patient_table)
-        
         return elements
     
     def _create_nutrition_calculations_section(self, diet_data: Dict[str, Any]) -> List:
         """Cria seção com cálculos nutricionais"""
         elements = []
-        nutrition_calc = diet_data.get('nutritional_calculations', {})
+        nutrition_calc = diet_data['nutritional_calculations']
         
-        # Título da seção
         section_title = Paragraph("📊 Cálculos Nutricionais", self.styles['section_header'])
         elements.append(section_title)
         
@@ -261,17 +310,16 @@ class ShapeMatePDFGenerator:
             macro_title = Paragraph("🔢 Distribuição de Macronutrientes", self.styles['section_header'])
             elements.append(macro_title)
             
-            macro_data = [
-                ['Macronutriente', 'Gramas/dia', 'Percentual', 'Calorias/dia']
-            ]
+            macro_data = [['Macronutriente', 'Gramas/dia', 'Percentual', 'Calorias/dia']]
             
-            for macro_name, macro_data_item in macros.items():
-                if isinstance(macro_data_item, dict):
+            for macro_name, macro_values in macros.items():
+                if isinstance(macro_values, dict):
+                    display_name = macro_name.replace('_', ' ').title()
                     macro_data.append([
-                        macro_name.replace('_', ' ').title(),
-                        f"{macro_data_item.get('grams_per_day', 'N/A')} g",
-                        f"{macro_data_item.get('percentage', 'N/A')}%",
-                        f"{macro_data_item.get('kcal_per_day', 'N/A')} kcal"
+                        display_name,
+                        f"{macro_values.get('grams_per_day', 'N/A')} g",
+                        f"{macro_values.get('percentage', 'N/A')}%",
+                        f"{macro_values.get('kcal_per_day', 'N/A')} kcal"
                     ])
             
             macro_table = Table(macro_data, colWidths=[4*cm, 3*cm, 3*cm, 4*cm])
@@ -291,99 +339,116 @@ class ShapeMatePDFGenerator:
         return elements
     
     def _create_weekly_menu_section(self, diet_data: Dict[str, Any]) -> List:
-        """Cria seção com menu semanal"""
+        """Cria seção com menu semanal usando dados diretos do JSON"""
         elements = []
         weekly_menu = diet_data.get('weekly_menu', {})
         
-        # Título da seção
         section_title = Paragraph("🍽️ Menu Semanal", self.styles['section_header'])
         elements.append(section_title)
         
-        # Para cada dia da semana
-        for day, daily_menu in weekly_menu.items():
-            # Título do dia
-            day_title = Paragraph(f"<b>{day}</b>", self.styles['bold_text'])
+        # Mapeamento de nomes de refeições
+        meal_names = {
+            'breakfast': '☀️ Café da Manhã',
+            'morning_snack': '🥤 Lanche da Manhã',
+            'lunch': '🍽️ Almoço',
+            'afternoon_snack': '🍎 Lanche da Tarde',
+            'dinner': '🌙 Jantar',
+            'evening_snack': '🌙 Ceia'
+        }
+        
+        # Tradução de dias para PT-BR
+        day_names = {
+            'monday': 'Segunda-feira',
+            'tuesday': 'Terça-feira',
+            'wednesday': 'Quarta-feira',
+            'thursday': 'Quinta-feira',
+            'friday': 'Sexta-feira',
+            'saturday': 'Sábado',
+            'sunday': 'Domingo'
+        }
+
+        # Ordem fixa dos dias (Monday -> Sunday)
+        ordered_days = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday']
+        # Se a estrutura vier com chaves diferentes, mantém ordem de entrada no final
+        extra_days = [k for k in weekly_menu.keys() if str(k).lower() not in ordered_days]
+        days_iter = ordered_days + extra_days
+
+        for day in days_iter:
+            if day not in weekly_menu:
+                continue
+            daily_menu = weekly_menu[day]
+            # Título do dia (PT-BR)
+            day_pt = day_names.get(str(day).lower(), str(day).title())
+            day_title = Paragraph(f"<b>{day_pt}</b>", self.styles['bold_text'])
             elements.append(day_title)
             
-            # Tabela das refeições do dia
-            meal_data = [['Refeição', 'Meta (kcal)', 'Alimentos']]
-            
-            meal_names = {
-                'breakfast': 'Café da Manhã',
-                'morning_snack': 'Lanche da Manhã',
-                'lunch': 'Almoço',
-                'afternoon_snack': 'Lanche da Tarde',
-                'dinner': 'Jantar'
-            }
-            
-            for meal_key, meal_info in daily_menu.items():
-                meal_name = meal_names.get(meal_key, meal_key)
-                target_kcal = meal_info.get('target_kcal', 0)
-                foods = meal_info.get('foods', [])
+            # Para cada refeição do dia
+            for meal_key, meal_data in daily_menu.items():
+                if not meal_data:
+                    continue
                 
-                food_list = []
-                for food_item in foods:
-                    food_name = food_item.get('food', '')
-                    portion = food_item.get('portion', '')
-                    # Traduzir nome do alimento
-                    translated_name = self._translate_food_name(food_name)
-                    food_list.append(f"• {translated_name} ({portion})")
+                meal_name = meal_names.get(meal_key, meal_key.title())
+                target_kcal = meal_data.get('target_kcal', 0)
                 
-                foods_text = '<br/>'.join(food_list) if food_list else 'A definir'
+                # Título da refeição
+                meal_title = Paragraph(f"{meal_name} - {target_kcal} kcal", self.styles['bold_text'])
+                elements.append(meal_title)
                 
-                meal_data.append([
-                    meal_name,
-                    f"{target_kcal} kcal",
-                    foods_text
-                ])
+                # Opções da refeição
+                options = meal_data.get('options', [])
+                for i, option in enumerate(options, 1):
+                    option_name = option.get('name', f'Opção {i}')
+                    items = option.get('items', [])
+                    totals = option.get('totals', {})
+                    
+                    # Lista de alimentos da opção
+                    food_items = []
+                    for item in items:
+                        display_name = item.get('name_pt') or item.get('name_en', '')
+                        portion = item.get('portion_grams', 0)
+                        kcal = item.get('kcal', 0)
+                        food_items.append(f"• {display_name} - {portion}g ({kcal} kcal)")
+                    
+                    option_text = f"<b>{option_name}:</b><br/>"
+                    option_text += "<br/>".join(food_items)
+                    option_text += f"<br/><i>Total: {totals.get('kcal', 0)} kcal</i>"
+                    
+                    option_para = Paragraph(option_text, self.styles['normal_text'])
+                    elements.append(option_para)
+                    elements.append(Spacer(1, 0.2 * cm))
             
-            daily_table = Table(meal_data, colWidths=[4*cm, 3*cm, 7*cm])
-            daily_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), self.secondary_color),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-                ('FONTSIZE', (0, 0), (-1, -1), 9),
-                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, self.bg_color]),
-                ('GRID', (0, 0), (-1, -1), 1, self.secondary_color)
-            ]))
-            
-            elements.append(daily_table)
-            elements.append(Spacer(1, 0.3 * cm))
+            elements.append(Spacer(1, 0.5 * cm))
         
         return elements
     
     def _create_shopping_list_section(self, diet_data: Dict[str, Any]) -> List:
         """Cria seção com lista de compras"""
         elements = []
-        shopping_list = diet_data.get('shopping_list', [])
+        shopping_list = diet_data.get('shopping_list', {})
         
-        # Título da seção
-        section_title = Paragraph("🛒 Lista de Compras Semanal", self.styles['section_header'])
+        section_title = Paragraph("🛒 Lista de Compras", self.styles['section_header'])
         elements.append(section_title)
         
-        if shopping_list:
+        items = shopping_list.get('items', [])
+        if items:
             # Agrupar por categoria
             categories = {}
-            for item in shopping_list:
+            for item in items:
                 category = item.get('category', 'Outros')
                 if category not in categories:
                     categories[category] = []
                 categories[category].append(item)
             
             # Para cada categoria
-            for category, items in categories.items():
+            for category, category_items in categories.items():
                 category_title = Paragraph(f"<b>{category}</b>", self.styles['bold_text'])
                 elements.append(category_title)
                 
                 item_data = [['Item', 'Quantidade Estimada']]
-                for item in items:
-                    item_data.append([
-                        item.get('item', ''),
-                        item.get('estimated_weekly_amount', 'A definir')
-                    ])
+                for item in category_items:
+                    name_pt = item.get('name_pt', item.get('name_en', ''))
+                    amount = item.get('estimated_weekly_amount', 'A definir')
+                    item_data.append([name_pt, amount])
                 
                 category_table = Table(item_data, colWidths=[8*cm, 4*cm])
                 category_table.setStyle(TableStyle([
@@ -399,6 +464,9 @@ class ShapeMatePDFGenerator:
                 
                 elements.append(category_table)
                 elements.append(Spacer(1, 0.3 * cm))
+        else:
+            no_list_text = Paragraph("Lista de compras será personalizada conforme suas preferências coletadas.", self.styles['normal_text'])
+            elements.append(no_list_text)
         
         return elements
     
@@ -407,72 +475,49 @@ class ShapeMatePDFGenerator:
         elements = []
         guidance = diet_data.get('practical_guidance', {})
         
-        # Título da seção
         section_title = Paragraph("💡 Orientações Práticas", self.styles['section_header'])
         elements.append(section_title)
         
-        # Para cada tipo de orientação
-        guidance_titles = {
-            'meal_timing': '⏰ Horários das Refeições',
-            'hydration': '💧 Hidratação',
-            'preparation_tips': '👨‍🍳 Dicas de Preparo',
-            'personalized_tips': '🎯 Dicas Personalizadas'
-        }
-        
         for guidance_key, tips in guidance.items():
-            if tips and guidance_key in guidance_titles:
-                tip_title = Paragraph(guidance_titles[guidance_key], self.styles['bold_text'])
+            if tips:
+                guidance_title = guidance_key.replace('_', ' ').title()
+                tip_title = Paragraph(f"<b>{guidance_title}</b>", self.styles['bold_text'])
                 elements.append(tip_title)
                 
-                for tip in tips:
-                    tip_text = Paragraph(f"• {tip}", self.styles['normal_text'])
+                if isinstance(tips, list):
+                    for tip in tips:
+                        tip_text = Paragraph(f"• {tip}", self.styles['normal_text'])
+                        elements.append(tip_text)
+                else:
+                    tip_text = Paragraph(str(tips), self.styles['normal_text'])
                     elements.append(tip_text)
                 
                 elements.append(Spacer(1, 0.3 * cm))
         
         return elements
     
-    def _create_footer_section(self, diet_data: Dict[str, Any]) -> List:
-        """Cria rodapé com informações da API"""
+    def _create_data_source_section(self, diet_data: Dict[str, Any]) -> List:
+        """Cria seção com informações da fonte de dados"""
         elements = []
         
         elements.append(Spacer(1, 1 * cm))
         
+        data_source = diet_data.get('nutrition_data_source', {})
+        source_name = data_source.get('primary_source', 'USDA FoodData Central API')
+        foods_count = data_source.get('foods_analyzed', 'N/A')
+        last_updated = data_source.get('last_updated', 'N/A')
+        
         footer_info = Paragraph(
-            "<b>Dados Nutricionais:</b> Este plano foi elaborado utilizando dados oficiais da "
-            "USDA FoodData Central API, garantindo precisão e confiabilidade das informações nutricionais. "
-            "Os cálculos de TMB foram baseados na fórmula de Harris-Benedict atualizada.<br/><br/>"
-            "<b>ShapeMateAI</b> - Nutrição Inteligente e Personalizada",
+            f"<b>Fonte dos Dados Nutricionais:</b> {source_name}<br/>"
+            f"<b>Alimentos Analisados:</b> {foods_count}<br/>"
+            f"<b>Última Atualização:</b> {last_updated}<br/><br/>"
+            f"<b>ShapeMateAI</b> - Nutrição Inteligente e Personalizada<br/>"
+            f"Todos os cálculos baseados em dados oficiais e metodologia científica.",
             self.styles['small_text']
         )
         elements.append(footer_info)
         
         return elements
-    
-    def _translate_food_name(self, english_name: str) -> str:
-        """Traduz nome do alimento do inglês para português"""
-        translation_map = {
-            'cooked white rice': 'Arroz branco cozido',
-            'cooked black beans': 'Feijão preto cozido',
-            'grilled chicken breast': 'Peito de frango grelhado',
-            'sweet potato': 'Batata doce',
-            'banana': 'Banana',
-            'boiled egg': 'Ovo cozido',
-            'whole milk': 'Leite integral',
-            'oats': 'Aveia',
-            'broccoli': 'Brócolis',
-            'spinach': 'Espinafre',
-            'apple': 'Maçã',
-            'tomato': 'Tomate',
-            'olive oil': 'Azeite de oliva',
-            'salmon': 'Salmão',
-            'greek yogurt': 'Iogurte grego',
-            'almonds': 'Amêndoas',
-            'avocado': 'Abacate',
-            'quinoa': 'Quinoa'
-        }
-        
-        return translation_map.get(english_name, english_name.title())
     
     def _add_header_footer(self, canvas, doc):
         """Adiciona cabeçalho e rodapé às páginas"""
@@ -496,7 +541,7 @@ class ShapeMatePDFGenerator:
 
 
 def create_diet_pdf(diet_data: Dict[str, Any], output_dir: str = None) -> str:
-    """Função utilitária para criar PDF da dieta"""
+    """Função utilitária para criar PDF da dieta sem traduções hardcoded"""
     try:
         # Definir diretório de saída
         if output_dir is None:
@@ -505,7 +550,7 @@ def create_diet_pdf(diet_data: Dict[str, Any], output_dir: str = None) -> str:
         # Criar diretório se não existir
         os.makedirs(output_dir, exist_ok=True)
         
-        # Nome do arquivo
+        # Nome do arquivo baseado nos dados do JSON
         patient_name = diet_data.get('patient_info', {}).get('name', 'Paciente')
         safe_name = "".join(c for c in patient_name if c.isalnum() or c in (' ', '-', '_')).rstrip()
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

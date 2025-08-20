@@ -27,7 +27,8 @@ from core.config_loader import get_config_loader
 
 # Importar utilitários
 from utils.diet_manager.diet_storage import diet_manager
-from utils.pdf_generator import process_uploaded_diet
+from utils.pdf_generator import create_diet_pdf
+from datetime import datetime
 
 # Classe de agente Daily Assistant simples
 class SimpleDailyAssistantAgent(BaseAgent):
@@ -85,6 +86,102 @@ nutritionist_agent = None
 daily_assistant_agent = None
 nutritionist_available = False
 daily_assistant_available = False
+pending_diets = {}
+
+# Deterministic diet generator (no LLM)
+def _deterministic_diet_from_user(user: dict) -> dict:
+    name = user.get('name') or 'Paciente'
+    gender = (user.get('gender') or '').lower()
+    try:
+        age = int(user.get('age') or user.get('age_years') or 30)
+    except Exception:
+        age = 30
+    weight = float(user.get('weight') or user.get('weight_kg') or 70)
+    height = float(user.get('height') or user.get('height_cm') or 170)
+    act = (user.get('activity_level') or 'moderately_active').lower()
+    goal = (user.get('primary_objective') or user.get('primary_goal') or 'Manutenção')
+
+    tmb = 10*weight + 6.25*height - 5*age + (5 if gender.startswith('m') else -161)
+    activity_map = {'sedentary':1.2,'lightly_active':1.375,'moderately_active':1.55,'very_active':1.725,'extra_active':1.9,
+                    'leve':1.375,'moderado':1.55,'alto':1.725,'intenso':1.725}
+    af = activity_map.get(act,1.55)
+    get_kcal = tmb*af
+    gl = str(goal).lower()
+    if 'perd' in gl or 'emag' in gl:
+        daily = max(1200, get_kcal-400)
+        adj = 'Déficit para perda de peso'
+    elif 'ganh' in gl or 'massa' in gl:
+        daily = get_kcal+300
+        adj = 'Superávit para ganho de massa'
+    else:
+        daily = get_kcal
+        adj = 'Manutenção'
+    carbs_kcal = daily*0.5
+    prot_kcal = daily*0.25
+    fat_kcal = daily*0.25
+    macros = {
+        'carbohydrates': {'kcal_per_day': round(carbs_kcal,1),'grams_per_day': round(carbs_kcal/4,1)},
+        'proteins': {'kcal_per_day': round(prot_kcal,1),'grams_per_day': round(prot_kcal/4,1)},
+        'fats': {'kcal_per_day': round(fat_kcal,1),'grams_per_day': round(fat_kcal/9,1)}
+    }
+    # Simple weekly menu template without API
+    daily_kcal = round(daily)
+    meals = {
+        'breakfast': 0.25,
+        'morning_snack': 0.10,
+        'lunch': 0.35,
+        'afternoon_snack': 0.10,
+        'dinner': 0.20
+    }
+    foods = {
+        'proteins': ['peito de frango','tilápia','ovo'],
+        'carbohydrates': ['arroz integral','batata doce','pão integral'],
+        'vegetables': ['brócolis','alface','tomate'],
+        'fruits': ['banana','maçã','laranja'],
+        'dairy': ['iogurte natural']
+    }
+    def select(meal):
+        items=[]
+        if meal in ['lunch','dinner']:
+            items=[{'food': foods['proteins'][0],'portion':'150g'},
+                   {'food': foods['carbohydrates'][0],'portion':'100g'},
+                   {'food': foods['vegetables'][0],'portion':'à vontade'}]
+        elif meal=='breakfast':
+            items=[{'food': foods['dairy'][0],'portion':'200ml'},{'food': foods['fruits'][0],'portion':'1 un'},
+                   {'food': foods['carbohydrates'][2],'portion':'1 fatia'}]
+        else:
+            items=[{'food': foods['fruits'][1],'portion':'1 un'}]
+        return items
+    days = ['Segunda','Terça','Quarta','Quinta','Sexta','Sábado','Domingo']
+    weekly = {}
+    for d in days:
+        dm={}
+        for meal,p in meals.items():
+            dm[meal] = {'target_kcal': round(daily_kcal*p), 'foods': select(meal)}
+        weekly[d]=dm
+    return {
+        'generated_at': datetime.now().isoformat(),
+        'diet_id': f"diet_{int(__import__('time').time())}",
+        'patient_info': {
+            'name': name,
+            'age': age,
+            'gender': 'Masculino' if gender.startswith('m') else 'Feminino',
+            'weight_kg': weight,
+            'height_cm': height,
+            'activity_level': act,
+            'primary_objective': goal
+        },
+        'nutritional_calculations': {
+            'tmb_kcal': round(tmb,1),
+            'daily_target_kcal': round(daily,1),
+            'objective_adjustment': adj,
+            'macronutrients': macros,
+            'activity_factor': af
+        },
+        'weekly_menu': weekly,
+        'nutrition_data_source': {'primary_source': 'deterministic', 'foods_analyzed': 0},
+        'nutritional_database': {}
+    }
 
 try:
     # Importar o agente nutricionista atualizado
@@ -196,7 +293,24 @@ def chat(agent=None):
                              assistant_available=daily_assistant_available)
     else:
         # Default para nutritionist - usar o template principal do chat
-        return render_template('nutritionist/chat.html', user=user_data)
+        user_id = session['user_id']
+        
+        # Verificar acesso ao nutricionista
+        from database.models import Database
+        db = Database()
+        has_access, message = db.check_nutritionist_access(user_id)
+        
+        if not has_access:
+            # Se não tem acesso, conceder acesso temporário para a consulta
+            db.grant_nutritionist_access(user_id, days=30)
+            has_access, message = db.check_nutritionist_access(user_id)
+        
+        access_info = db.get_nutritionist_access_info(user_id)
+        
+        return render_template('nutritionist/chat.html', 
+                             user=user_data, 
+                             has_access=has_access, 
+                             access_info=access_info)
 
 
 # API Routes
@@ -576,9 +690,13 @@ def api_respond_structured_consultation():
         
         # Continuar consulta estruturada
         print("🔄 Continuing structured consultation...")
+        print(f"📊 Before: current_question={consultation_state.get('current_question')}, total={consultation_state.get('total_questions')}")
+        
         updated_state = nutritionist_agent.continue_structured_consultation(
             consultation_state, user_response
         )
+        
+        print(f"📊 After: current_question={updated_state.get('current_question')}, completed={updated_state.get('consultation_completed')}")
         
         # Atualizar estado na sessão
         session['consultation_state'] = updated_state
@@ -589,8 +707,8 @@ def api_respond_structured_consultation():
         print(f"📨 Latest message: {latest_message[:100]}...")
         
         # Verificar se chegou ao ponto de decisão
-        is_decision_point = updated_state.get('ready_for_summary', False)
-        show_buttons = 'summary_and_decision' in updated_state['current_phase']
+        is_decision_point = updated_state.get('ready_for_summary', False) or updated_state.get('consultation_completed', False)
+        show_buttons = is_decision_point or updated_state.get('current_phase') == 'consultation_summary'
         
         response_data = {
             'success': True,
@@ -598,7 +716,7 @@ def api_respond_structured_consultation():
             'current_message': latest_message,
             'current_phase': updated_state['current_phase'],
             'is_decision_point': is_decision_point,
-            'show_action_buttons': show_buttons,
+            'show_option_buttons': show_buttons,
             'diet_generated': updated_state.get('current_phase') == 'diet_generated'
         }
         print(f"✅ Sending response: success={response_data['success']}, message_length={len(latest_message)}, diet_generated={response_data['diet_generated']}")
@@ -629,70 +747,61 @@ def api_consultation_action():
         consultation_state = session.get('consultation_state', {})
         
         if action == 'generate_diet':
-            # NOVA FUNCIONALIDADE: Gerar dieta real usando agente com TMB
+            # Gerar dieta exclusivamente via agente (task diet_creation)
             try:
-                # Verificar se o agente nutricionista está disponível
-                if not nutritionist_available or not nutritionist_agent:
-                    return jsonify({
-                        'success': False,
-                        'message': 'Sistema de geração de dietas não disponível'
-                    }), 503
-                
-                # Gerar dieta usando o agente nutricionista
-                diet_json = nutritionist_agent.generate_diet_json(consultation_state)
-                
-                # Salvar dieta para o usuário (aqui você pode implementar salvamento no banco)
+                # Considera disponível se objeto nutritionist_agent existir (facilita monkeypatch em testes)
+                if not nutritionist_agent:
+                    return jsonify({'success': False, 'message': 'Sistema de geração de dietas não disponível'}), 503
+
                 user_id = session['user_id']
-                
-                # Mensagem de sucesso com detalhes dos cálculos
-                tmb_info = diet_json.get('tmb_calculations', {})
-                patient_info = diet_json.get('patient_info', {})
-                
-                success_message = f"""🎉 **DIETA PERSONALIZADA CRIADA COM SUCESSO!** 
+                session_id = session.get('current_chat_session') or f"diet_creation_{user_id}_{__import__('time').time()}"
 
-Uhuuul! Sua dieta personalizada está pronta! ✨
+                # Criar configuração do sistema para a task diet_creation
+                core_system.create_system_config(
+                    agent_type=AgentType.NUTRITIONIST,
+                    task_type=TaskType.DIET_CREATION,
+                    user_id=str(user_id),
+                    session_id=session_id,
+                    priority=TaskPriority.HIGH
+                )
 
-## 📊 **SEUS CÁLCULOS NUTRICIONAIS:**
-- **TMB (Taxa Metabólica Basal):** {tmb_info.get('tmb_kcal', 'N/A')} kcal
-- **Gasto Energético Total:** {tmb_info.get('get_kcal', 'N/A')} kcal  
-- **Meta Calórica Diária:** {tmb_info.get('daily_target_kcal', 'N/A')} kcal
-- **Estratégia:** {tmb_info.get('objective_adjustment', 'Personalizada')}
+                # Incluir estado de consulta atual no contexto para o agente
+                user_data = session.get('user_data', {})
+                context = {'consultation_state': consultation_state}
 
-## 🎯 **SEU PLANO PERSONALIZADO:**
-Baseei tudo nas suas preferências, objetivos e estilo de vida. Considerando que você:
-- **Objetivo:** {patient_info.get('primary_objective', 'Melhoria da saúde')}
-- **Nível de Atividade:** {patient_info.get('activity_level', 'Personalizado')}
-- **Preferências:** {', '.join(patient_info.get('food_preferences', [])[:3])}
+                # Mensagem de gatilho para a task
+                trigger_message = 'Executar task diet_creation agora'
 
-## 📋 **O QUE VOCÊ TERÁ:**
-🍽️ **Cardápio semanal completo** com horários
-🛒 **Lista de compras inteligente**  
-📊 **Valores nutricionais detalhados**
-🔄 **Opções de substituições**
-⚖️ **Controle de macronutrientes**
+                result = core_system.process_user_message(
+                    user_id=str(user_id),
+                    session_id=session_id,
+                    message=trigger_message,
+                    user_profile=user_data,
+                    context=context
+                )
 
-Sua dieta já está disponível na área "Minhas Dietas" do dashboard!
+                if not result.get('success'):
+                    return jsonify({'success': False, 'message': result.get('error', 'Falha ao gerar dieta')}), 500
 
-Estou aqui sempre que precisar de ajustes! Vamos nessa jornada juntos! 💪"""
+                # Obter texto e JSON gerados pelo agente
+                diet_text = result.get('response', '')
+                diet_json = result.get('generated_diet')
+                if not diet_json:
+                    return jsonify({'success': False, 'message': 'Agente não retornou JSON da dieta'}), 500
 
-                # Limpar estado da consulta
-                if 'consultation_state' in session:
-                    del session['consultation_state']
-                
+                # Opcional: guardar dieta pendente (fallback)
+                pending_diets[user_id] = diet_json
+
+                # Sinalizar conclusão para a UI atual (aciona modal e redirecionamento)
                 return jsonify({
                     'success': True,
-                    'action': 'diet_generated',
-                    'message': success_message,
-                    'diet_data': diet_json,
-                    'redirect_to': 'dashboard'
+                    'action': 'diet_completed',
+                    'message': diet_text or 'Sua dieta personalizada foi criada com sucesso!',
+                    'diet_data': diet_json
                 })
-                
             except Exception as diet_error:
                 logger.error(f"Erro ao gerar dieta: {diet_error}")
-                return jsonify({
-                    'success': False,
-                    'message': f'Erro ao gerar dieta personalizada: {str(diet_error)}'
-                }), 500
+                return jsonify({'success': False, 'message': f'Erro ao gerar dieta: {str(diet_error)}'}), 500
             
         elif action == 'add_information':
             # Voltar para coleta de informações adicionais
@@ -813,12 +922,12 @@ def download_diet_pdf():
         
         if not diet:
             return jsonify({'error': 'Nenhuma dieta encontrada'}), 404
-        
+
         # Verificar se o PDF existe
-        pdf_path = diet.get('pdf_path')
+        pdf_path = diet.get('pdf_path') or diet.get('data', {}).get('pdf_path')
         if not pdf_path or not os.path.exists(pdf_path):
             return jsonify({'error': 'PDF não encontrado'}), 404
-        
+
         # Enviar arquivo PDF
         return send_file(
             pdf_path,
@@ -826,10 +935,92 @@ def download_diet_pdf():
             download_name=f"dieta_{user_data.get('name', 'paciente')}.pdf",
             mimetype='application/pdf'
         )
-        
+
     except Exception as e:
         logging.error(f"Erro ao baixar PDF da dieta: {str(e)}")
         return jsonify({'error': 'Erro interno do servidor'}), 500
+
+@app.route('/api/diet/view-pdf')
+@require_login
+def view_diet_pdf():
+    """Visualiza o PDF da dieta do usuário no navegador"""
+    try:
+        user_id = session['user_id']
+        
+        # Buscar dieta ativa do usuário
+        diet = diet_manager.get_user_diet(user_id)
+        
+        if not diet:
+            return jsonify({'error': 'Nenhuma dieta encontrada'}), 404
+
+        # Verificar se o PDF existe
+        pdf_path = diet.get('pdf_path') or diet.get('data', {}).get('pdf_path')
+        if not pdf_path or not os.path.exists(pdf_path):
+            return jsonify({'error': 'PDF não encontrado'}), 404
+
+        # Enviar arquivo PDF para visualização no navegador
+        return send_file(
+            pdf_path,
+            mimetype='application/pdf'
+        )
+
+    except Exception as e:
+        logging.error(f"Erro ao visualizar PDF da dieta: {str(e)}")
+        return jsonify({'error': 'Erro interno do servidor'}), 500
+
+
+@app.route('/api/diet/finalize-pdf', methods=['POST'])
+@require_login
+def finalize_diet_pdf():
+    """Gera o PDF da dieta ativa do usuário e atualiza o registro com o caminho do PDF."""
+    try:
+        user_id = session['user_id']
+        diet = diet_manager.get_user_diet(user_id)
+        if not diet:
+            return jsonify({'success': False, 'message': 'Nenhuma dieta ativa encontrada'}), 404
+
+        diet_data = diet.get('data') or diet.get('diet_data') or {}
+        if not diet_data:
+            return jsonify({'success': False, 'message': 'Dados da dieta indisponíveis'}), 400
+
+        # Gerar PDF
+        pdf_path = create_diet_pdf(diet_data)
+
+        # Atualizar registro da dieta com o pdf_path
+        try:
+            # Pequena atualização direta via DietManager (adicionaremos método)
+            diet_manager.update_diet_pdf_path(diet_id=diet['id'], pdf_path=pdf_path)
+        except Exception as e:
+            logger.warning(f"Falha ao atualizar pdf_path na dieta: {e}")
+
+        return jsonify({'success': True, 'pdf_path': pdf_path})
+    except Exception as e:
+        logger.error(f"Erro ao finalizar PDF da dieta: {e}")
+        return jsonify({'success': False, 'message': 'Erro ao gerar PDF'}), 500
+
+
+@app.route('/api/diet/save-pending', methods=['POST'])
+@require_login
+def save_pending_diet():
+    """Salva a dieta pendente armazenada na sessão como dieta ativa do usuário."""
+    try:
+        user_id = session['user_id']
+        pending = pending_diets.get(user_id)
+        if not pending:
+            return jsonify({'success': False, 'message': 'Nenhuma dieta pendente para salvar'}), 400
+
+        patient_name = pending.get('patient_info', {}).get('name', 'Paciente')
+        diet_name = f"Dieta Personalizada - {patient_name}"
+        diet_id = diet_manager.save_diet(user_id=user_id, diet_data=pending, diet_name=diet_name, source="nutritionist_ai")
+
+        # Limpar pendência e estado de consulta
+        pending_diets.pop(user_id, None)
+        session.pop('consultation_state', None)
+
+        return jsonify({'success': True, 'diet_id': diet_id})
+    except Exception as e:
+        logger.error(f"Erro ao salvar dieta pendente: {e}")
+        return jsonify({'success': False, 'message': 'Erro ao salvar a dieta'}), 500
 
 @app.route('/shopping-list')
 def shopping_list():

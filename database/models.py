@@ -49,6 +49,8 @@ class Database:
                 health_conditions TEXT,
                 other_notes TEXT,
                 profile_completed BOOLEAN DEFAULT 1,
+                nutritionist_access_granted TIMESTAMP,
+                nutritionist_access_expires TIMESTAMP,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users (id)
             )
@@ -277,3 +279,90 @@ class Database:
         
         return [{'id': s[0], 'name': s[1], 'created_at': s[2], 
                 'last_activity': s[3], 'is_active': s[4]} for s in sessions]
+    
+    def grant_nutritionist_access(self, user_id, days=30):
+        """Concede acesso ao nutricionista por X dias"""
+        from datetime import datetime, timedelta
+        
+        access_granted = datetime.now()
+        access_expires = access_granted + timedelta(days=days)
+        
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute('''
+                UPDATE user_profiles 
+                SET nutritionist_access_granted = ?, nutritionist_access_expires = ?
+                WHERE user_id = ?
+            ''', (access_granted.isoformat(), access_expires.isoformat(), user_id))
+            
+            conn.commit()
+            conn.close()
+            return True, "Acesso concedido com sucesso"
+        except Exception as e:
+            conn.close()
+            return False, f"Erro ao conceder acesso: {str(e)}"
+    
+    def check_nutritionist_access(self, user_id):
+        """Verifica se o usuário tem acesso ao nutricionista"""
+        from datetime import datetime
+        
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT nutritionist_access_granted, nutritionist_access_expires
+            FROM user_profiles
+            WHERE user_id = ?
+        ''', (user_id,))
+        
+        result = cursor.fetchone()
+        conn.close()
+        
+        if not result or not result[0] or not result[1]:
+            return False, "Acesso não concedido"
+        
+        access_granted = datetime.fromisoformat(result[0])
+        access_expires = datetime.fromisoformat(result[1])
+        now = datetime.now()
+        
+        if now > access_expires:
+            return False, "Acesso expirado"
+        
+        # Calcular dias restantes
+        days_remaining = (access_expires - now).days
+        
+        return True, f"Acesso válido - {days_remaining} dias restantes"
+    
+    def get_nutritionist_access_info(self, user_id):
+        """Obtém informações sobre o acesso ao nutricionista"""
+        from datetime import datetime
+        
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT nutritionist_access_granted, nutritionist_access_expires
+            FROM user_profiles
+            WHERE user_id = ?
+        ''', (user_id,))
+        
+        result = cursor.fetchone()
+        conn.close()
+        
+        if not result or not result[0] or not result[1]:
+            return None
+        
+        access_granted = datetime.fromisoformat(result[0])
+        access_expires = datetime.fromisoformat(result[1])
+        now = datetime.now()
+        
+        days_remaining = max(0, (access_expires - now).days)
+        
+        return {
+            'access_granted': access_granted,
+            'access_expires': access_expires,
+            'days_remaining': days_remaining,
+            'is_active': now <= access_expires
+        }

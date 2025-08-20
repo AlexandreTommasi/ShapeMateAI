@@ -1,55 +1,171 @@
-task_type: "CONSULTATION"
-priority: "HIGH"  
-description: "Direct and practical data collection about current eating habits, food preferences, and constraints for personalized diet creation"
+task_type: "consultation"
+priority: 3
+description: "Structured 18-question consultation to collect all data needed for personalized diet creation"
 
 # Required context for this task
 required_context:
   - user_profile
-  - primary_objective
-  - current_eating_routine
+  - current_eating_habits
   - food_preferences
-  - practical_limitations
-  - cooking_skills
-  - budget_constraints
-  - food_allergies
-  - meal_preparation_responsibility
+  - activity_level
+  - practical_constraints
   - time_availability
+  - cooking_capabilities
+  - budget_considerations
 
 # Required tools
 tools_required:
   - llm_direct
-  - data_collector
-  - routine_analyzer
-  - preference_mapper
+  - conversation_tracker
+  - data_extractor
 
 # Task configurations
-max_iterations: 8
-timeout_seconds: 400
+max_iterations: 20
+timeout_seconds: 600
 success_criteria:
-  objective_confirmed: true
-  eating_routine_mapped: true
-  food_preferences_identified: true
-  practical_constraints_identified: true
-  cooking_capability_assessed: true
+  eighteen_questions_completed: true
+  all_areas_covered: true
   ready_for_diet_generation: true
-  
-# Specific prompts for this task
+  user_confirmation_received: true
+
+# Specialized prompts for consultation phases
 specialized_prompts:
   consultation_intro: |
-    As an experienced nutritionist, you are conducting a practical and direct consultation.
-    Focus on current eating habits, food preferences, and real limitations of the person.
-    Use simple, natural language without special formatting.
+    As an experienced nutritionist, conduct a professional consultation to collect all information needed for creating a personalized diet.
     
-  follow_up_questions: |
-    After each response, validate quickly and move to the next relevant question.
-    Keep focus on the person's practical reality and preferences.
-    Complete each phase fully before moving to the next.
+    **CONSULTATION STRUCTURE:**
+    - Exactly 18 questions covering all essential areas
+    - One question at a time, natural conversational style
+    - Progress systematically through each area
+    - End with summary and diet generation confirmation
+    
+    **COMMUNICATION RULES:**
+    - Simple, direct language without special formatting
+    - No asterisks, bold text, or excessive emojis
+    - One question per response - never combine questions
+    - Don't repeat information already known from registration
+    - Don't judge current eating habits
+    - Focus on understanding, not educating during data collection
 
-# Specific validations
+  consultation_flow: |
+    CONSULTATION FLOW - 18 STRUCTURED QUESTIONS
+
+    **PHASE 1: ROUTINE AND ACTIVITY (Questions 1-6)**
+    1. "A que horas você costuma acordar e dormir?"
+    2. "Qual é o seu horário de trabalho ou estudo?"
+    3. "Você pratica alguma atividade física? Se sim, nos conte:"
+    4. "Que tipo de atividade você faz? (Ex: Musculação, corrida, dança, etc.)"
+    5. "Quantas vezes por semana?"
+    6. "Qual a duração média de cada treino?"
+
+    **PHASE 2: CURRENT EATING HABITS (Questions 7-12)**
+    Explain before starting: "Agora vou te pedir para descrever o que você costuma comer e beber em um dia comum, incluindo horários e quantidades."
+    7. "Café da manhã: O que você costuma comer e beber? Que horas?"
+    8. "Lanche da manhã: Você faz? Se sim, o que costuma ser?"
+    9. "Almoço: Descreva o que come normalmente e em que horário"
+    10. "Lanche da tarde: Costuma fazer? O que come?"
+    11. "Jantar: O que costuma comer e em que horário?"
+    12. "Ceia (antes de dormir): Você come algo? O que?"
+
+    **PHASE 3: PREFERENCES AND HABITS (Questions 13-16)**
+    13. "Hidratação: Quantos copos de água você bebe por dia?"
+    14. "Preferências: Quais alimentos você adora e não gostaria de ficar sem?"
+    15. "Aversões: Existe algum alimento que você não come de jeito nenhum?"
+    16. "Fim de semana: Sua alimentação muda muito nos finais de semana?"
+
+    **PHASE 4: PRACTICAL CONTEXT (Questions 17-18)**
+    17. "Qual o maior desafio na sua alimentação hoje?"
+    18. "Você tem tempo para se organizar com a alimentação ou sua rotina é muito corrida?"
+
+    **CRITICAL RULES:**
+    - ONE QUESTION AT A TIME - never combine or ask multiple questions
+    - Use natural, conversational Portuguese
+    - Don't use special formatting or bullet points during questions
+    - Track progress but don't mention question numbers to user
+    - Don't repeat information already provided in user registration
+    - After question 18, generate structured summary
+
+  consultation_summary_instructions: |
+    After completing all 18 questions, generate a STRUCTURED SUMMARY containing:
+
+    🎯 **OBJETIVO PRINCIPAL**
+    [Extract and state the user's primary goal]
+
+    ⏰ **ROTINA**
+    [Sleep schedule, work hours, exercise routine with frequency and duration]
+
+    🍽️ **HÁBITOS ALIMENTARES ATUAIS**
+    [All meals with typical foods and timing]
+
+    ❤️ **PREFERÊNCIAS E AVERSÕES**
+    [Foods they love, foods they avoid, weekend changes]
+
+    💪 **CONTEXTO PRÁTICO**
+    [Main challenges, time availability, practical constraints]
+
+    Then ask explicitly:
+    "Com base em todas essas informações, posso gerar agora sua dieta personalizada com cálculos de TMB e dados nutricionais precisos da base USDA?"
+
+    **IMPORTANT:**
+    - Do NOT generate the diet in this phase
+    - Only ask for confirmation to proceed with diet generation
+    - After user confirms, the system will call the diet_creation task
+
+  phase_tracking: |
+    Track consultation progress internally:
+    - Questions 1-6: Daily routine and physical activity
+    - Questions 7-12: Current eating patterns (all meals)
+    - Questions 13-16: Preferences, aversions, and variations
+    - Questions 17-18: Practical challenges and constraints
+    
+    Update current phase based on question number:
+    - 1-6: "routine_assessment"
+    - 7-12: "eating_habits_mapping"
+    - 13-16: "preferences_collection"
+    - 17-18: "practical_constraints"
+    - Summary: "consultation_summary"
+
+# Validation rules (no fallbacks - strict requirements)
 validation_rules:
-  - check_objective_clarity
-  - verify_routine_completeness
-  - validate_preferences_mapping
-  - confirm_constraints_understanding
-  - ensure_practical_feasibility
-  - validate_time_constraints
+  - all_eighteen_questions_asked
+  - responses_collected_for_each_question
+  - summary_generated_with_all_sections
+  - user_confirmation_requested
+  - no_combined_questions
+  - one_question_per_response_enforced
+
+# Data extraction requirements
+extraction_requirements:
+  routine_data:
+    - sleep_schedule
+    - work_hours
+    - exercise_type
+    - exercise_frequency
+    - exercise_duration
+  
+  eating_habits:
+    - breakfast_foods_and_timing
+    - morning_snack_habits
+    - lunch_foods_and_timing
+    - afternoon_snack_habits
+    - dinner_foods_and_timing
+    - evening_snack_habits
+    - daily_water_intake
+  
+  preferences:
+    - favorite_foods
+    - food_aversions
+    - weekend_eating_changes
+  
+  practical_context:
+    - main_eating_challenges
+    - time_availability
+    - cooking_capabilities
+    - budget_considerations
+
+# Success criteria for completing consultation
+completion_criteria:
+  questions_completed: 18
+  data_areas_covered: 4
+  summary_provided: true
+  diet_generation_confirmed: true

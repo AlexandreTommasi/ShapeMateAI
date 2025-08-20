@@ -9,14 +9,12 @@
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2><i class="fas fa-clipboard-list me-2"></i>Minha Dieta</h2>
                 <div>
-                    {% if diet and diet.pdf_generated %}
+                    {% if diet and (diet.pdf_generated or diet.data.pdf_generated) %}
                     <a href="/api/diet/download-pdf" class="btn btn-success me-2" target="_blank">
                         <i class="fas fa-download me-2"></i>Baixar PDF
                     </a>
                     {% endif %}
-                    <button class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#uploadDietModal">
-                        <i class="fas fa-upload me-2"></i>Carregar Dieta PDF
-                    </button>
+                    <!-- Upload removido temporariamente -->
                     <a href="/chat" class="btn btn-primary">
                         <i class="fas fa-comments me-2"></i>Falar com Nutricionista
                     </a>
@@ -24,6 +22,23 @@
             </div>
 
             {% if diet %}
+            {% set pdf_path = diet.pdf_path or (diet.data and diet.data.pdf_path) %}
+            {% if pdf_path %}
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0"><i class="fas fa-file-pdf me-2"></i>Visualização do PDF</h5>
+                        </div>
+                        <div class="card-body">
+                            <div style="height: 600px;">
+                                <iframe src="/api/diet/view-pdf" style="width:100%; height:100%; border: none;"></iframe>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
             <div class="row">
                 <!-- Informações da Dieta -->
                 <div class="col-md-4">
@@ -40,7 +55,22 @@
                                 </small>
                             </p>
                             
-                            {% if diet.data.nutrition_plan %}
+                            {% if diet.data.nutritional_calculations %}
+                            <h6 class="mt-3">Plano Nutricional</h6>
+                            <ul class="list-unstyled">
+                                {% if diet.data.nutritional_calculations.tmb %}
+                                <li><strong>TMB:</strong> {{ diet.data.nutritional_calculations.tmb }} kcal/dia</li>
+                                {% endif %}
+                                {% if diet.data.nutritional_calculations.calories_goal %}
+                                <li><strong>Meta Calórica:</strong> {{ diet.data.nutritional_calculations.calories_goal }} kcal/dia</li>
+                                {% endif %}
+                                {% if diet.data.nutritional_calculations.macros %}
+                                <li><strong>Proteínas:</strong> {{ diet.data.nutritional_calculations.macros.protein_g }}g</li>
+                                <li><strong>Carboidratos:</strong> {{ diet.data.nutritional_calculations.macros.carbs_g }}g</li>
+                                <li><strong>Gorduras:</strong> {{ diet.data.nutritional_calculations.macros.fat_g }}g</li>
+                                {% endif %}
+                            </ul>
+                            {% elif diet.data.nutrition_plan %}
                             <h6 class="mt-3">Plano Nutricional</h6>
                             <ul class="list-unstyled">
                                 {% if diet.data.nutrition_plan.daily_calories %}
@@ -68,36 +98,117 @@
                             <h5 class="mb-0"><i class="fas fa-utensils me-2"></i>Plano de Refeições</h5>
                         </div>
                         <div class="card-body">
-                            {% if diet.data.meal_plans %}
-                            <div class="row">
-                                {% for meal_type, meals in diet.data.meal_plans.items() %}
-                                {% if meals %}
-                                <div class="col-md-6 mb-3">
-                                    <h6 class="text-primary">
-                                        {% if meal_type == 'breakfast' %}☀️ Café da Manhã
-                                        {% elif meal_type == 'lunch' %}🍽️ Almoço
-                                        {% elif meal_type == 'dinner' %}🌙 Jantar
-                                        {% elif meal_type == 'snacks' %}🍎 Lanches
-                                        {% else %}{{ meal_type|title }}
-                                        {% endif %}
-                                    </h6>
-                                    <ul class="list-group list-group-flush">
-                                        {% for meal in meals %}
-                                        <li class="list-group-item px-0 py-1">
-                                            {% if meal is string %}
-                                            {{ meal }}
-                                            {% else %}
-                                            {{ meal.name or meal }}
-                                            {% endif %}
-                                        </li>
-                                        {% endfor %}
-                                    </ul>
-                                </div>
-                                {% endif %}
+                            {% if diet.data.weekly_menu %}
+                                {% set day_names = {
+                                    'monday':'📅 Segunda-feira',
+                                    'tuesday':'📅 Terça-feira',
+                                    'wednesday':'📅 Quarta-feira',
+                                    'thursday':'📅 Quinta-feira',
+                                    'friday':'📅 Sexta-feira',
+                                    'saturday':'📅 Sábado',
+                                    'sunday':'📅 Domingo'
+                                } %}
+
+                                <div class="accordion" id="weeklyMenu">
+                                {% for day_key, day_data in diet.data.weekly_menu.items() %}
+                                    {% set day_lower = (day_key|string)|lower %}
+                                    {% set day_title = day_names.get(day_lower, day_key|title) %}
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="heading-{{ loop.index }}">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ loop.index }}">
+                                                {{ day_title }}
+                                            </button>
+                                        </h2>
+                                        <div id="collapse-{{ loop.index }}" class="accordion-collapse collapse" data-bs-parent="#weeklyMenu">
+                                            <div class="accordion-body">
+                                                {% set meal_names = {
+                                                    'breakfast':'☀️ Café da Manhã',
+                                                    'morning_snack':'🥤 Lanche da Manhã',
+                                                    'lunch':'🍽️ Almoço',
+                                                    'afternoon_snack':'🍎 Lanche da Tarde',
+                                                    'dinner':'🌙 Jantar',
+                                                    'evening_snack':'🌙 Ceia'
+                                                } %}
+
+                                                {% for meal_key, meal_data in day_data.items() %}
+                                                    {% if meal_data %}
+                                                    <div class="mb-3">
+                                                        <h6 class="mb-1">
+                                                            {{ meal_names.get(meal_key, meal_key|title) }}
+                                                            {% if meal_data.target_kcal %}
+                                                                <span class="badge bg-success ms-2">{{ meal_data.target_kcal }} kcal</span>
+                                                            {% endif %}
+                                                        </h6>
+                                                        {% if meal_data.options %}
+                                                            {% for opt in meal_data.options %}
+                                                            <div class="border rounded p-2 mb-2">
+                                                                <strong>{{ opt.name or ('Opção ' ~ loop.index) }}</strong>
+                                                                <ul class="list-unstyled mb-0 mt-1">
+                                                                    {% for it in opt.items %}
+                                                                    <li>• {{ it.name_pt or it.name_en }} — {{ it.portion_grams or it.quantity_g }}g{% if it.kcal is defined %} ({{ it.kcal }} kcal){% endif %}</li>
+                                                                    {% endfor %}
+                                                                </ul>
+                                                                {% if opt.totals and opt.totals.kcal %}
+                                                                <small class="text-muted">Total: {{ opt.totals.kcal }} kcal</small>
+                                                                {% endif %}
+                                                            </div>
+                                                            {% endfor %}
+                                                        {% elif meal_data.meals %}
+                                                            <ul class="list-group list-group-flush">
+                                                                {% for meal in meal_data.meals %}
+                                                                    <li class="list-group-item px-0 py-1">
+                                                                        <strong>{{ meal.name }}:</strong>
+                                                                        {% if meal.items %}
+                                                                        <ul class="list-unstyled ms-3 mt-1">
+                                                                            {% for item in meal.items %}
+                                                                            <li>• {{ item.food }} ({{ item.quantity_g }}g)</li>
+                                                                            {% endfor %}
+                                                                        </ul>
+                                                                        {% endif %}
+                                                                    </li>
+                                                                {% endfor %}
+                                                            </ul>
+                                                        {% else %}
+                                                            <small class="text-muted">Sem opções registradas para esta refeição.</small>
+                                                        {% endif %}
+                                                    </div>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
                                 {% endfor %}
-                            </div>
+                                </div>
+                            {% elif diet.data.meal_plans %}
+                                <div class="row">
+                                    {% for meal_type, meals in diet.data.meal_plans.items() %}
+                                    {% if meals %}
+                                    <div class="col-md-6 mb-3">
+                                        <h6 class="text-primary">
+                                            {% if meal_type == 'breakfast' %}☀️ Café da Manhã
+                                            {% elif meal_type == 'lunch' %}🍽️ Almoço
+                                            {% elif meal_type == 'dinner' %}🌙 Jantar
+                                            {% elif meal_type == 'snacks' %}🍎 Lanches
+                                            {% else %}{{ meal_type|title }}
+                                            {% endif %}
+                                        </h6>
+                                        <ul class="list-group list-group-flush">
+                                            {% for meal in meals %}
+                                            <li class="list-group-item px-0 py-1">
+                                                {% if meal is string %}
+                                                {{ meal }}
+                                                {% else %}
+                                                {{ meal.name or meal }}
+                                                {% endif %}
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                    {% endif %}
+                                    {% endfor %}
+                                </div>
                             {% else %}
-                            <p class="text-muted">Nenhum plano de refeições encontrado.</p>
+                                <p class="text-muted">Nenhum plano de refeições encontrado.</p>
                             {% endif %}
                         </div>
                     </div>
@@ -112,6 +223,50 @@
                             {% for key, value in diet.data.recommendations.items() %}
                             <p><strong>{{ key|replace('_', ' ')|title }}:</strong> {{ value }}</p>
                             {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Lista de Compras -->
+                    {% if diet.data.shopping_list %}
+                    <div class="card mt-4">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>Lista de Compras</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if diet.data.shopping_list.items %}
+                            {% set grouped = {} %}
+                            {% for it in diet.data.shopping_list.items %}
+                                {% set cat = it.category or 'Outros' %}
+                                {% if grouped.update({cat: (grouped.get(cat, []) + [it])}) %}{% endif %}
+                            {% endfor %}
+                            <div class="row">
+                                {% for cat, items in grouped.items() %}
+                                <div class="col-md-6 mb-3">
+                                    <h6 class="text-primary">{{ cat|title }}</h6>
+                                    <ul class="list-group list-group-flush">
+                                        {% for it in items %}
+                                        <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                                            <span>{{ it.name_pt or it.name_en }}</span>
+                                            <span class="badge bg-primary">{{ it.estimated_weekly_amount }}</span>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="row">
+                                {% for item in diet.data.shopping_list %}
+                                <div class="col-md-6 mb-2">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span>{{ item.food }}</span>
+                                        <span class="badge bg-primary">{{ item.quantity_g }}g</span>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                     {% endif %}
@@ -155,76 +310,11 @@
     </div>
 </div>
 
-<!-- Modal Upload Dieta -->
-<div class="modal fade" id="uploadDietModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Carregar Dieta PDF</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="uploadDietForm" enctype="multipart/form-data">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="dietFile" class="form-label">Selecione o arquivo PDF da sua dieta</label>
-                        <input type="file" class="form-control" id="dietFile" name="diet_file" accept=".pdf" required>
-                        <div class="form-text">Apenas arquivos PDF são aceitos (máx. 10MB)</div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="dietName" class="form-label">Nome da dieta (opcional)</label>
-                        <input type="text" class="form-control" id="dietName" name="diet_name" placeholder="Ex: Dieta de Emagrecimento">
-                    </div>
-                    <div class="alert alert-info">
-                        <strong>💡 Dica:</strong> O sistema irá extrair automaticamente as informações do PDF. 
-                        Funciona melhor com PDFs que contêm texto (não apenas imagens).
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-upload me-2"></i>Carregar Dieta
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+<!-- Upload de dieta removido nesta versão -->
 {% endblock %}
 
 {% block extra_js %}
 <script>
-document.getElementById('uploadDietForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(this);
-    const submitBtn = this.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    
-    // Mostrar loading
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processando...';
-    
-    try {
-        const response = await fetch('/api/diet/upload', {
-            method: 'POST',
-            body: formData
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            alert('Dieta carregada com sucesso!');
-            location.reload();
-        } else {
-            alert('Erro ao carregar dieta: ' + result.message);
-        }
-    } catch (error) {
-        alert('Erro de conexão. Tente novamente.');
-        console.error('Upload error:', error);
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
-    }
-});
+// Sem upload nesta versão
 </script>
 {% endblock %}

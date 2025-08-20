@@ -81,7 +81,7 @@ O **Nutrion** é um nutricionista profissional com personalidade alegre e motiva
 - Gera dieta personalizada considerando orçamento e praticidade
 
 ### Utilização de Tools:
-- **API Nutricional**: FatSecret para dados precisos de alimentos
+- **API Nutricional**: USDA para dados precisos de alimentos
 - **Calculadora TMB**: Cálculo de taxa metabólica basal
 - **Gerador de Dietas**: Criação de planos alimentares personalizados
 - **Sistema de Custos**: Estimativa de preços para controle orçamentário

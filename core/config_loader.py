@@ -188,12 +188,15 @@ class ConfigLoader:
             return TaskConfig(
                 task_type=TaskType(config_data['task_type']),
                 priority=TaskPriority(config_data.get('priority', TaskPriority.MEDIUM.value)),
+                description=config_data.get('description', ""),
                 required_context=config_data.get('required_context', []),
                 tools_required=config_data.get('tools_required', []),
                 max_iterations=config_data.get('max_iterations', 10),
                 timeout_seconds=config_data.get('timeout_seconds', 300),
                 success_criteria=config_data.get('success_criteria', {}),
-                fallback_strategy=config_data.get('fallback_strategy')
+                fallback_strategy=config_data.get('fallback_strategy'),
+                specialized_prompts=config_data.get('specialized_prompts', {}),
+                validation_rules=config_data.get('validation_rules', [])
             )
         except KeyError as e:
             raise ConfigurationError(f"Missing required field in task config: {e}")

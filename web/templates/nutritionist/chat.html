@@ -14,7 +14,15 @@
                     </h5>
                     <small>Nutricionista virtual personalizado • {{ user.name or 'Paciente' }}</small>
                 </div>
-                <div>
+                <div class="d-flex align-items-center">
+                    {% if access_info and access_info.is_active %}
+                    <div class="me-3">
+                        <span class="badge bg-success">
+                            <i class="fas fa-clock me-1"></i>
+                            {{ access_info.days_remaining }} dias restantes
+                        </span>
+                    </div>
+                    {% endif %}
                     <button class="btn btn-light btn-sm" onclick="resetConsultation()" style="background-color: white; color: #28a745; border-color: white;">
                         <i class="fas fa-refresh me-2"></i>Recomeçar
                     </button>
@@ -49,23 +57,41 @@
                 <!-- Dynamic messages will be added here -->
             </div>
 
-            <!-- Action Buttons (shown during decision phase) -->
+            <!-- Action Buttons - somente quando a consulta é concluída -->
             <div id="actionButtons" class="p-3 bg-white border-top d-none">
                 <div class="row g-2">
-                    <div class="col-md-6">
+                    <div class="col-12">
                         <button class="btn btn-success w-100" onclick="executeAction('generate_diet')">
                             <i class="fas fa-clipboard-list me-2"></i>
-                            🎯 Gerar Dieta Personalizada
-                        </button>
-                    </div>
-                    <div class="col-md-6">
-                        <button class="btn btn-outline-success w-100" onclick="executeAction('add_information')">
-                            <i class="fas fa-plus me-2"></i>
-                            📝 Adicionar Mais Informações
+                            Gerar Dieta Personalizada
                         </button>
                     </div>
                 </div>
             </div>
+
+                            <!-- Diet Completion Buttons - quando a dieta é gerada -->
+                <div id="dietCompletionButtons" class="p-3 bg-white border-top d-none">
+                    <div class="row g-2">
+                        <div class="col-4">
+                            <a href="/diet" class="btn btn-primary w-100">
+                                <i class="fas fa-clipboard-list me-2"></i>
+                                Ver Minha Dieta
+                            </a>
+                        </div>
+                        <div class="col-4">
+                            <a href="/api/diet/view-pdf" class="btn btn-info w-100" target="_blank">
+                                <i class="fas fa-eye me-2"></i>
+                                Visualizar PDF
+                            </a>
+                        </div>
+                        <div class="col-4">
+                            <button onclick="exitConsultation()" class="btn btn-secondary w-100">
+                                <i class="fas fa-sign-out-alt me-2"></i>
+                                Sair
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
             <!-- Message Input Area -->
             <div id="messageInputArea" class="p-3 bg-white border-top">
@@ -82,14 +108,6 @@
                             disabled>
                         <i class="fas fa-paper-plane"></i>
                     </button>
-                </div>
-                
-                <!-- Quick suggestions (shown for specific questions) -->
-                <div id="quickSuggestions" class="mt-2 d-none">
-                    <small class="text-muted mb-2 d-block">Sugestões rápidas:</small>
-                    <div class="d-flex flex-wrap gap-2" id="suggestionsList">
-                        <!-- Suggestions will be added here dynamically -->
-                    </div>
                 </div>
             </div>
 
@@ -108,6 +126,14 @@
                     <small class="text-muted ms-2">Nutrion está respondendo...</small>
                 </div>
             </div>
+
+            <!-- Diet Generation Progress Bar -->
+            <div id="dietProgressWrapper" class="px-3 py-2 d-none">
+                <div class="progress" style="height: 10px;">
+                    <div id="dietProgressBar" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                </div>
+                <small class="text-muted d-block mt-1" id="dietProgressText">Preparando...</small>
+            </div>
         </div>
     </div>
 </div>
@@ -119,15 +145,15 @@
             <div class="modal-header bg-success text-white">
                 <h5 class="modal-title">
                     <i class="fas fa-check-circle me-2"></i>
-                    Consulta Finalizada!
+                    Dieta Criada com Sucesso!
                 </h5>
             </div>
             <div class="modal-body text-center">
                 <div class="mb-4">
                     <i class="fas fa-clipboard-check text-success" style="font-size: 3rem;"></i>
                 </div>
-                <h6>Sua dieta personalizada foi criada com sucesso!</h6>
-                <p class="text-muted">Baseada em todas as suas preferências e objetivos.</p>
+                <h6>Sua dieta personalizada foi criada!</h6>
+                <p class="text-muted">Baseada em TMB e dados nutricionais precisos da USDA.</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-success" onclick="goToDashboard()">
@@ -193,29 +219,9 @@
     height: calc(100vh - 300px);
 }
 
-.suggestion-chip {
-    background-color: #e9ecef;
-    border: 1px solid #ced4da;
-    border-radius: 20px;
-    padding: 8px 16px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.suggestion-chip:hover {
-    background-color: #28a745;
-    color: white;
-    border-color: #28a745;
-}
-
 .progress-container {
     position: relative;
     overflow: hidden;
-}
-
-.phase-indicator {
-    font-size: 0.9rem;
-    font-weight: 500;
 }
 
 /* Override any blue colors */
@@ -246,22 +252,27 @@ let isWaitingForResponse = false;
 
 // Phase mapping for progress indicator
 const phaseProgress = {
-    'greeting_and_introduction': 10,
-    'goals_clarification': 20,
-    'preferences_collection': 60,
-    'lifestyle_assessment': 80,
-    'social_economic_context': 90,
-    'summary_and_decision': 100
+    'greeting': 10,
+    'routine_assessment': 30,
+    'eating_habits_mapping': 60,
+    'preferences_collection': 80,
+    'practical_constraints': 90,
+    'consultation_summary': 95,
+    'consultation_completed': 100,
+    'diet_creation': 100,
+    'diet_completed': 100
 };
 
 const phaseNames = {
-    'greeting_and_introduction': 'Apresentação e boas-vindas',
-    'goals_clarification': 'Definindo seus objetivos',
-    'preferences_collection': 'Descobrindo seus gostos',
-    'lifestyle_assessment': 'Entendendo seu estilo de vida',
-    'social_economic_context': 'Contexto social e econômico',
-    'summary_and_decision': 'Resumo e decisão',
-    'additional_information_gathering': 'Informações adicionais'
+    'greeting': 'Apresentação e boas-vindas',
+    'routine_assessment': 'Avaliando sua rotina',
+    'eating_habits_mapping': 'Mapeando hábitos alimentares',
+    'preferences_collection': 'Descobrindo preferências',
+    'practical_constraints': 'Contexto prático',
+    'consultation_summary': 'Resumo da consulta',
+    'consultation_completed': 'Consulta finalizada',
+    'diet_creation': 'Gerando sua dieta',
+    'diet_completed': 'Dieta criada com sucesso'
 };
 
 // Initialize consultation when page loads
@@ -325,8 +336,7 @@ async function sendMessage() {
     disableInput();
     isWaitingForResponse = true;
     
-    // Hide suggestions and action buttons
-    hideQuickSuggestions();
+    // Hide action buttons
     hideActionButtons();
     
     // Show typing indicator
@@ -351,8 +361,8 @@ async function sendMessage() {
             updateUI(result);
             addMessage('assistant', result.current_message);
             
-            // Show action buttons if decision point
-            if (result.show_action_buttons) {
+            // Show action buttons if consultation completed
+            if (result.show_option_buttons || result.show_action_buttons) {
                 showActionButtons();
             } else {
                 enableInput();
@@ -374,79 +384,58 @@ async function sendMessage() {
 async function executeAction(action) {
     try {
         hideActionButtons();
-        
-        if (action === 'generate_pdf') {
-            // Mostrar indicador especial para geração do PDF final
-            addMessage('assistant', '📄 **GERANDO PDF DA SUA DIETA PERSONALIZADA**\n\n' +
-                '✅ Dados nutricionais verificados\n' +
-                '📊 Cardápio semanal organizado\n' +
-                '🎨 Formatando documento profissional\n' +
-                '💾 Salvando no seu perfil\n\n' +
-                '⏳ Aguarde, estou finalizando sua dieta...');
-        } else if (action === 'modify_diet') {
-            addMessage('assistant', '🔄 **MODO DE MODIFICAÇÃO ATIVADO**\n\n' +
-                'Me diga o que você gostaria de alterar na sua dieta:\n' +
-                '• Trocar algum alimento específico\n' +
-                '• Ajustar quantidades\n' +
-                '• Modificar horários das refeições\n' +
-                '• Alterar distribuição de macronutrientes\n\n' +
-                'O que você gostaria de modificar?');
-            
-            // Reativar input para modificações
-            enableInput();
-            return;
-        } else if (action === 'generate_diet') {
-            // Ação antiga - manter compatibilidade
-            addMessage('assistant', '🧮 **INICIANDO GERAÇÃO DA DIETA PERSONALIZADA**\n\n' +
-                '📊 Calculando sua Taxa Metabólica Basal (TMB)...\n' +
-                '⚡ Aplicando fator de atividade física...\n' +
-                '🎯 Ajustando calorias para seu objetivo...\n' +
-                '🥗 Distribuindo macronutrientes...\n' +
-                '📋 Criando cardápio com seus alimentos preferidos...\n\n' +
-                '⏳ Aguarde, estou analisando todas as suas informações...');
+        disableInput();
+
+        if (action === 'generate_diet') {
+            addMessage('assistant', '🧮 Iniciando a geração da sua dieta personalizada...\n\n' +
+                '📊 Calculando TMB e necessidades nutricionais\n' +
+                '🍽️ Selecionando alimentos baseado nas suas preferências\n' +
+                '🔍 Buscando dados nutricionais precisos na API USDA\n' +
+                '📋 Montando cardápio semanal completo\n' +
+                '📄 Gerando PDF personalizado\n\n' +
+                '⏳ Aguarde alguns instantes...');
+            startDietProgress();
         }
-        
+
         showTypingIndicator();
         
         const response = await fetch('/api/nutritionist/consultation/action', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ action: action })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action })
         });
         
         const result = await response.json();
-        
         hideTypingIndicator();
-        
-        if (result.success) {
-            if (result.action === 'diet_generated' || result.action === 'pdf_generated') {
-                addMessage('assistant', result.message);
-                
-                // Redirecionar para dashboard após 3 segundos
-                setTimeout(() => {
-                    window.location.href = '/dashboard';
-                }, 3000);
-            } else if (result.action === 'continue_consultation') {
-                consultationState = result.consultation_state;
-                addMessage('assistant', result.message);
-                enableInput();
-                // Reexibir input de mensagem se voltou para consulta
-                document.getElementById('messageInput').style.display = 'block';
-                document.getElementById('sendButton').style.display = 'block';
-            } else if (result.action === 'modification_mode') {
-                // Modo de modificação ativado
-                consultationState = result.consultation_state;
-                enableInput();
-            }
-        } else {
+        stopDietProgress();
+
+        if (!result.success) {
             showError(result.message || 'Erro ao executar ação');
-            showActionButtons(); // Show buttons again
+            showActionButtons();
+            return;
         }
+
+        // Handle different action results
+        if (result.action === 'diet_generated') {
+            addMessage('assistant', result.message);
+            // Show diet completion buttons instead of redirecting
+            showDietCompletionButtons();
+            return;
+        }
+
+        if (result.action === 'diet_completed') {
+            addMessage('assistant', result.message);
+            // Show diet completion buttons
+            showDietCompletionButtons();
+            return;
+        }
+
+        // Default handling
+        addMessage('assistant', result.message || 'Ação concluída.');
         
     } catch (error) {
         hideTypingIndicator();
+        stopDietProgress();
         showActionButtons();
         showError('Erro de conexão ao executar ação');
         console.error('Error executing action:', error);
@@ -517,52 +506,6 @@ function addMessage(type, content) {
     
     chatMessages.appendChild(messageDiv);
     scrollToBottom();
-    
-    // NOVA FUNCIONALIDADE: Detectar "AÇÃO_DIETA_PRONTA" e mostrar botões
-    if (type === 'assistant' && content.includes('AÇÃO_DIETA_PRONTA')) {
-        // Remover o código interno da mensagem exibida
-        const cleanContent = content.replace('AÇÃO_DIETA_PRONTA', '').trim();
-        
-        // Atualizar o conteúdo da mensagem para remover o código
-        const messageContentDiv = messageDiv.querySelector('.bg-white');
-        if (messageContentDiv) {
-            messageContentDiv.innerHTML = cleanContent.replace(/\n/g, '<br>');
-        }
-        
-        // Esconder o input de mensagem
-        document.getElementById('messageInput').style.display = 'none';
-        document.getElementById('sendButton').style.display = 'none';
-        
-        // Mostrar os botões de ação específicos para dieta
-        showDietActionButtons();
-        
-        // Atualizar progresso para 100%
-        document.getElementById('consultationProgress').style.width = '100%';
-        document.getElementById('currentPhase').textContent = 'Dieta Pronta - Escolha sua próxima ação';
-    }
-    
-    // Manter compatibilidade com código antigo
-    else if (type === 'assistant' && content.includes('ESCOLHA_OPCOES_FINAIS')) {
-        // Remover o código interno da mensagem exibida
-        const cleanContent = content.replace('ESCOLHA_OPCOES_FINAIS', '').trim();
-        
-        // Atualizar o conteúdo da mensagem para remover o código
-        const messageContentDiv = messageDiv.querySelector('.bg-white');
-        if (messageContentDiv) {
-            messageContentDiv.innerHTML = cleanContent.replace(/\n/g, '<br>');
-        }
-        
-        // Esconder o input de mensagem
-        document.getElementById('messageInput').style.display = 'none';
-        document.getElementById('sendButton').style.display = 'none';
-        
-        // Mostrar os botões de ação
-        document.getElementById('actionButtons').classList.remove('d-none');
-        
-        // Atualizar progresso para 100%
-        document.getElementById('consultationProgress').style.width = '100%';
-        document.getElementById('currentPhase').textContent = 'Consulta Finalizada - Escolha sua próxima ação';
-    }
 }
 
 function showTypingIndicator() {
@@ -602,56 +545,24 @@ function hideActionButtons() {
     document.getElementById('messageInputArea').classList.remove('d-none');
 }
 
-function showDietActionButtons() {
-    // Atualizar os botões para ações específicas da dieta
-    const actionButtons = document.getElementById('actionButtons');
-    
-    // Limpar botões existentes e adicionar novos
-    actionButtons.innerHTML = `
-        <div class="row g-2">
-            <div class="col-md-6">
-                <button class="btn btn-success w-100" onclick="executeAction('generate_pdf')">
-                    <i class="fas fa-file-pdf me-2"></i>
-                    Gerar PDF da Dieta
-                </button>
-            </div>
-            <div class="col-md-6">
-                <button class="btn btn-outline-success w-100" onclick="executeAction('modify_diet')">
-                    <i class="fas fa-edit me-2"></i>
-                    Modificar Dieta
-                </button>
-            </div>
-        </div>
-    `;
-    
-    actionButtons.classList.remove('d-none');
+function showDietCompletionButtons() {
+    document.getElementById('dietCompletionButtons').classList.remove('d-none');
     document.getElementById('messageInputArea').classList.add('d-none');
     scrollToBottom();
 }
 
-function showQuickSuggestions(suggestions) {
-    const suggestionsContainer = document.getElementById('quickSuggestions');
-    const suggestionsList = document.getElementById('suggestionsList');
-    
-    suggestionsList.innerHTML = '';
-    
-    suggestions.forEach(suggestion => {
-        const chip = document.createElement('span');
-        chip.className = 'suggestion-chip';
-        chip.textContent = suggestion;
-        chip.onclick = () => {
-            document.getElementById('messageInput').value = suggestion;
-            hideQuickSuggestions();
-        };
-        suggestionsList.appendChild(chip);
-    });
-    
-    suggestionsContainer.classList.remove('d-none');
-}
-
-function hideQuickSuggestions() {
-    document.getElementById('quickSuggestions').classList.add('d-none');
-}
+                function hideDietCompletionButtons() {
+                    document.getElementById('dietCompletionButtons').classList.add('d-none');
+                    document.getElementById('messageInputArea').classList.remove('d-none');
+                }
+                
+                function exitConsultation() {
+                    // Mostrar modal de confirmação
+                    if (confirm('Tem certeza que deseja sair da consulta? Você pode retornar a qualquer momento.')) {
+                        // Redirecionar para dashboard
+                        window.location.href = '/dashboard';
+                    }
+                }
 
 function showSuccessModal() {
     const modal = new bootstrap.Modal(document.getElementById('consultationSuccessModal'));
@@ -671,6 +582,37 @@ function scrollToBottom() {
     setTimeout(() => {
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }, 100);
+}
+
+// Progress helpers
+let dietProgressTimer = null;
+function startDietProgress() {
+    const wrapper = document.getElementById('dietProgressWrapper');
+    const bar = document.getElementById('dietProgressBar');
+    const text = document.getElementById('dietProgressText');
+    wrapper.classList.remove('d-none');
+    let p = 0;
+    text.textContent = 'Calculando TMB e necessidades...';
+    dietProgressTimer = setInterval(() => {
+        p = Math.min(p + Math.random() * 8 + 3, 92);
+        bar.style.width = p.toFixed(0) + '%';
+        if (p < 25) text.textContent = 'Selecionando alimentos...';
+        else if (p < 50) text.textContent = 'Consultando USDA...';
+        else if (p < 75) text.textContent = 'Montando cardápio...';
+        else text.textContent = 'Gerando PDF...';
+    }, 600);
+}
+function stopDietProgress() {
+    const wrapper = document.getElementById('dietProgressWrapper');
+    const bar = document.getElementById('dietProgressBar');
+    const text = document.getElementById('dietProgressText');
+    if (dietProgressTimer) clearInterval(dietProgressTimer);
+    bar.style.width = '100%';
+    text.textContent = 'Concluído';
+    setTimeout(() => {
+        wrapper.classList.add('d-none');
+        bar.style.width = '0%';
+    }, 1200);
 }
 </script>
 {% endblock %}

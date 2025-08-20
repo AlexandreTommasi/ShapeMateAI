@@ -32,7 +32,7 @@ class TaskType(Enum):
     """Tipos de tarefas que os agentes podem executar"""
     # Nutritionist tasks
     CONSULTATION = "consultation"
-    JSON_GENERATION = "json_generation"
+    DIET_CREATION = "diet_creation"
     MEAL_PLANNING = "meal_planning" 
     PDF_GENERATION = "pdf_generation"
     
@@ -71,24 +71,30 @@ class TaskConfig:
     """Configuração de uma tarefa específica"""
     task_type: TaskType
     priority: TaskPriority
+    description: str = ""
     required_context: List[str] = field(default_factory=list)
     tools_required: List[str] = field(default_factory=list)
     max_iterations: int = 10
     timeout_seconds: int = 300
     success_criteria: Dict[str, Any] = field(default_factory=dict)
     fallback_strategy: Optional[str] = None
+    specialized_prompts: Dict[str, str] = field(default_factory=dict)
+    validation_rules: List[str] = field(default_factory=list)
     
     def to_dict(self) -> Dict[str, Any]:
         """Converte a configuração para dicionário"""
         return {
             'task_type': self.task_type.value,
             'priority': self.priority.value,
+            'description': self.description,
             'required_context': self.required_context,
             'tools_required': self.tools_required,
             'max_iterations': self.max_iterations,
             'timeout_seconds': self.timeout_seconds,
             'success_criteria': self.success_criteria,
-            'fallback_strategy': self.fallback_strategy
+            'fallback_strategy': self.fallback_strategy,
+            'specialized_prompts': self.specialized_prompts,
+            'validation_rules': self.validation_rules
         }
 
 
@@ -271,8 +277,9 @@ class CoreAgentSystem:
         # Sistema de memória para conversas
         self.conversation_memory: Dict[str, List[BaseMessage]] = {}
         self.memory_limits: Dict[str, int] = {}
-        # Config loader para carregar configurações de tasks (temporariamente desabilitado)
-        # self.config_loader = get_config_loader()
+        # Config loader para carregar configurações de tasks
+        from .config_loader import get_config_loader
+        self.config_loader = get_config_loader()
         # Sistema de compartilhamento de dados entre agentes
         self.shared_user_data: Dict[str, Dict[str, Any]] = {}
         
@@ -359,27 +366,27 @@ class CoreAgentSystem:
         agent_config = self.agents[agent_type].config
         
         # Carregar configuração da tarefa específica do agente
-        # Temporariamente desabilitado devido a importação circular
-        # try:
-        #     task_config_data = self.config_loader.load_task_config(task_type, agent_type)
-        #     
-        #     # Criar TaskConfig com dados carregados + overrides
-        #     task_config = TaskConfig(
-        #         task_type=task_type,
-        #         priority=kwargs.get('priority', TaskPriority(task_config_data.get('priority', 'MEDIUM'))),
-        #         required_context=kwargs.get('required_context', task_config_data.get('required_context', [])),
-        #         tools_required=kwargs.get('tools_required', task_config_data.get('tools_required', [])),
-        #         max_iterations=kwargs.get('max_iterations', task_config_data.get('max_iterations', 10)),
-        #         timeout_seconds=kwargs.get('timeout_seconds', task_config_data.get('timeout_seconds', 300)),
-        #         success_criteria=task_config_data.get('success_criteria', {}),
-        #         fallback_strategy=task_config_data.get('fallback_strategy')
-        #     )
-        # except Exception as e:
-        #     logger.warning(f"Failed to load task config for {agent_type.value}/{task_type.value}: {e}")
-        #     # Fallback para configuração padrão
-        task_config = TaskConfig(
-            task_type=task_type,
-            priority=kwargs.get('priority', TaskPriority.MEDIUM),
+        try:
+            loaded_task_config = self.config_loader.load_task_config(task_type, agent_type)
+            # Aplicar overrides opcionais vindos de kwargs
+            task_config = TaskConfig(
+                task_type=loaded_task_config.task_type,
+                priority=kwargs.get('priority', loaded_task_config.priority),
+                description=loaded_task_config.description,
+                required_context=kwargs.get('required_context', loaded_task_config.required_context),
+                tools_required=kwargs.get('tools_required', loaded_task_config.tools_required),
+                max_iterations=kwargs.get('max_iterations', loaded_task_config.max_iterations),
+                timeout_seconds=kwargs.get('timeout_seconds', loaded_task_config.timeout_seconds),
+                success_criteria=loaded_task_config.success_criteria,
+                fallback_strategy=loaded_task_config.fallback_strategy,
+                specialized_prompts=loaded_task_config.specialized_prompts,
+                validation_rules=loaded_task_config.validation_rules
+            )
+        except Exception as e:
+            logger.warning(f"Failed to load task config for {agent_type.value}/{task_type.value}: {e}")
+            task_config = TaskConfig(
+                task_type=task_type,
+                priority=kwargs.get('priority', TaskPriority.MEDIUM),
                 required_context=kwargs.get('required_context', []),
                 tools_required=kwargs.get('tools_required', []),
                 max_iterations=kwargs.get('max_iterations', 10),
@@ -502,7 +509,7 @@ class CoreAgentSystem:
                     # Adicionar resposta do agente à memória
                     self._add_to_memory(user_id, session_id, last_message)
                     
-                    return {
+                    result: Dict[str, Any] = {
                         'success': True,
                         'response': last_message.content,
                         'confidence_score': result_state.get('confidence_score', 0.0),
@@ -514,6 +521,10 @@ class CoreAgentSystem:
                         'current_phase': result_state.get('current_phase', ''),
                         'diet_generated': result_state.get('diet_generated', False)
                     }
+                    # Propagar dieta gerada quando aplicável
+                    if result_state.get('generated_diet'):
+                        result['generated_diet'] = result_state['generated_diet']
+                    return result
             
             return {
                 'success': False,

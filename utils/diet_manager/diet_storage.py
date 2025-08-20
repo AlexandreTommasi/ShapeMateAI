@@ -27,7 +27,7 @@ class DietManager:
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS user_diets (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
+                user_id TEXT NOT NULL,
                 diet_name VARCHAR(200),
                 diet_data TEXT NOT NULL,
                 source VARCHAR(50) DEFAULT 'nutritionist',
@@ -42,7 +42,7 @@ class DietManager:
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS shopping_lists (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
+                user_id TEXT NOT NULL,
                 diet_id INTEGER,
                 list_name VARCHAR(200),
                 items TEXT NOT NULL,
@@ -57,7 +57,7 @@ class DietManager:
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS home_inventory (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
+                user_id TEXT NOT NULL,
                 item_name VARCHAR(200) NOT NULL,
                 quantity VARCHAR(50),
                 unit VARCHAR(20),
@@ -72,7 +72,7 @@ class DietManager:
         conn.commit()
         conn.close()
     
-    def save_diet(self, user_id: int, diet_data: Dict[str, Any], 
+    def save_diet(self, user_id: str, diet_data: Dict[str, Any], 
                   diet_name: str = None, source: str = "nutritionist") -> int:
         """Salva uma dieta para o usuário"""
         conn = sqlite3.connect(self.db_path)
@@ -108,7 +108,7 @@ class DietManager:
         finally:
             conn.close()
     
-    def get_user_diet(self, user_id: int, diet_id: int = None) -> Optional[Dict[str, Any]]:
+    def get_user_diet(self, user_id: str, diet_id: int = None) -> Optional[Dict[str, Any]]:
         """Obtém a dieta do usuário"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -149,7 +149,7 @@ class DietManager:
         finally:
             conn.close()
     
-    def get_user_diet_list(self, user_id: int) -> List[Dict[str, Any]]:
+    def get_user_diet_list(self, user_id: str) -> List[Dict[str, Any]]:
         """Lista todas as dietas do usuário"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -177,8 +177,36 @@ class DietManager:
             return []
         finally:
             conn.close()
+
+    def update_diet_pdf_path(self, diet_id: int, pdf_path: str):
+        """Atualiza o caminho do PDF para uma dieta existente"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        try:
+            # Buscar dieta atual
+            cursor.execute('SELECT diet_data FROM user_diets WHERE id = ?', (diet_id,))
+            row = cursor.fetchone()
+            if not row:
+                raise ValueError("Dieta não encontrada")
+
+            data = json.loads(row[0]) if row[0] else {}
+            data['pdf_path'] = pdf_path
+            data['pdf_generated'] = True
+
+            cursor.execute('''
+                UPDATE user_diets
+                SET diet_data = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            ''', (json.dumps(data), diet_id))
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"Erro ao atualizar pdf_path da dieta: {e}")
+            raise
+        finally:
+            conn.close()
     
-    def create_shopping_list(self, user_id: int, diet_id: int = None, 
+    def create_shopping_list(self, user_id: str, diet_id: int = None, 
                            custom_items: List[str] = None) -> int:
         """Cria lista de compras baseada na dieta"""
         conn = sqlite3.connect(self.db_path)
@@ -254,7 +282,7 @@ class DietManager:
         
         return found_ingredients
     
-    def get_shopping_lists(self, user_id: int) -> List[Dict[str, Any]]:
+    def get_shopping_lists(self, user_id: str) -> List[Dict[str, Any]]:
         """Obtém listas de compras do usuário"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -283,7 +311,7 @@ class DietManager:
         finally:
             conn.close()
     
-    def update_inventory_item(self, user_id: int, item_name: str, 
+    def update_inventory_item(self, user_id: str, item_name: str, 
                             quantity: str, unit: str = 'unidade', 
                             category: str = 'geral', expiration_date: str = None):
         """Atualiza item no estoque"""
@@ -324,7 +352,7 @@ class DietManager:
         finally:
             conn.close()
     
-    def get_inventory(self, user_id: int) -> List[Dict[str, Any]]:
+    def get_inventory(self, user_id: str) -> List[Dict[str, Any]]:
         """Obtém estoque do usuário"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
