@@ -362,7 +362,7 @@ async function sendMessage() {
             addMessage('assistant', result.current_message);
             
             // Show action buttons if consultation completed
-            if (result.show_option_buttons || result.show_action_buttons) {
+            if (result.show_option_buttons || result.show_action_buttons || result.consultation_completed) {
                 showActionButtons();
             } else {
                 enableInput();

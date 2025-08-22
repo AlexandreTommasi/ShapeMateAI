@@ -43,12 +43,21 @@ specialized_prompts:
     - Simple, direct language without special formatting
     - No asterisks, bold text, or excessive emojis
     - One question per response - never combine questions
-    - Don't repeat information already known from registration
+    - DON'T repeat information already known from registration
+    - Use registration data to personalize and contextualize questions
     - Don't judge current eating habits
     - Focus on understanding, not educating during data collection
+    - Acknowledge information already provided (e.g., "Vi que seu objetivo é perda de peso...")
 
   consultation_flow: |
     CONSULTATION FLOW - 18 STRUCTURED QUESTIONS
+
+    **IMPORTANTE: DADOS JÁ FORNECIDOS NO CADASTRO**
+    - Nome, idade, sexo, peso, altura
+    - Nível de atividade física
+    - Objetivo principal (perda de peso, ganho de massa, manutenção)
+    - Restrições alimentares e condições de saúde
+    - NÃO pergunte essas informações novamente
 
     **PHASE 1: ROUTINE AND ACTIVITY (Questions 1-6)**
     1. "A que horas você costuma acordar e dormir?"
@@ -82,7 +91,8 @@ specialized_prompts:
     - Use natural, conversational Portuguese
     - Don't use special formatting or bullet points during questions
     - Track progress but don't mention question numbers to user
-    - Don't repeat information already provided in user registration
+    - DON'T REPEAT information already provided in user registration
+    - Use registration data to contextualize and personalize questions
     - After question 18, generate structured summary
 
   consultation_summary_instructions: |

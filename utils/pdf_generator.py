@@ -60,8 +60,8 @@ class ShapeMatePDFGenerator:
                 fontSize=16,
                 spaceAfter=15,
                 textColor=self.secondary_color,
-                alignment=TA_CENTER,
-                fontName='Helvetica'
+                alignment=TA_LEFT,
+                fontName='Helvetica-Bold'
             ),
             'section_header': ParagraphStyle(
                 'SectionHeader',
@@ -83,7 +83,7 @@ class ShapeMatePDFGenerator:
                 spaceAfter=6,
                 textColor=self.text_color,
                 fontName='Helvetica',
-                alignment=TA_JUSTIFY
+                alignment=TA_LEFT
             ),
             'bold_text': ParagraphStyle(
                 'BoldText',
@@ -130,28 +130,12 @@ class ShapeMatePDFGenerator:
             elements.extend(self._create_cover_page(diet_data))
             elements.append(PageBreak())
             
-            # 2. Informações do paciente
-            elements.extend(self._create_patient_info_section(diet_data))
-            elements.append(PageBreak())
-            
-            # 3. Cálculos nutricionais
-            elements.extend(self._create_nutrition_calculations_section(diet_data))
-            elements.append(PageBreak())
-            
-            # 4. Menu semanal
+            # 2. Menu semanal
             elements.extend(self._create_weekly_menu_section(diet_data))
             elements.append(PageBreak())
             
-            # 5. Lista de compras
+            # 3. Lista de compras
             elements.extend(self._create_shopping_list_section(diet_data))
-            elements.append(PageBreak())
-            
-            # 6. Orientações práticas (se existir)
-            if diet_data.get('practical_guidance'):
-                elements.extend(self._create_practical_guidance_section(diet_data))
-            
-            # 7. Dados da fonte nutricional
-            elements.extend(self._create_data_source_section(diet_data))
             
             # Gerar PDF
             doc.build(elements, onFirstPage=self._add_header_footer, onLaterPages=self._add_header_footer)
@@ -185,156 +169,126 @@ class ShapeMatePDFGenerator:
             raise ValueError("Menu semanal não encontrado")
     
     def _create_cover_page(self, diet_data: Dict[str, Any]) -> List:
-        """Cria página de capa usando dados do JSON"""
+        """Cria a página de capa com informações do paciente e cálculos nutricionais"""
         elements = []
         
-        elements.append(Spacer(1, 1 * cm))
-        
-        # Logo e título
-        title = Paragraph("🍃 ShapeMateAI", self.styles['title'])
+        # Título principal
+        title = Paragraph("ShapeMateAI - Plano Alimentar Personalizado", self.styles['title'])
         elements.append(title)
+        elements.append(Spacer(1, 20))
         
-        subtitle = Paragraph("Plano Alimentar Personalizado", self.styles['subtitle'])
-        elements.append(subtitle)
-        
-        elements.append(Spacer(1, 2 * cm))
-        
-        # Nome do paciente
-        patient_info = diet_data['patient_info']
-        if isinstance(patient_info, dict):
-            patient_name = patient_info.get('name', 'Paciente')
-        else:
-            patient_name = 'Paciente'
-        patient_title = Paragraph(f"Elaborado para: <b>{patient_name}</b>", self.styles['section_header'])
+        # Informações do paciente
+        patient_title = Paragraph("Informações do Paciente", self.styles['subtitle'])
         elements.append(patient_title)
+        elements.append(Spacer(1, 15))
         
-        elements.append(Spacer(1, 1 * cm))
-        
-        # Data de geração
-        generated_at = diet_data.get('generated_at', datetime.now().isoformat())
-        try:
-            # Parse da data ISO
-            gen_date = datetime.fromisoformat(generated_at.replace('Z', '+00:00'))
-            formatted_date = gen_date.strftime("%d/%m/%Y às %H:%M")
-        except:
-            formatted_date = datetime.now().strftime("%d/%m/%Y às %H:%M")
-        
-        date_text = Paragraph(f"Gerado em: {formatted_date}", self.styles['normal_text'])
-        elements.append(date_text)
-        
-        # Informações da fonte de dados
-        elements.append(Spacer(1, 2 * cm))
-        data_source = diet_data.get('nutrition_data_source', {})
-        source_name = data_source.get('primary_source', 'USDA FoodData Central API')
-        foods_analyzed = data_source.get('foods_analyzed', 'N/A')
-        
-        api_info = Paragraph(
-            f"<b>Dados Nutricionais:</b> {source_name}<br/>"
-            f"<b>Alimentos Analisados:</b> {foods_analyzed}<br/>"
-            f"<b>Cálculos:</b> Taxa Metabólica Basal (TMB) personalizada<br/>"
-            f"<b>Precisão:</b> Dados oficiais per 100g",
-            self.styles['normal_text']
-        )
-        elements.append(api_info)
-        
-        return elements
-    
-    def _create_patient_info_section(self, diet_data: Dict[str, Any]) -> List:
-        """Cria seção com informações do paciente"""
-        elements = []
         patient_info = diet_data['patient_info']
-        if not isinstance(patient_info, dict):
-            # Se não for dicionário, criar um dicionário padrão
-            patient_info = {
-                'name': 'Paciente',
-                'age': 'Não informado',
-                'gender': 'Não informado',
-                'weight_kg': 'Não informado',
-                'height_cm': 'Não informado',
-                'activity_level': 'Não informado',
-                'primary_objective': 'Não informado'
-            }
         
-        section_title = Paragraph("📋 Informações do Paciente", self.styles['section_header'])
-        elements.append(section_title)
-        
-        # Formatar dados do paciente
+        # Dados do paciente com formatação melhorada
         patient_data = [
-            ['Nome:', patient_info.get('name', 'Não informado')],
-            ['Idade:', f"{patient_info.get('age', 'Não informado')} anos"],
-            ['Sexo:', patient_info.get('gender', 'Não informado')],
-            ['Peso:', f"{patient_info.get('weight_kg', 'Não informado')} kg"],
-            ['Altura:', f"{patient_info.get('height_cm', 'Não informado')} cm"],
-            ['Nível de Atividade:', patient_info.get('activity_level', 'Não informado')],
-            ['Objetivo Principal:', patient_info.get('primary_objective', 'Não informado')]
+            ["Nome:", patient_info.get('name', 'Não informado')],
+            ["Idade:", f"{patient_info.get('age', 'Não informado')} anos" if patient_info.get('age') else "Não informado"],
+            ["Sexo:", patient_info.get('gender', 'Não informado')],
+            ["Peso:", f"{patient_info.get('weight', 'Não informado')} kg" if patient_info.get('weight') else "Não informado"],
+            ["Altura:", f"{patient_info.get('height', 'Não informado')} cm" if patient_info.get('height') else "Não informado"],
+            ["Nível de Atividade:", patient_info.get('activity_level', 'Não informado')],
+            ["Objetivo Principal:", patient_info.get('primary_goal', 'Não informado')]
         ]
         
-        patient_table = Table(patient_data, colWidths=[4*cm, 10*cm])
+        # Criar tabela com dados do paciente
+        patient_table = Table(patient_data, colWidths=[100, 200])
         patient_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (0, -1), self.bg_color),
-            ('TEXTCOLOR', (0, 0), (-1, -1), self.text_color),
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
             ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
             ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('ROWBACKGROUNDS', (0, 0), (-1, -1), [colors.white, self.bg_color]),
-            ('GRID', (0, 0), (-1, -1), 1, self.primary_color)
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('GRID', (0, 0), (-1, -1), 1, colors.grey),
         ]))
-        
         elements.append(patient_table)
-        return elements
-    
-    def _create_nutrition_calculations_section(self, diet_data: Dict[str, Any]) -> List:
-        """Cria seção com cálculos nutricionais"""
-        elements = []
-        nutrition_calc = diet_data['nutritional_calculations']
+        elements.append(Spacer(1, 20))
         
-        section_title = Paragraph("📊 Cálculos Nutricionais", self.styles['section_header'])
-        elements.append(section_title)
-        
-        # TMB e calorias
-        tmb_info = Paragraph(
-            f"<b>Taxa Metabólica Basal (TMB):</b> {nutrition_calc.get('tmb_kcal', 'N/A')} kcal/dia<br/>"
-            f"<b>Meta Calórica Diária:</b> {nutrition_calc.get('daily_target_kcal', 'N/A')} kcal<br/>"
-            f"<b>Fator de Atividade:</b> {nutrition_calc.get('activity_factor', 'N/A')}<br/>"
-            f"<b>Ajuste para Objetivo:</b> {nutrition_calc.get('objective_adjustment', 'N/A')}",
-            self.styles['normal_text']
-        )
-        elements.append(tmb_info)
-        
-        elements.append(Spacer(1, 0.5 * cm))
-        
-        # Macronutrientes
-        macros = nutrition_calc.get('macronutrients', {})
-        if macros:
-            macro_title = Paragraph("🔢 Distribuição de Macronutrientes", self.styles['section_header'])
-            elements.append(macro_title)
+        # Cálculos nutricionais
+        nutritional_calculations = diet_data.get('nutritional_calculations', {})
+        if nutritional_calculations:
+            calc_title = Paragraph("Cálculos Nutricionais", self.styles['subtitle'])
+            elements.append(calc_title)
+            elements.append(Spacer(1, 15))
             
-            macro_data = [['Macronutriente', 'Gramas/dia', 'Percentual', 'Calorias/dia']]
+            # TMB e meta calórica
+            tmb = nutritional_calculations.get('tmb_kcal', 0)
+            daily_target = nutritional_calculations.get('daily_target_kcal', 0)
+            activity_factor = nutritional_calculations.get('activity_factor', 0)
             
-            for macro_name, macro_values in macros.items():
-                if isinstance(macro_values, dict):
-                    display_name = macro_name.replace('_', ' ').title()
-                    macro_data.append([
-                        display_name,
-                        f"{macro_values.get('grams_per_day', 'N/A')} g",
-                        f"{macro_values.get('percentage', 'N/A')}%",
-                        f"{macro_values.get('kcal_per_day', 'N/A')} kcal"
-                    ])
+            calc_data = [
+                ["Taxa Metabólica Basal (TMB):", f"{tmb:.1f} kcal/dia"],
+                ["Meta Calórica Diária:", f"{daily_target:.1f} kcal/dia"],
+                ["Fator de Atividade:", f"{activity_factor:.3f}"],
+            ]
             
-            macro_table = Table(macro_data, colWidths=[4*cm, 3*cm, 3*cm, 4*cm])
-            macro_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), self.primary_color),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            if 'objective_adjustment' in nutritional_calculations:
+                calc_data.append(["Ajuste por Objetivo:", nutritional_calculations['objective_adjustment']])
+            
+            calc_table = Table(calc_data, colWidths=[150, 150])
+            calc_table.setStyle(TableStyle([
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
                 ('FONTSIZE', (0, 0), (-1, -1), 10),
-                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, self.bg_color]),
-                ('GRID', (0, 0), (-1, -1), 1, self.primary_color)
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                ('GRID', (0, 0), (-1, -1), 1, colors.grey),
             ]))
+            elements.append(calc_table)
+            elements.append(Spacer(1, 20))
             
-            elements.append(macro_table)
+            # Distribuição de macronutrientes
+            if 'macronutrients' in nutritional_calculations:
+                macro_title = Paragraph("Distribuição de Macronutrientes", self.styles['subtitle'])
+                elements.append(macro_title)
+                elements.append(Spacer(1, 15))
+                
+                macros = nutritional_calculations['macronutrients']
+                
+                # Traduzir nomes dos macronutrientes
+                macro_names = {
+                    'carbohydrates': 'Carboidratos',
+                    'proteins': 'Proteínas',
+                    'fats': 'Gorduras'
+                }
+                
+                macro_data = [["Macronutriente", "Gramas/dia", "Percentual", "Calorias/dia"]]
+                
+                for macro_key, macro_info in macros.items():
+                    macro_name = macro_names.get(macro_key, macro_key.title())
+                    grams = macro_info.get('grams_per_day', 0)
+                    percentage = macro_info.get('percentage', 0)
+                    kcal = macro_info.get('kcal_per_day', 0)
+                    
+                    macro_data.append([
+                        macro_name,
+                        f"{grams:.1f} g",
+                        f"{percentage}%",
+                        f"{kcal:.1f} kcal"
+                    ])
+                
+                macro_table = Table(macro_data, colWidths=[100, 80, 80, 100])
+                macro_table.setStyle(TableStyle([
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 9),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ]))
+                elements.append(macro_table)
+        
+        # Data de geração
+        elements.append(Spacer(1, 20))
+        generation_date = datetime.now().strftime("%d/%m/%Y às %H:%M")
+        date_text = Paragraph(f"Gerado em: {generation_date}", self.styles['normal_text'])
+        elements.append(date_text)
         
         return elements
     
@@ -342,11 +296,12 @@ class ShapeMatePDFGenerator:
         """Cria seção com menu semanal usando dados diretos do JSON"""
         elements = []
         weekly_menu = diet_data.get('weekly_menu', {})
+        nutritional_calculations = diet_data.get('nutritional_calculations', {})
         
         section_title = Paragraph("🍽️ Menu Semanal", self.styles['section_header'])
         elements.append(section_title)
         
-        # Mapeamento de nomes de refeições
+        # Mapeamento de nomes de refeições em PT-BR
         meal_names = {
             'breakfast': '☀️ Café da Manhã',
             'morning_snack': '🥤 Lanche da Manhã',
@@ -368,26 +323,27 @@ class ShapeMatePDFGenerator:
         }
 
         # Ordem fixa dos dias (Monday -> Sunday)
-        ordered_days = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday']
-        # Se a estrutura vier com chaves diferentes, mantém ordem de entrada no final
-        extra_days = [k for k in weekly_menu.keys() if str(k).lower() not in ordered_days]
-        days_iter = ordered_days + extra_days
-
-        for day in days_iter:
+        ordered_days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+        
+        for day in ordered_days:
             if day not in weekly_menu:
                 continue
             daily_menu = weekly_menu[day]
+            
             # Título do dia (PT-BR)
             day_pt = day_names.get(str(day).lower(), str(day).title())
             day_title = Paragraph(f"<b>{day_pt}</b>", self.styles['bold_text'])
             elements.append(day_title)
+            
+            # Calcular macros diários para este dia
+            daily_macros = self._calculate_daily_macros(daily_menu)
             
             # Para cada refeição do dia
             for meal_key, meal_data in daily_menu.items():
                 if not meal_data:
                     continue
                 
-                meal_name = meal_names.get(meal_key, meal_key.title())
+                meal_name = meal_names.get(meal_key, meal_key.replace('_', ' ').title())
                 target_kcal = meal_data.get('target_kcal', 0)
                 
                 # Título da refeição
@@ -404,22 +360,153 @@ class ShapeMatePDFGenerator:
                     # Lista de alimentos da opção
                     food_items = []
                     for item in items:
-                        display_name = item.get('name_pt') or item.get('name_en', '')
-                        portion = item.get('portion_grams', 0)
-                        kcal = item.get('kcal', 0)
+                        # Priorizar nome em português
+                        display_name = item.get('name_pt') or item.get('name_en') or 'Alimento'
+                        portion = item.get('portion_grams') or item.get('quantity_g') or 0
+                        kcal = item.get('kcal') or 0
+                        # Formatação clara
                         food_items.append(f"• {display_name} - {portion}g ({kcal} kcal)")
                     
                     option_text = f"<b>{option_name}:</b><br/>"
                     option_text += "<br/>".join(food_items)
-                    option_text += f"<br/><i>Total: {totals.get('kcal', 0)} kcal</i>"
+                    total_kcal = totals.get('kcal', 0)
+                    option_text += f"<br/><b>Total da opção: {total_kcal} kcal</b>"
                     
                     option_para = Paragraph(option_text, self.styles['normal_text'])
                     elements.append(option_para)
-                    elements.append(Spacer(1, 0.2 * cm))
+                    elements.append(Spacer(1, 0.3 * cm))
+            
+            # Adicionar resumo dos macros do dia
+            if daily_macros:
+                elements.append(Spacer(1, 0.3 * cm))
+                elements.extend(self._create_daily_macro_summary(daily_macros, nutritional_calculations))
             
             elements.append(Spacer(1, 0.5 * cm))
         
         return elements
+    
+    def _calculate_daily_macros(self, daily_menu: Dict[str, Any]) -> Dict[str, float]:
+        """Calcula os macronutrientes consumidos em um dia"""
+        daily_macros = {
+            'kcal': 0,
+            'protein_g': 0,
+            'carbs_g': 0,
+            'fat_g': 0
+        }
+        
+        for meal_data in daily_menu.values():
+            if not meal_data:
+                continue
+                
+            options = meal_data.get('options', [])
+            for option in options:
+                items = option.get('items', [])
+                for item in items:
+                    # Calorias
+                    kcal = item.get('kcal', 0)
+                    daily_macros['kcal'] += kcal
+                    
+                    # Proteínas (estimativa baseada em calorias)
+                    protein_kcal = kcal * 0.3  # 30% das calorias
+                    protein_g = protein_kcal / 4  # 4 kcal por grama
+                    daily_macros['protein_g'] += protein_g
+                    
+                    # Carboidratos (estimativa baseada em calorias)
+                    carbs_kcal = kcal * 0.4  # 40% das calorias
+                    carbs_g = carbs_kcal / 4  # 4 kcal por grama
+                    daily_macros['carbs_g'] += carbs_g
+                    
+                    # Gorduras (estimativa baseada em calorias)
+                    fat_kcal = kcal * 0.3  # 30% das calorias
+                    fat_g = fat_kcal / 9  # 9 kcal por grama
+                    daily_macros['fat_g'] += fat_g
+        
+        return daily_macros
+    
+    def _create_daily_macro_summary(self, daily_macros: Dict[str, float], nutritional_calculations: Dict[str, Any]) -> List:
+        """Cria resumo dos macronutrientes do dia com comparação com as metas"""
+        elements = []
+        
+        # Título do resumo
+        summary_title = Paragraph("📊 Resumo Nutricional do Dia", self.styles['bold_text'])
+        elements.append(summary_title)
+        
+        # Obter metas diárias
+        target_macros = nutritional_calculations.get('macronutrients', {})
+        
+        # Criar tabela de comparação
+        macro_data = [["Macronutriente", "Consumido", "Meta", "Status"]]
+        
+        # Calorias
+        target_kcal = nutritional_calculations.get('daily_target_kcal', 0)
+        kcal_status = self._get_macro_status(daily_macros['kcal'], target_kcal, 0.1)  # 10% de tolerância
+        macro_data.append([
+            "Calorias",
+            f"{daily_macros['kcal']:.0f} kcal",
+            f"{target_kcal:.0f} kcal",
+            kcal_status
+        ])
+        
+        # Proteínas
+        target_protein = target_macros.get('proteins', {}).get('grams_per_day', 0)
+        protein_status = self._get_macro_status(daily_macros['protein_g'], target_protein, 0.15)  # 15% de tolerância
+        macro_data.append([
+            "Proteínas",
+            f"{daily_macros['protein_g']:.1f} g",
+            f"{target_protein:.1f} g",
+            protein_status
+        ])
+        
+        # Carboidratos
+        target_carbs = target_macros.get('carbohydrates', {}).get('grams_per_day', 0)
+        carbs_status = self._get_macro_status(daily_macros['carbs_g'], target_carbs, 0.15)  # 15% de tolerância
+        macro_data.append([
+            "Carboidratos",
+            f"{daily_macros['carbs_g']:.1f} g",
+            f"{target_carbs:.1f} g",
+            carbs_status
+        ])
+        
+        # Gorduras
+        target_fat = target_macros.get('fats', {}).get('grams_per_day', 0)
+        fat_status = self._get_macro_status(daily_macros['fat_g'], target_fat, 0.15)  # 15% de tolerância
+        macro_data.append([
+            "Gorduras",
+            f"{daily_macros['fat_g']:.1f} g",
+            f"{target_fat:.1f} g",
+            fat_status
+        ])
+        
+        # Criar tabela
+        macro_table = Table(macro_data, colWidths=[80, 80, 80, 60])
+        macro_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+            ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ]))
+        
+        elements.append(macro_table)
+        elements.append(Spacer(1, 0.2 * cm))
+        
+        return elements
+    
+    def _get_macro_status(self, consumed: float, target: float, tolerance: float) -> str:
+        """Retorna o status de um macronutriente baseado na tolerância"""
+        if target == 0:
+            return "N/A"
+        
+        ratio = consumed / target
+        if abs(ratio - 1.0) <= tolerance:
+            return "✅"
+        elif ratio < 1.0:
+            return "⚠️"
+        else:
+            return "❌"
     
     def _create_shopping_list_section(self, diet_data: Dict[str, Any]) -> List:
         """Cria seção com lista de compras"""
@@ -441,12 +528,13 @@ class ShapeMatePDFGenerator:
             
             # Para cada categoria
             for category, category_items in categories.items():
-                category_title = Paragraph(f"<b>{category}</b>", self.styles['bold_text'])
+                category_title = Paragraph(f"<b>{category.title()}</b>", self.styles['bold_text'])
                 elements.append(category_title)
                 
-                item_data = [['Item', 'Quantidade Estimada']]
+                item_data = [['Item', 'Quantidade Semanal']]
                 for item in category_items:
-                    name_pt = item.get('name_pt', item.get('name_en', ''))
+                    # Priorizar nome em português
+                    name_pt = item.get('name_pt') or item.get('name_en') or 'Item'
                     amount = item.get('estimated_weekly_amount', 'A definir')
                     item_data.append([name_pt, amount])
                 
@@ -467,55 +555,6 @@ class ShapeMatePDFGenerator:
         else:
             no_list_text = Paragraph("Lista de compras será personalizada conforme suas preferências coletadas.", self.styles['normal_text'])
             elements.append(no_list_text)
-        
-        return elements
-    
-    def _create_practical_guidance_section(self, diet_data: Dict[str, Any]) -> List:
-        """Cria seção com orientações práticas"""
-        elements = []
-        guidance = diet_data.get('practical_guidance', {})
-        
-        section_title = Paragraph("💡 Orientações Práticas", self.styles['section_header'])
-        elements.append(section_title)
-        
-        for guidance_key, tips in guidance.items():
-            if tips:
-                guidance_title = guidance_key.replace('_', ' ').title()
-                tip_title = Paragraph(f"<b>{guidance_title}</b>", self.styles['bold_text'])
-                elements.append(tip_title)
-                
-                if isinstance(tips, list):
-                    for tip in tips:
-                        tip_text = Paragraph(f"• {tip}", self.styles['normal_text'])
-                        elements.append(tip_text)
-                else:
-                    tip_text = Paragraph(str(tips), self.styles['normal_text'])
-                    elements.append(tip_text)
-                
-                elements.append(Spacer(1, 0.3 * cm))
-        
-        return elements
-    
-    def _create_data_source_section(self, diet_data: Dict[str, Any]) -> List:
-        """Cria seção com informações da fonte de dados"""
-        elements = []
-        
-        elements.append(Spacer(1, 1 * cm))
-        
-        data_source = diet_data.get('nutrition_data_source', {})
-        source_name = data_source.get('primary_source', 'USDA FoodData Central API')
-        foods_count = data_source.get('foods_analyzed', 'N/A')
-        last_updated = data_source.get('last_updated', 'N/A')
-        
-        footer_info = Paragraph(
-            f"<b>Fonte dos Dados Nutricionais:</b> {source_name}<br/>"
-            f"<b>Alimentos Analisados:</b> {foods_count}<br/>"
-            f"<b>Última Atualização:</b> {last_updated}<br/><br/>"
-            f"<b>ShapeMateAI</b> - Nutrição Inteligente e Personalizada<br/>"
-            f"Todos os cálculos baseados em dados oficiais e metodologia científica.",
-            self.styles['small_text']
-        )
-        elements.append(footer_info)
         
         return elements
     

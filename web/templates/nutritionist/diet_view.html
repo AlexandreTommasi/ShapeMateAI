@@ -3,6 +3,9 @@
 {% block title %}Minha Dieta - ShapeMateAI{% endblock %}
 
 {% block content %}
+<!-- Hidden element to store diet data -->
+<script id="dietData" type="application/json">{{ diet.data | tojson | safe }}</script>
+
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
@@ -92,126 +95,106 @@
                 </div>
 
                 <!-- Plano de Refeições -->
-                <div class="col-md-8">
-                    <div class="card">
-                        <div class="card-header bg-success text-white">
-                            <h5 class="mb-0"><i class="fas fa-utensils me-2"></i>Plano de Refeições</h5>
-                        </div>
-                        <div class="card-body">
-                            {% if diet.data.weekly_menu %}
-                                {% set day_names = {
-                                    'monday':'📅 Segunda-feira',
-                                    'tuesday':'📅 Terça-feira',
-                                    'wednesday':'📅 Quarta-feira',
-                                    'thursday':'📅 Quinta-feira',
-                                    'friday':'📅 Sexta-feira',
-                                    'saturday':'📅 Sábado',
-                                    'sunday':'📅 Domingo'
-                                } %}
-
-                                <div class="accordion" id="weeklyMenu">
-                                {% for day_key, day_data in diet.data.weekly_menu.items() %}
-                                    {% set day_lower = (day_key|string)|lower %}
-                                    {% set day_title = day_names.get(day_lower, day_key|title) %}
-                                    <div class="accordion-item">
-                                        <h2 class="accordion-header" id="heading-{{ loop.index }}">
-                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ loop.index }}">
-                                                {{ day_title }}
-                                            </button>
-                                        </h2>
-                                        <div id="collapse-{{ loop.index }}" class="accordion-collapse collapse" data-bs-parent="#weeklyMenu">
-                                            <div class="accordion-body">
-                                                {% set meal_names = {
-                                                    'breakfast':'☀️ Café da Manhã',
-                                                    'morning_snack':'🥤 Lanche da Manhã',
-                                                    'lunch':'🍽️ Almoço',
-                                                    'afternoon_snack':'🍎 Lanche da Tarde',
-                                                    'dinner':'🌙 Jantar',
-                                                    'evening_snack':'🌙 Ceia'
-                                                } %}
-
-                                                {% for meal_key, meal_data in day_data.items() %}
-                                                    {% if meal_data %}
-                                                    <div class="mb-3">
-                                                        <h6 class="mb-1">
-                                                            {{ meal_names.get(meal_key, meal_key|title) }}
-                                                            {% if meal_data.target_kcal %}
-                                                                <span class="badge bg-success ms-2">{{ meal_data.target_kcal }} kcal</span>
-                                                            {% endif %}
-                                                        </h6>
-                                                        {% if meal_data.options %}
-                                                            {% for opt in meal_data.options %}
-                                                            <div class="border rounded p-2 mb-2">
-                                                                <strong>{{ opt.name or ('Opção ' ~ loop.index) }}</strong>
-                                                                <ul class="list-unstyled mb-0 mt-1">
-                                                                    {% for it in opt.items %}
-                                                                    <li>• {{ it.name_pt or it.name_en }} — {{ it.portion_grams or it.quantity_g }}g{% if it.kcal is defined %} ({{ it.kcal }} kcal){% endif %}</li>
-                                                                    {% endfor %}
-                                                                </ul>
-                                                                {% if opt.totals and opt.totals.kcal %}
-                                                                <small class="text-muted">Total: {{ opt.totals.kcal }} kcal</small>
-                                                                {% endif %}
-                                                            </div>
-                                                            {% endfor %}
-                                                        {% elif meal_data.meals %}
-                                                            <ul class="list-group list-group-flush">
-                                                                {% for meal in meal_data.meals %}
-                                                                    <li class="list-group-item px-0 py-1">
-                                                                        <strong>{{ meal.name }}:</strong>
-                                                                        {% if meal.items %}
-                                                                        <ul class="list-unstyled ms-3 mt-1">
-                                                                            {% for item in meal.items %}
-                                                                            <li>• {{ item.food }} ({{ item.quantity_g }}g)</li>
-                                                                            {% endfor %}
-                                                                        </ul>
-                                                                        {% endif %}
-                                                                    </li>
-                                                                {% endfor %}
-                                                            </ul>
-                                                        {% else %}
-                                                            <small class="text-muted">Sem opções registradas para esta refeição.</small>
-                                                        {% endif %}
-                                                    </div>
-                                                    {% endif %}
-                                                {% endfor %}
-                                            </div>
-                                        </div>
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">🍽️ Plano de Refeições</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="accordion" id="weeklyMenuAccordion">
+                            <!-- Dias da semana em ordem fixa -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="mondayHeader">
+                                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#mondayCollapse" aria-expanded="true" aria-controls="mondayCollapse">
+                                        <strong>Segunda-feira</strong>
+                                    </button>
+                                </h2>
+                                <div id="mondayCollapse" class="accordion-collapse collapse show" aria-labelledby="mondayHeader" data-bs-parent="#weeklyMenuAccordion">
+                                    <div class="accordion-body" id="mondayContent">
+                                        <!-- Conteúdo será preenchido via JavaScript -->
                                     </div>
-                                {% endfor %}
                                 </div>
-                            {% elif diet.data.meal_plans %}
-                                <div class="row">
-                                    {% for meal_type, meals in diet.data.meal_plans.items() %}
-                                    {% if meals %}
-                                    <div class="col-md-6 mb-3">
-                                        <h6 class="text-primary">
-                                            {% if meal_type == 'breakfast' %}☀️ Café da Manhã
-                                            {% elif meal_type == 'lunch' %}🍽️ Almoço
-                                            {% elif meal_type == 'dinner' %}🌙 Jantar
-                                            {% elif meal_type == 'snacks' %}🍎 Lanches
-                                            {% else %}{{ meal_type|title }}
-                                            {% endif %}
-                                        </h6>
-                                        <ul class="list-group list-group-flush">
-                                            {% for meal in meals %}
-                                            <li class="list-group-item px-0 py-1">
-                                                {% if meal is string %}
-                                                {{ meal }}
-                                                {% else %}
-                                                {{ meal.name or meal }}
-                                                {% endif %}
-                                            </li>
-                                            {% endfor %}
-                                        </ul>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="tuesdayHeader">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tuesdayCollapse" aria-expanded="false" aria-controls="tuesdayCollapse">
+                                        <strong>Terça-feira</strong>
+                                    </button>
+                                </h2>
+                                <div id="tuesdayCollapse" class="accordion-collapse collapse" aria-labelledby="tuesdayHeader" data-bs-parent="#weeklyMenuAccordion">
+                                    <div class="accordion-body" id="tuesdayContent">
+                                        <!-- Conteúdo será preenchido via JavaScript -->
                                     </div>
-                                    {% endif %}
-                                    {% endfor %}
                                 </div>
-                            {% else %}
-                                <p class="text-muted">Nenhum plano de refeições encontrado.</p>
-                            {% endif %}
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="wednesdayHeader">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#wednesdayCollapse" aria-expanded="false" aria-controls="wednesdayCollapse">
+                                        <strong>Quarta-feira</strong>
+                                    </button>
+                                </h2>
+                                <div id="wednesdayCollapse" class="accordion-collapse collapse" aria-labelledby="wednesdayHeader" data-bs-parent="#weeklyMenuAccordion">
+                                    <div class="accordion-body" id="wednesdayContent">
+                                        <!-- Conteúdo será preenchido via JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="thursdayHeader">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#thursdayCollapse" aria-expanded="false" aria-controls="thursdayCollapse">
+                                        <strong>Quinta-feira</strong>
+                                    </button>
+                                </h2>
+                                <div id="thursdayCollapse" class="accordion-collapse collapse" aria-labelledby="thursdayHeader" data-bs-parent="#weeklyMenuAccordion">
+                                    <div class="accordion-body" id="thursdayContent">
+                                        <!-- Conteúdo será preenchido via JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="fridayHeader">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#fridayCollapse" aria-expanded="false" aria-controls="fridayCollapse">
+                                        <strong>Sexta-feira</strong>
+                                    </button>
+                                </h2>
+                                <div id="fridayCollapse" class="accordion-collapse collapse" aria-labelledby="fridayHeader" data-bs-parent="#weeklyMenuAccordion">
+                                    <div class="accordion-body" id="fridayContent">
+                                        <!-- Conteúdo será preenchido via JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="saturdayHeader">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#saturdayCollapse" aria-expanded="false" aria-controls="saturdayCollapse">
+                                        <strong>Sábado</strong>
+                                    </button>
+                                </h2>
+                                <div id="saturdayCollapse" class="accordion-collapse collapse" aria-labelledby="saturdayHeader" data-bs-parent="#weeklyMenuAccordion">
+                                    <div class="accordion-body" id="saturdayContent">
+                                        <!-- Conteúdo será preenchido via JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="sundayHeader">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sundayCollapse" aria-expanded="false" aria-controls="sundayCollapse">
+                                        <strong>Domingo</strong>
+                                    </button>
+                                </h2>
+                                <div id="sundayCollapse" class="accordion-collapse collapse" aria-labelledby="sundayHeader" data-bs-parent="#weeklyMenuAccordion">
+                                    <div class="accordion-body" id="sundayContent">
+                                        <!-- Conteúdo será preenchido via JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                </div>
 
                     <!-- Recomendações -->
                     {% if diet.data.recommendations %}
@@ -219,10 +202,8 @@
                         <div class="card-header bg-warning text-dark">
                             <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Recomendações</h5>
                         </div>
-                        <div class="card-body">
-                            {% for key, value in diet.data.recommendations.items() %}
-                            <p><strong>{{ key|replace('_', ' ')|title }}:</strong> {{ value }}</p>
-                            {% endfor %}
+                        <div class="card-body" id="recommendationsContainer">
+                            <!-- Conteúdo será preenchido via JavaScript -->
                         </div>
                     </div>
                     {% endif %}
@@ -233,40 +214,8 @@
                         <div class="card-header bg-info text-white">
                             <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>Lista de Compras</h5>
                         </div>
-                        <div class="card-body">
-                            {% if diet.data.shopping_list.items %}
-                            {% set grouped = {} %}
-                            {% for it in diet.data.shopping_list.items %}
-                                {% set cat = it.category or 'Outros' %}
-                                {% if grouped.update({cat: (grouped.get(cat, []) + [it])}) %}{% endif %}
-                            {% endfor %}
-                            <div class="row">
-                                {% for cat, items in grouped.items() %}
-                                <div class="col-md-6 mb-3">
-                                    <h6 class="text-primary">{{ cat|title }}</h6>
-                                    <ul class="list-group list-group-flush">
-                                        {% for it in items %}
-                                        <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                                            <span>{{ it.name_pt or it.name_en }}</span>
-                                            <span class="badge bg-primary">{{ it.estimated_weekly_amount }}</span>
-                                        </li>
-                                        {% endfor %}
-                                    </ul>
-                                </div>
-                                {% endfor %}
-                            </div>
-                            {% else %}
-                            <div class="row">
-                                {% for item in diet.data.shopping_list %}
-                                <div class="col-md-6 mb-2">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span>{{ item.food }}</span>
-                                        <span class="badge bg-primary">{{ item.quantity_g }}g</span>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
+                        <div class="card-body" id="shoppingListContainer">
+                            <!-- Conteúdo será preenchido via JavaScript -->
                         </div>
                     </div>
                     {% endif %}
@@ -277,12 +226,8 @@
                         <div class="card-header bg-danger text-white">
                             <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Restrições</h5>
                         </div>
-                        <div class="card-body">
-                            <ul class="mb-0">
-                                {% for restriction in diet.data.restrictions %}
-                                <li>{{ restriction }}</li>
-                                {% endfor %}
-                            </ul>
+                        <div class="card-body" id="restrictionsContainer">
+                            <!-- Conteúdo será preenchido via JavaScript -->
                         </div>
                     </div>
                     {% endif %}
@@ -315,6 +260,356 @@
 
 {% block extra_js %}
 <script>
-// Sem upload nesta versão
+    // Função para calcular macros diários
+    function calculateDailyMacros(dailyMenu) {
+        const dailyMacros = {
+            kcal: 0,
+            protein_g: 0,
+            carbs_g: 0,
+            fat_g: 0
+        };
+        
+        Object.values(dailyMenu).forEach(mealData => {
+            if (!mealData) return;
+            
+            mealData.options?.forEach(option => {
+                option.items?.forEach(item => {
+                    const kcal = item.kcal || 0;
+                    dailyMacros.kcal += kcal;
+                    
+                    // Estimativa baseada em calorias (aproximação)
+                    const proteinKcal = kcal * 0.3; // 30% das calorias
+                    const carbsKcal = kcal * 0.4;   // 40% das calorias
+                    const fatKcal = kcal * 0.3;     // 30% das calorias
+                    
+                    dailyMacros.protein_g += proteinKcal / 4; // 4 kcal por grama
+                    dailyMacros.carbs_g += carbsKcal / 4;     // 4 kcal por grama
+                    dailyMacros.fat_g += fatKcal / 9;         // 9 kcal por grama
+                });
+            });
+        });
+        
+        return dailyMacros;
+    }
+    
+    // Função para criar resumo nutricional do dia
+    function createDailyMacroSummary(dayContent, dailyMacros, targetMacros) {
+        const summaryDiv = document.createElement('div');
+        summaryDiv.className = 'mt-3 p-3 bg-light rounded';
+        
+        const summaryTitle = document.createElement('h6');
+        summaryTitle.className = 'text-primary mb-2';
+        summaryTitle.innerHTML = '📊 Resumo Nutricional do Dia';
+        summaryDiv.appendChild(summaryTitle);
+        
+        // Criar tabela de macros
+        const table = document.createElement('table');
+        table.className = 'table table-sm table-bordered';
+        
+        const thead = document.createElement('thead');
+        thead.innerHTML = `
+            <tr class="table-secondary">
+                <th>Macronutriente</th>
+                <th>Consumido</th>
+                <th>Meta</th>
+                <th>Status</th>
+            </tr>
+        `;
+        table.appendChild(thead);
+        
+        const tbody = document.createElement('tbody');
+        
+        // Calorias
+        const targetKcal = targetMacros?.daily_target_kcal || 0;
+        const kcalStatus = getMacroStatus(dailyMacros.kcal, targetKcal, 0.1);
+        tbody.innerHTML += `
+            <tr>
+                <td><strong>Calorias</strong></td>
+                <td>${dailyMacros.kcal.toFixed(0)} kcal</td>
+                <td>${targetKcal.toFixed(0)} kcal</td>
+                <td class="text-center">${kcalStatus}</td>
+            </tr>
+        `;
+        
+        // Proteínas
+        const targetProtein = targetMacros?.macronutrients?.proteins?.grams_per_day || 0;
+        const proteinStatus = getMacroStatus(dailyMacros.protein_g, targetProtein, 0.15);
+        tbody.innerHTML += `
+            <tr>
+                <td><strong>Proteínas</strong></td>
+                <td>${dailyMacros.protein_g.toFixed(1)} g</td>
+                <td>${targetProtein.toFixed(1)} g</td>
+                <td class="text-center">${proteinStatus}</td>
+            </tr>
+        `;
+        
+        // Carboidratos
+        const targetCarbs = targetMacros?.macronutrients?.carbohydrates?.grams_per_day || 0;
+        const carbsStatus = getMacroStatus(dailyMacros.carbs_g, targetCarbs, 0.15);
+        tbody.innerHTML += `
+            <tr>
+                <td><strong>Carboidratos</strong></td>
+                <td>${dailyMacros.carbs_g.toFixed(1)} g</td>
+                <td>${targetCarbs.toFixed(1)} g</td>
+                <td class="text-center">${carbsStatus}</td>
+            </tr>
+        `;
+        
+        // Gorduras
+        const targetFat = targetMacros?.macronutrients?.fats?.grams_per_day || 0;
+        const fatStatus = getMacroStatus(dailyMacros.fat_g, targetFat, 0.15);
+        tbody.innerHTML += `
+            <tr>
+                <td><strong>Gorduras</strong></td>
+                <td>${dailyMacros.fat_g.toFixed(1)} g</td>
+                <td>${targetFat.toFixed(1)} g</td>
+                <td class="text-center">${fatStatus}</td>
+            </tr>
+        `;
+        
+        table.appendChild(tbody);
+        summaryDiv.appendChild(table);
+        
+        // Adicionar ao conteúdo do dia
+        dayContent.appendChild(summaryDiv);
+    }
+    
+    // Função para obter status do macronutriente
+    function getMacroStatus(consumed, target, tolerance) {
+        if (target === 0) return 'N/A';
+        
+        const ratio = consumed / target;
+        if (Math.abs(ratio - 1.0) <= tolerance) {
+            return '<span class="text-success">✅</span>';
+        } else if (ratio < 1.0) {
+            return '<span class="text-warning">⚠️</span>';
+        } else {
+            return '<span class="text-danger">❌</span>';
+        }
+    }
+    
+    // Função para formatar o menu semanal
+    function formatWeeklyMenu(weeklyMenu) {
+        if (!weeklyMenu) return;
+        
+        // Mapeamento de nomes de refeições em PT-BR
+        const mealNames = {
+            'breakfast': '☀️ Café da Manhã',
+            'morning_snack': '🥤 Lanche da Manhã',
+            'lunch': '🍽️ Almoço',
+            'afternoon_snack': '🍎 Lanche da Tarde',
+            'dinner': '🌙 Jantar',
+            'evening_snack': '🌙 Ceia'
+        };
+        
+        // Ordem fixa dos dias
+        const dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        
+        dayOrder.forEach(day => {
+            const dayContent = document.getElementById(`${day}Content`);
+            if (!dayContent) return;
+            
+            const dayData = weeklyMenu[day];
+            if (!dayData) {
+                dayContent.innerHTML = '<p class="text-muted">Nenhuma refeição configurada para este dia.</p>';
+                return;
+            }
+            
+            let html = '';
+            
+            // Para cada refeição do dia
+            Object.entries(dayData).forEach(([mealKey, mealData]) => {
+                if (!mealData) return;
+                
+                const mealName = mealNames[mealKey] || mealKey.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+                const targetKcal = mealData.target_kcal || 0;
+                
+                html += `
+                    <div class="mb-3">
+                        <h6 class="mb-2 text-primary">
+                            ${mealName}
+                            ${targetKcal ? `<span class="badge bg-success ms-2">${targetKcal} kcal</span>` : ''}
+                        </h6>
+                `;
+                
+                // Opções da refeição
+                if (mealData.options && mealData.options.length > 0) {
+                    mealData.options.forEach((option, optIndex) => {
+                        html += `
+                            <div class="border rounded p-3 mb-2 bg-light">
+                                <strong class="text-success">${option.name || `Opção ${optIndex + 1}`}</strong>
+                                <ul class="list-unstyled mb-2 mt-2">
+                        `;
+                        
+                        // Itens da opção
+                        if (option.items && option.items.length > 0) {
+                            option.items.forEach(item => {
+                                const displayName = item.name_pt || item.name_en || 'Alimento';
+                                const portion = item.portion_grams || item.quantity_g || 0;
+                                const kcal = item.kcal || 0;
+                                
+                                html += `
+                                    <li class="mb-1">
+                                        <i class="fas fa-utensils text-muted me-2"></i>
+                                        <strong>${displayName}</strong> — ${portion}g
+                                        ${kcal ? `(${kcal} kcal)` : ''}
+                                    </li>
+                                `;
+                            });
+                        }
+                        
+                        html += '</ul>';
+                        
+                        // Total da opção
+                        if (option.totals && option.totals.kcal) {
+                            html += `
+                                <div class="text-end">
+                                    <small class="text-muted">
+                                        <strong>Total da opção: ${option.totals.kcal} kcal</strong>
+                                    </small>
+                                </div>
+                            `;
+                        }
+                        
+                        html += '</div>';
+                    });
+                } else {
+                    html += '<p class="text-muted">Sem opções registradas para esta refeição.</p>';
+                }
+                
+                html += '</div>';
+            });
+            
+            dayContent.innerHTML = html;
+            
+            // Adicionar resumo nutricional do dia
+            const dailyMacros = calculateDailyMacros(dayData);
+            const targetMacros = window.dietTargetMacros || {};
+            createDailyMacroSummary(dayContent, dailyMacros, targetMacros);
+        });
+    }
+    
+    // Função para formatar a lista de compras
+    function formatShoppingList(shoppingList) {
+        const shoppingListContainer = document.getElementById('shoppingListContainer');
+        if (!shoppingListContainer || !shoppingList) return;
+        
+        const items = shoppingList.items || [];
+        if (items.length === 0) {
+            shoppingListContainer.innerHTML = '<p class="text-muted">Nenhum item na lista de compras.</p>';
+            return;
+        }
+        
+        // Agrupar por categoria
+        const categories = {};
+        items.forEach(item => {
+            const category = item.category || 'Outros';
+            if (!categories[category]) {
+                categories[category] = [];
+            }
+            categories[category].push(item);
+        });
+        
+        let html = '';
+        Object.entries(categories).forEach(([category, categoryItems]) => {
+            html += `
+                <div class="mb-3">
+                    <h6 class="text-primary mb-2">
+                        <i class="fas fa-tags me-2"></i>${category}
+                    </h6>
+                    <ul class="list-group list-group-flush">
+            `;
+            
+            categoryItems.forEach(item => {
+                const name = item.name_pt || item.name_en || 'Item';
+                const amount = item.estimated_weekly_amount || 'A definir';
+                
+                html += `
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>${name}</span>
+                        <span class="badge bg-secondary">${amount}</span>
+                    </li>
+                `;
+            });
+            
+            html += '</ul></div>';
+        });
+        
+        shoppingListContainer.innerHTML = html;
+    }
+    
+    // Função para formatar recomendações
+    function formatRecommendations(recommendations) {
+        const recommendationsContainer = document.getElementById('recommendationsContainer');
+        if (!recommendationsContainer || !recommendations) return;
+        
+        if (typeof recommendations === 'string') {
+            recommendationsContainer.innerHTML = `<p>${recommendations}</p>`;
+        } else if (Array.isArray(recommendations)) {
+            const html = recommendations.map(rec => `<li>${rec}</li>`).join('');
+            recommendationsContainer.innerHTML = `<ul>${html}</ul>`;
+        } else {
+            recommendationsContainer.innerHTML = '<p class="text-muted">Nenhuma recomendação disponível.</p>';
+        }
+    }
+    
+    // Função para formatar restrições
+    function formatRestrictions(restrictions) {
+        const restrictionsContainer = document.getElementById('restrictionsContainer');
+        if (!restrictionsContainer || !restrictions) return;
+        
+        if (typeof restrictions === 'string') {
+            restrictionsContainer.innerHTML = `<p>${restrictions}</p>`;
+        } else if (Array.isArray(restrictions)) {
+            const html = restrictions.map(rest => `<li>${rest}</li>`).join('');
+            restrictionsContainer.innerHTML = `<ul>${html}</ul>`;
+        } else {
+            restrictionsContainer.innerHTML = '<p class="text-muted">Nenhuma restrição alimentar registrada.</p>';
+        }
+    }
+    
+    // Função principal para carregar os dados da dieta
+    function loadDietData() {
+        try {
+            const dietDataElement = document.getElementById('dietData');
+            if (!dietDataElement) return;
+            
+            const dietData = JSON.parse(dietDataElement.textContent);
+            
+            if (dietData) {
+                // Armazenar metas nutricionais globalmente
+                if (dietData.nutritional_calculations) {
+                    window.dietTargetMacros = dietData.nutritional_calculations;
+                }
+                
+                // Formatar menu semanal
+                if (dietData.weekly_menu) {
+                    formatWeeklyMenu(dietData.weekly_menu);
+                }
+                
+                // Formatar lista de compras
+                if (dietData.shopping_list) {
+                    formatShoppingList(dietData.shopping_list);
+                }
+                
+                // Formatar recomendações
+                if (dietData.recommendations) {
+                    formatRecommendations(dietData.recommendations);
+                }
+                
+                // Formatar restrições
+                if (dietData.restrictions) {
+                    formatRestrictions(dietData.restrictions);
+                }
+            }
+        } catch (error) {
+            console.error('Erro ao carregar dados da dieta:', error);
+        }
+    }
+    
+    // Carregar dados quando a página carregar
+    document.addEventListener('DOMContentLoaded', function() {
+        loadDietData();
+    });
 </script>
 {% endblock %}

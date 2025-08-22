@@ -101,7 +101,12 @@ def _deterministic_diet_from_user(user: dict) -> dict:
     act = (user.get('activity_level') or 'moderately_active').lower()
     goal = (user.get('primary_objective') or user.get('primary_goal') or 'Manutenção')
 
-    tmb = 10*weight + 6.25*height - 5*age + (5 if gender.startswith('m') else -161)
+    # TMB usando Mifflin-St Jeor (correto)
+    if gender.startswith('m'):
+        tmb = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age)
+    else:
+        tmb = 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age)
+    
     activity_map = {'sedentary':1.2,'lightly_active':1.375,'moderately_active':1.55,'very_active':1.725,'extra_active':1.9,
                     'leve':1.375,'moderado':1.55,'alto':1.725,'intenso':1.725}
     af = activity_map.get(act,1.55)
@@ -110,19 +115,42 @@ def _deterministic_diet_from_user(user: dict) -> dict:
     if 'perd' in gl or 'emag' in gl:
         daily = max(1200, get_kcal-400)
         adj = 'Déficit para perda de peso'
+        # Distribuição para perda de peso
+        carbs_kcal = daily*0.4
+        prot_kcal = daily*0.3
+        fat_kcal = daily*0.3
     elif 'ganh' in gl or 'massa' in gl:
         daily = get_kcal+300
         adj = 'Superávit para ganho de massa'
+        # Distribuição para ganho de massa
+        carbs_kcal = daily*0.55
+        prot_kcal = daily*0.25
+        fat_kcal = daily*0.2
     else:
         daily = get_kcal
         adj = 'Manutenção'
-    carbs_kcal = daily*0.5
-    prot_kcal = daily*0.25
-    fat_kcal = daily*0.25
+        # Distribuição para manutenção
+        carbs_kcal = daily*0.5
+        prot_kcal = daily*0.2
+        fat_kcal = daily*0.3
+    
+    # Cálculo correto de gramas (4 kcal/g para carbs e proteínas, 9 kcal/g para gorduras)
     macros = {
-        'carbohydrates': {'kcal_per_day': round(carbs_kcal,1),'grams_per_day': round(carbs_kcal/4,1)},
-        'proteins': {'kcal_per_day': round(prot_kcal,1),'grams_per_day': round(prot_kcal/4,1)},
-        'fats': {'kcal_per_day': round(fat_kcal,1),'grams_per_day': round(fat_kcal/9,1)}
+        'carbohydrates': {
+            'kcal_per_day': round(carbs_kcal,1),
+            'grams_per_day': round(carbs_kcal/4,1),
+            'percentage': 40 if 'perd' in gl or 'emag' in gl else (55 if 'ganh' in gl or 'massa' in gl else 50)
+        },
+        'proteins': {
+            'kcal_per_day': round(prot_kcal,1),
+            'grams_per_day': round(prot_kcal/4,1),
+            'percentage': 30 if 'perd' in gl or 'emag' in gl else (25 if 'ganh' in gl or 'massa' in gl else 20)
+        },
+        'fats': {
+            'kcal_per_day': round(fat_kcal,1),
+            'grams_per_day': round(fat_kcal/9,1),
+            'percentage': 30 if 'perd' in gl or 'emag' in gl else (20 if 'ganh' in gl or 'massa' in gl else 30)
+        }
     }
     # Simple weekly menu template without API
     daily_kcal = round(daily)
@@ -710,6 +738,16 @@ def api_respond_structured_consultation():
         is_decision_point = updated_state.get('ready_for_summary', False) or updated_state.get('consultation_completed', False)
         show_buttons = is_decision_point or updated_state.get('current_phase') == 'consultation_summary'
         
+        # Verificar se a consulta foi realmente concluída (18 perguntas respondidas)
+        consultation_completed = updated_state.get('consultation_completed', False)
+        current_question = updated_state.get('current_question', 0)
+        total_questions = updated_state.get('total_questions', 18)
+        
+        # Se completou todas as perguntas, mostrar botões
+        if current_question > total_questions or consultation_completed:
+            show_buttons = True
+            is_decision_point = True
+        
         response_data = {
             'success': True,
             'consultation_state': updated_state,
@@ -717,9 +755,11 @@ def api_respond_structured_consultation():
             'current_phase': updated_state['current_phase'],
             'is_decision_point': is_decision_point,
             'show_option_buttons': show_buttons,
+            'show_action_buttons': show_buttons,  # Adicionar esta linha para compatibilidade
+            'consultation_completed': consultation_completed,
             'diet_generated': updated_state.get('current_phase') == 'diet_generated'
         }
-        print(f"✅ Sending response: success={response_data['success']}, message_length={len(latest_message)}, diet_generated={response_data['diet_generated']}")
+        print(f"✅ Sending response: success={response_data['success']}, message_length={len(latest_message)}, diet_generated={response_data['diet_generated']}, show_buttons={show_buttons}, consultation_completed={consultation_completed}")
         
         return jsonify(response_data)
         
